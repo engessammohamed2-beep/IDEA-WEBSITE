@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin | IDEA-EG</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="images/favicon-32.png">
+</head>
+<body>
+<header class="site-header">
+  <div class="nav">
+    <a class="brand" href="index.html"><img src="images/logo.png" alt="IDEA-EG logo"> IDEA<span style="color:var(--orange)">-EG</span> <span style="color:var(--ink-soft);font-weight:400;font-size:.85rem">/ admin</span></a>
+    <div id="auth-status" style="font-size:.85rem;color:var(--ink-soft)"></div>
+  </div>
+</header>
+
+<div class="admin-shell">
+
+  <div id="login-card" class="admin-card">
+    <h3>Sign in</h3>
+    <p class="lead" style="font-size:.88rem">First time here? Use "Create account" once to set up your admin login. After that, always use "Sign in".</p>
+    <div id="confirm-banner" style="display:none;background:#E7F8EF;border:1px solid #6FCB9A;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:.88rem;color:#1a6b45">
+      ✅ Email confirmed — signing you in...
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:360px">
+      <input id="email" type="email" placeholder="Email" style="padding:10px;border:1px solid var(--line);border-radius:6px">
+      <input id="password" type="password" placeholder="Password" style="padding:10px;border:1px solid var(--line);border-radius:6px">
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="signIn()">Sign in</button>
+        <button class="btn btn-ghost" onclick="signUp()">Create account</button>
+      </div>
+      <div id="auth-msg" style="font-size:.82rem;color:var(--orange-dark)"></div>
+    </div>
+  </div>
+
+  <div id="dashboard" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h2 style="margin:0">Dashboard</h2>
+      <button class="mini-btn" onclick="signOut()">Sign out</button>
+    </div>
+
+    <div class="admin-card">
+      <h3>Team members</h3>
+      <table class="admin-table" id="team-table">
+        <thead><tr><th></th><th>Name</th><th>Role (EN)</th><th>Role (AR)</th><th>Initials</th><th>Founder</th><th></th></tr></thead>
+        <tbody id="team-tbody"></tbody>
+      </table>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <input id="nt-name" placeholder="Name" style="flex:1;min-width:120px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <input id="nt-role-en" placeholder="Role (English)" style="flex:1;min-width:140px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <input id="nt-role-ar" placeholder="Role (Arabic)" style="flex:1;min-width:140px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <input id="nt-initials" placeholder="Initials" style="width:80px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <button class="mini-btn primary" onclick="addTeamMember()">Add</button>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <h3>Behind-the-scenes counter</h3>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label>Count: <input id="extra-count-input" type="number" style="width:80px;padding:6px 8px;border:1px solid var(--line);border-radius:5px"></label>
+        <input id="extra-label-en" placeholder="Label (English)" style="flex:1;min-width:220px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <button class="mini-btn primary" onclick="saveTeamMeta()">Save</button>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <h3>Clients & partners</h3>
+      <table class="admin-table" id="clients-table">
+        <thead><tr><th></th><th>Name</th><th>Logo URL</th><th>Color from</th><th>Color to</th><th></th></tr></thead>
+        <tbody id="clients-tbody"></tbody>
+      </table>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <input id="nc-name" placeholder="Client name" style="flex:1;min-width:160px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <input id="nc-logo" placeholder="Logo URL (optional)" style="flex:1;min-width:160px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <input id="nc-color1" type="color" value="#E8631E" style="width:44px;padding:2px;border:1px solid var(--line);border-radius:5px">
+        <input id="nc-color2" type="color" value="#B84A12" style="width:44px;padding:2px;border:1px solid var(--line);border-radius:5px">
+        <button class="mini-btn primary" onclick="addClient()">Add</button>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="margin:0">Service cards</h3>
+        <select id="svc-page-filter" onchange="loadServices()" style="padding:6px 10px;border:1px solid var(--line);border-radius:5px">
+          <option value="event-management">Event management page</option>
+          <option value="media-production">Media & broadcast page</option>
+          <option value="branding-digital">Branding & digital page</option>
+        </select>
+      </div>
+      <table class="admin-table" id="services-table">
+        <thead><tr><th></th><th>Icon</th><th>Title (EN)</th><th>Title (AR)</th><th>Description (EN)</th><th>Description (AR)</th><th></th></tr></thead>
+        <tbody id="services-tbody"></tbody>
+      </table>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <select id="ns-icon" style="padding:8px;border:1px solid var(--line);border-radius:5px">
+          <option value="lifecycle">lifecycle</option><option value="headset">headset</option><option value="trending">trending</option>
+          <option value="box">box</option><option value="refresh">refresh</option><option value="chart">chart</option>
+          <option value="coffee">coffee</option><option value="shield">shield</option><option value="image">image</option>
+          <option value="plexi">plexi</option><option value="live">live</option><option value="control">control</option>
+          <option value="video4k">video4k</option><option value="broadcast">broadcast</option><option value="code">code</option>
+          <option value="pencil">pencil</option><option value="cube">cube</option><option value="printer">printer</option>
+          <option value="megaphone">megaphone</option><option value="heart">heart</option><option value="search">search</option>
+          <option value="spark">spark</option>
+        </select>
+        <input id="ns-title-en" placeholder="Title (English)" style="flex:1;min-width:140px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <input id="ns-title-ar" placeholder="Title (Arabic)" style="flex:1;min-width:140px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <input id="ns-desc-en" placeholder="Description (English)" style="flex:2;min-width:200px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <input id="ns-desc-ar" placeholder="Description (Arabic)" style="flex:2;min-width:200px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <button class="mini-btn primary" onclick="addService()">Add card</button>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="margin:0">Stats & numbers</h3>
+        <select id="stat-page-filter" onchange="loadStats()" style="padding:6px 10px;border:1px solid var(--line);border-radius:5px">
+          <option value="home">Home page</option>
+          <option value="impact">Impact page</option>
+        </select>
+      </div>
+      <table class="admin-table" id="stats-table">
+        <thead><tr><th></th><th>Value</th><th>Label (EN)</th><th>Label (AR)</th><th></th></tr></thead>
+        <tbody id="stats-tbody"></tbody>
+      </table>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <input id="nst-value" placeholder="Value e.g. 650+" style="width:120px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <input id="nst-label-en" placeholder="Label (English)" style="flex:1;min-width:160px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <input id="nst-label-ar" placeholder="Label (Arabic)" style="flex:1;min-width:160px;padding:8px;border:1px solid var(--line);border-radius:5px">
+        <button class="mini-btn primary" onclick="addStat()">Add stat</button>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="margin:0">🗒️ Page text (every string on the site)</h3>
+        <select id="content-page-filter" onchange="loadContent()" style="padding:6px 10px;border:1px solid var(--line);border-radius:5px">
+          <option value="home">Home</option>
+          <option value="about">About</option>
+          <option value="services">Services (hub)</option>
+          <option value="events">Event management page</option>
+          <option value="media">Media production page</option>
+          <option value="brand">Branding & digital page</option>
+          <option value="sw">Software development page</option>
+          <option value="impact">Impact page</option>
+          <option value="team">Team page</option>
+          <option value="clients">Clients page</option>
+          <option value="blog">Blog page</option>
+          <option value="contact">Contact page</option>
+          <option value="nav">Navigation menu</option>
+          <option value="foot">Footer</option>
+        </select>
+      </div>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin-top:-6px">Edit any heading, paragraph or button on the site. Changes appear on the live site instantly — no redeploy needed.</p>
+      <div id="content-list" style="display:flex;flex-direction:column;gap:14px"></div>
+    </div>
+
+    <div class="admin-card">
+      <h3 style="margin-top:0">📅 Upcoming event (homepage countdown)</h3>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin-top:-6px">Shows an image + live countdown on the homepage. Turn off "Enabled" to hide it, or it hides itself automatically once the date passes.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:600px">
+        <label style="font-size:.85rem"><input type="checkbox" id="ev-enabled"> Enabled — show on homepage</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <input id="ev-title-en" placeholder="Title (English)" style="padding:8px;border:1px solid var(--line);border-radius:5px">
+          <input id="ev-title-ar" placeholder="Title (Arabic)" dir="rtl" style="padding:8px;border:1px solid var(--line);border-radius:5px">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <input id="ev-location-en" placeholder="Location (English, optional)" style="padding:8px;border:1px solid var(--line);border-radius:5px">
+          <input id="ev-location-ar" placeholder="Location (Arabic, optional)" dir="rtl" style="padding:8px;border:1px solid var(--line);border-radius:5px">
+        </div>
+        <div>
+          <label style="font-size:.82rem;color:var(--ink-soft);display:block;margin-bottom:4px">Event date &amp; time</label>
+          <input id="ev-date" type="datetime-local" style="padding:8px;border:1px solid var(--line);border-radius:5px">
+        </div>
+        <div>
+          <label style="font-size:.82rem;color:var(--ink-soft);display:block;margin-bottom:4px">Image URL (upload in Media library above, then paste link here)</label>
+          <input id="ev-image" placeholder="https://..." style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px">
+        </div>
+        <button class="mini-btn primary" style="align-self:flex-start" onclick="saveUpcomingEvent()">Save event</button>
+        <div id="ev-status" style="font-size:.82rem;color:#2FBE7A"></div>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <h3 style="margin-top:0">🖼️ Media library</h3>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin-top:-6px">Upload any image here first — then copy its link into an article cover, a client logo, or a page image below.</p>
+      <input type="file" id="media-file" accept="image/*" style="margin-bottom:10px">
+      <button class="mini-btn primary" onclick="uploadMedia()">Upload image</button>
+      <div id="media-status" style="font-size:.82rem;color:var(--ink-soft);margin-top:8px"></div>
+      <div id="media-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:16px"></div>
+    </div>
+
+    <div class="admin-card">
+      <h3 style="margin-top:0">🏞️ Page images</h3>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin-top:-6px">Replace the hero photo and other fixed images across the site.</p>
+      <table class="admin-table" id="pageimg-table">
+        <thead><tr><th>Slot</th><th>Preview</th><th>Image URL</th><th></th></tr></thead>
+        <tbody id="pageimg-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="admin-card">
+      <h3 style="margin-top:0">💬 Contact messages</h3>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin-top:-6px">Submissions from the contact form on the website.</p>
+      <table class="admin-table" id="messages-table">
+        <thead><tr><th>Date</th><th>Name</th><th>Phone</th><th>Email</th><th>Message</th><th></th></tr></thead>
+        <tbody id="messages-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="admin-card">
+      <h3 style="margin-top:0">📝 Articles / Blog</h3>
+      <table class="admin-table" id="articles-table">
+        <thead><tr><th>Cover</th><th>Title (EN)</th><th>Slug</th><th>Published</th><th></th></tr></thead>
+        <tbody id="articles-tbody"></tbody>
+      </table>
+      <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:16px">
+        <h4 id="article-form-title" style="margin:0 0 10px">New article</h4>
+        <input type="hidden" id="art-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <input id="art-title-en" placeholder="Title (English)" style="padding:8px;border:1px solid var(--line);border-radius:5px">
+          <input id="art-title-ar" placeholder="Title (Arabic)" style="padding:8px;border:1px solid var(--line);border-radius:5px">
+        </div>
+        <input id="art-slug" placeholder="URL slug e.g. our-first-hybrid-congress" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px;margin-bottom:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <input id="art-excerpt-en" placeholder="Short excerpt (English)" style="padding:8px;border:1px solid var(--line);border-radius:5px">
+          <input id="art-excerpt-ar" placeholder="Short excerpt (Arabic)" style="padding:8px;border:1px solid var(--line);border-radius:5px">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <textarea id="art-content-en" placeholder="Full article text (English) — one paragraph per line" rows="6" style="padding:8px;border:1px solid var(--line);border-radius:5px;font-family:var(--font-body)"></textarea>
+          <textarea id="art-content-ar" placeholder="Full article text (Arabic) — one paragraph per line" rows="6" style="padding:8px;border:1px solid var(--line);border-radius:5px;font-family:var(--font-body)"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input id="art-cover" placeholder="Cover image URL (upload above, then paste link here)" style="flex:1;min-width:220px;padding:8px;border:1px solid var(--line);border-radius:5px">
+          <label style="font-size:.85rem"><input type="checkbox" id="art-published" checked> Published</label>
+          <button class="mini-btn primary" onclick="saveArticle()">Save article</button>
+          <button class="mini-btn" onclick="resetArticleForm()">Clear form</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-init.js"></script>
+<script>
+var sb = window.getSupabaseClient();
+
+// If arriving from an email confirmation / magic link, Supabase puts tokens in the URL hash.
+// Show a friendly banner, then clean the URL so the tokens don't stay visible.
+if (location.hash && location.hash.indexOf('access_token') !== -1) {
+  document.getElementById('confirm-banner').style.display = 'block';
+  setTimeout(function () {
+    history.replaceState(null, '', location.pathname);
+  }, 1500);
+}
+
+async function checkSession() {
+  var { data } = await sb.auth.getSession();
+  if (data.session) {
+    document.getElementById('login-card').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('auth-status').textContent = data.session.user.email;
+    loadTeam();
+    loadTeamMeta();
+    loadClients();
+    loadServices();
+    loadStats();
+    loadMedia();
+    loadPageImages();
+    loadArticles();
+    loadMessages();
+    loadContent();
+  }
+}
+
+async function signUp() {
+  var email = document.getElementById('email').value;
+  var password = document.getElementById('password').value;
+  var { error } = await sb.auth.signUp({ email: email, password: password });
+  document.getElementById('auth-msg').textContent = error ? error.message : 'Account created — check your email if confirmation is required, then sign in.';
+  if (!error) checkSession();
+}
+
+async function signIn() {
+  var email = document.getElementById('email').value;
+  var password = document.getElementById('password').value;
+  var { error } = await sb.auth.signInWithPassword({ email: email, password: password });
+  document.getElementById('auth-msg').textContent = error ? error.message : '';
+  checkSession();
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+async function loadTeam() {
+  var { data } = await sb.from('website_team_members').select('*').order('sort_order');
+  var tbody = document.getElementById('team-tbody');
+  tbody.innerHTML = '';
+  (data || []).forEach(function(m) {
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-id', m.id);
+    tr.innerHTML =
+      '<td style="cursor:grab">&#8942;&#8942;</td>' +
+      '<td><input value="'+esc(m.name)+'" onchange="updateTeam(\''+m.id+'\',\'name\',this.value)"></td>' +
+      '<td><input value="'+esc(m.role_en)+'" onchange="updateTeam(\''+m.id+'\',\'role_en\',this.value)"></td>' +
+      '<td><input value="'+esc(m.role_ar||'')+'" onchange="updateTeam(\''+m.id+'\',\'role_ar\',this.value)"></td>' +
+      '<td><input value="'+esc(m.initials)+'" style="width:60px" onchange="updateTeam(\''+m.id+'\',\'initials\',this.value)"></td>' +
+      '<td style="text-align:center"><input type="checkbox" '+(m.is_founder?'checked':'')+' onchange="updateTeam(\''+m.id+'\',\'is_founder\',this.checked)"></td>' +
+      '<td><button class="mini-btn danger" onclick="deleteTeam(\''+m.id+'\')">Remove</button></td>';
+    tbody.appendChild(tr);
+  });
+  makeSortable('team-tbody', 'website_team_members');
+}
+
+async function updateTeam(id, field, value) {
+  var payload = {}; payload[field] = value;
+  await sb.from('website_team_members').update(payload).eq('id', id);
+}
+async function deleteTeam(id) {
+  if (!confirm('Remove this team member?')) return;
+  await sb.from('website_team_members').delete().eq('id', id);
+  loadTeam();
+}
+async function addTeamMember() {
+  var name = document.getElementById('nt-name').value;
+  var role_en = document.getElementById('nt-role-en').value;
+  var role_ar = document.getElementById('nt-role-ar').value;
+  var initials = document.getElementById('nt-initials').value || name.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+  if (!name || !role_en) return alert('Name and role (English) are required.');
+  await sb.from('website_team_members').insert({ name: name, role_en: role_en, role_ar: role_ar, initials: initials, sort_order: 999 });
+  document.getElementById('nt-name').value = '';
+  document.getElementById('nt-role-en').value = '';
+  document.getElementById('nt-role-ar').value = '';
+  document.getElementById('nt-initials').value = '';
+  loadTeam();
+}
+
+async function loadTeamMeta() {
+  var { data } = await sb.from('website_team_meta').select('*').eq('id', 1).single();
+  if (data) {
+    document.getElementById('extra-count-input').value = data.extra_staff_count;
+    document.getElementById('extra-label-en').value = data.extra_staff_label_en;
+  }
+}
+async function saveTeamMeta() {
+  var count = parseInt(document.getElementById('extra-count-input').value) || 0;
+  var label = document.getElementById('extra-label-en').value;
+  await sb.from('website_team_meta').update({ extra_staff_count: count, extra_staff_label_en: label }).eq('id', 1);
+  alert('Saved.');
+}
+
+async function loadClients() {
+  var { data } = await sb.from('website_clients').select('*').order('sort_order');
+  var tbody = document.getElementById('clients-tbody');
+  tbody.innerHTML = '';
+  (data || []).forEach(function(c) {
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-id', c.id);
+    tr.innerHTML =
+      '<td style="cursor:grab">&#8942;&#8942;</td>' +
+      '<td><input value="'+esc(c.name)+'" onchange="updateClient(\''+c.id+'\',\'name\',this.value)"></td>' +
+      '<td><input value="'+esc(c.logo_url||'')+'" placeholder="https://..." onchange="updateClient(\''+c.id+'\',\'logo_url\',this.value)"></td>' +
+      '<td><input type="color" value="'+c.color_from+'" style="width:44px;padding:2px" onchange="updateClient(\''+c.id+'\',\'color_from\',this.value)"></td>' +
+      '<td><input type="color" value="'+c.color_to+'" style="width:44px;padding:2px" onchange="updateClient(\''+c.id+'\',\'color_to\',this.value)"></td>' +
+      '<td><button class="mini-btn danger" onclick="deleteClient(\''+c.id+'\')">Remove</button></td>';
+    tbody.appendChild(tr);
+  });
+  makeSortable('clients-tbody', 'website_clients');
+}
+async function updateClient(id, field, value) {
+  var payload = {}; payload[field] = value;
+  await sb.from('website_clients').update(payload).eq('id', id);
+}
+async function deleteClient(id) {
+  if (!confirm('Remove this client?')) return;
+  await sb.from('website_clients').delete().eq('id', id);
+  loadClients();
+}
+async function addClient() {
+  var name = document.getElementById('nc-name').value;
+  var logo = document.getElementById('nc-logo').value;
+  var c1 = document.getElementById('nc-color1').value;
+  var c2 = document.getElementById('nc-color2').value;
+  if (!name) return alert('Client name is required.');
+  await sb.from('website_clients').insert({ name: name, logo_url: logo || null, color_from: c1, color_to: c2, sort_order: 999 });
+  document.getElementById('nc-name').value = '';
+  document.getElementById('nc-logo').value = '';
+  loadClients();
+}
+
+function esc(s) { return (s||'').replace(/"/g,'&quot;'); }
+
+async function loadServices() {
+  var pageKey = document.getElementById('svc-page-filter').value;
+  var { data } = await sb.from('website_services').select('*').eq('page', pageKey).order('sort_order');
+  var tbody = document.getElementById('services-tbody');
+  tbody.innerHTML = '';
+  (data || []).forEach(function(s) {
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-id', s.id);
+    tr.innerHTML =
+      '<td style="cursor:grab">&#8942;&#8942;</td>' +
+      '<td><input value="'+esc(s.icon)+'" style="width:80px" onchange="updateService(\''+s.id+'\',\'icon\',this.value)"></td>' +
+      '<td><input value="'+esc(s.title_en)+'" onchange="updateService(\''+s.id+'\',\'title_en\',this.value)"></td>' +
+      '<td><input value="'+esc(s.title_ar||'')+'" onchange="updateService(\''+s.id+'\',\'title_ar\',this.value)"></td>' +
+      '<td><input value="'+esc(s.desc_en)+'" onchange="updateService(\''+s.id+'\',\'desc_en\',this.value)"></td>' +
+      '<td><input value="'+esc(s.desc_ar||'')+'" onchange="updateService(\''+s.id+'\',\'desc_ar\',this.value)"></td>' +
+      '<td><button class="mini-btn danger" onclick="deleteService(\''+s.id+'\')">Remove</button></td>';
+    tbody.appendChild(tr);
+  });
+  makeSortable('services-tbody', 'website_services');
+}
+async function updateService(id, field, value) {
+  var payload = {}; payload[field] = value;
+  await sb.from('website_services').update(payload).eq('id', id);
+}
+async function deleteService(id) {
+  if (!confirm('Remove this service card?')) return;
+  await sb.from('website_services').delete().eq('id', id);
+  loadServices();
+}
+async function addService() {
+  var pageKey = document.getElementById('svc-page-filter').value;
+  var icon = document.getElementById('ns-icon').value;
+  var title_en = document.getElementById('ns-title-en').value;
+  var title_ar = document.getElementById('ns-title-ar').value;
+  var desc_en = document.getElementById('ns-desc-en').value;
+  var desc_ar = document.getElementById('ns-desc-ar').value;
+  if (!title_en || !desc_en) return alert('English title and description are required.');
+  await sb.from('website_services').insert({ page: pageKey, icon: icon, title_en: title_en, title_ar: title_ar, desc_en: desc_en, desc_ar: desc_ar, sort_order: 999 });
+  document.getElementById('ns-title-en').value = '';
+  document.getElementById('ns-title-ar').value = '';
+  document.getElementById('ns-desc-en').value = '';
+  document.getElementById('ns-desc-ar').value = '';
+  loadServices();
+}
+
+async function loadStats() {
+  var pageKey = document.getElementById('stat-page-filter').value;
+  var { data } = await sb.from('website_stats').select('*').eq('page', pageKey).order('sort_order');
+  var tbody = document.getElementById('stats-tbody');
+  tbody.innerHTML = '';
+  (data || []).forEach(function(s) {
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-id', s.id);
+    tr.innerHTML =
+      '<td style="cursor:grab">&#8942;&#8942;</td>' +
+      '<td><input value="'+esc(s.value)+'" style="width:90px" onchange="updateStat(\''+s.id+'\',\'value\',this.value)"></td>' +
+      '<td><input value="'+esc(s.label_en)+'" onchange="updateStat(\''+s.id+'\',\'label_en\',this.value)"></td>' +
+      '<td><input value="'+esc(s.label_ar||'')+'" onchange="updateStat(\''+s.id+'\',\'label_ar\',this.value)"></td>' +
+      '<td><button class="mini-btn danger" onclick="deleteStat(\''+s.id+'\')">Remove</button></td>';
+    tbody.appendChild(tr);
+  });
+  makeSortable('stats-tbody', 'website_stats');
+}
+async function updateStat(id, field, value) {
+  var payload = {}; payload[field] = value;
+  await sb.from('website_stats').update(payload).eq('id', id);
+}
+async function deleteStat(id) {
+  if (!confirm('Remove this stat?')) return;
+  await sb.from('website_stats').delete().eq('id', id);
+  loadStats();
+}
+async function addStat() {
+  var pageKey = document.getElementById('stat-page-filter').value;
+  var value = document.getElementById('nst-value').value;
+  var label_en = document.getElementById('nst-label-en').value;
+  var label_ar = document.getElementById('nst-label-ar').value;
+  if (!value || !label_en) return alert('Value and English label are required.');
+  await sb.from('website_stats').insert({ page: pageKey, value: value, label_en: label_en, label_ar: label_ar, sort_order: 999 });
+  document.getElementById('nst-value').value = '';
+  document.getElementById('nst-label-en').value = '';
+  document.getElementById('nst-label-ar').value = '';
+  loadStats();
+}
+
+/* ---------- Media library ---------- */
+async function uploadMedia() {
+  var fileInput = document.getElementById('media-file');
+  var file = fileInput.files[0];
+  var statusEl = document.getElementById('media-status');
+  if (!file) return alert('Choose an image file first.');
+  statusEl.textContent = 'Uploading...';
+  var path = Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+  var { error } = await sb.storage.from('website-media').upload(path, file, { upsert: true });
+  if (error) { statusEl.textContent = 'Error: ' + error.message; return; }
+  var { data } = sb.storage.from('website-media').getPublicUrl(path);
+  statusEl.innerHTML = 'Uploaded ✓ — <a href="' + data.publicUrl + '" target="_blank">' + data.publicUrl + '</a>';
+  fileInput.value = '';
+  loadMedia();
+}
+async function loadMedia() {
+  var { data, error } = await sb.storage.from('website-media').list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+  var grid = document.getElementById('media-grid');
+  if (error || !data) { grid.innerHTML = ''; return; }
+  grid.innerHTML = data.filter(function(f){return f.name;}).map(function(f) {
+    var url = sb.storage.from('website-media').getPublicUrl(f.name).data.publicUrl;
+    return '<div style="cursor:pointer" onclick="navigator.clipboard.writeText(\''+url+'\');this.querySelector(\'.tag\').textContent=\'Copied!\'" title="Click to copy link">' +
+      '<img src="'+url+'" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;border:1px solid var(--line)">' +
+      '<div class="tag" style="font-size:.65rem;text-align:center;color:var(--ink-soft);margin-top:2px">Copy link</div></div>';
+  }).join('');
+}
+
+/* ---------- Page images ---------- */
+async function loadPageImages() {
+  var { data } = await sb.from('website_page_images').select('*').order('id');
+  var tbody = document.getElementById('pageimg-tbody');
+  tbody.innerHTML = '';
+  (data || []).forEach(function(p) {
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>'+p.id+'</td>' +
+      '<td><img src="'+p.image_url+'" style="width:70px;height:50px;object-fit:cover;border-radius:4px;border:1px solid var(--line)"></td>' +
+      '<td><input value="'+p.image_url+'" onchange="updatePageImage(\''+p.id+'\',this.value)"></td>' +
+      '<td><button class="mini-btn" onclick="location.reload()">↻ Refresh preview</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+async function updatePageImage(id, url) {
+  await sb.from('website_page_images').update({ image_url: url, updated_at: new Date().toISOString() }).eq('id', id);
+  loadPageImages();
+}
+
+/* ---------- Articles ---------- */
+async function loadArticles() {
+  var { data } = await sb.from('website_articles').select('*').order('created_at', { ascending: false });
+  var tbody = document.getElementById('articles-tbody');
+  tbody.innerHTML = '';
+  (data || []).forEach(function(a) {
+    var tr = document.createElement('tr');
+    var cover = a.cover_image_url ? '<img src="'+a.cover_image_url+'" style="width:50px;height:36px;object-fit:cover;border-radius:4px">' : '—';
+    tr.innerHTML =
+      '<td>'+cover+'</td>' +
+      '<td>'+esc(a.title_en)+'</td>' +
+      '<td style="font-family:var(--font-mono);font-size:.78rem">'+esc(a.slug)+'</td>' +
+      '<td>'+(a.published ? '✅' : '— draft')+'</td>' +
+      '<td><button class="mini-btn" onclick="editArticle(\''+a.id+'\')">Edit</button> <button class="mini-btn danger" onclick="deleteArticle(\''+a.id+'\')">Remove</button></td>';
+    tbody.appendChild(tr);
+  });
+  window._articleCache = data || [];
+}
+function editArticle(id) {
+  var a = (window._articleCache || []).find(function(x){ return x.id === id; });
+  if (!a) return;
+  document.getElementById('article-form-title').textContent = 'Editing: ' + a.title_en;
+  document.getElementById('art-id').value = a.id;
+  document.getElementById('art-title-en').value = a.title_en || '';
+  document.getElementById('art-title-ar').value = a.title_ar || '';
+  document.getElementById('art-slug').value = a.slug || '';
+  document.getElementById('art-excerpt-en').value = a.excerpt_en || '';
+  document.getElementById('art-excerpt-ar').value = a.excerpt_ar || '';
+  document.getElementById('art-content-en').value = a.content_en || '';
+  document.getElementById('art-content-ar').value = a.content_ar || '';
+  document.getElementById('art-cover').value = a.cover_image_url || '';
+  document.getElementById('art-published').checked = !!a.published;
+  window.scrollTo({ top: document.getElementById('article-form-title').offsetTop, behavior: 'smooth' });
+}
+function resetArticleForm() {
+  document.getElementById('article-form-title').textContent = 'New article';
+  ['art-id','art-title-en','art-title-ar','art-slug','art-excerpt-en','art-excerpt-ar','art-content-en','art-content-ar','art-cover'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('art-published').checked = true;
+}
+async function saveArticle() {
+  var id = document.getElementById('art-id').value;
+  var payload = {
+    title_en: document.getElementById('art-title-en').value,
+    title_ar: document.getElementById('art-title-ar').value,
+    slug: document.getElementById('art-slug').value.trim().toLowerCase().replace(/[^a-z0-9\-]+/g, '-'),
+    excerpt_en: document.getElementById('art-excerpt-en').value,
+    excerpt_ar: document.getElementById('art-excerpt-ar').value,
+    content_en: document.getElementById('art-content-en').value,
+    content_ar: document.getElementById('art-content-ar').value,
+    cover_image_url: document.getElementById('art-cover').value,
+    published: document.getElementById('art-published').checked,
+    updated_at: new Date().toISOString()
+  };
+  if (!payload.title_en || !payload.slug) return alert('Title (English) and slug are required.');
+  var res = id ? await sb.from('website_articles').update(payload).eq('id', id)
+               : await sb.from('website_articles').insert(payload);
+  if (res.error) return alert('Error: ' + res.error.message);
+  resetArticleForm();
+  loadArticles();
+}
+async function deleteArticle(id) {
+  if (!confirm('Remove this article permanently?')) return;
+  await sb.from('website_articles').delete().eq('id', id);
+  loadArticles();
+}
+
+/* ---------- Contact messages ---------- */
+async function loadMessages() {
+  var { data } = await sb.from('website_contact_messages').select('*').order('created_at', { ascending: false });
+  var tbody = document.getElementById('messages-tbody');
+  tbody.innerHTML = '';
+  (data || []).forEach(function(m) {
+    var tr = document.createElement('tr');
+    var date = new Date(m.created_at).toLocaleDateString();
+    var rowStyle = m.is_read ? '' : 'font-weight:600';
+    tr.setAttribute('style', rowStyle);
+    tr.innerHTML =
+      '<td>'+date+'</td>' +
+      '<td>'+esc(m.name)+'</td>' +
+      '<td><a href="tel:'+esc(m.phone||'')+'">'+esc(m.phone||'—')+'</a></td>' +
+      '<td><a href="mailto:'+esc(m.email)+'">'+esc(m.email)+'</a></td>' +
+      '<td style="max-width:300px;white-space:normal">'+esc(m.message||'')+'</td>' +
+      '<td><button class="mini-btn" onclick="markRead(\''+m.id+'\')">'+(m.is_read?'Read':'Mark read')+'</button> <button class="mini-btn danger" onclick="deleteMessage(\''+m.id+'\')">Remove</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+async function markRead(id) {
+  await sb.from('website_contact_messages').update({ is_read: true }).eq('id', id);
+  loadMessages();
+}
+async function deleteMessage(id) {
+  if (!confirm('Delete this message?')) return;
+  await sb.from('website_contact_messages').delete().eq('id', id);
+  loadMessages();
+}
+
+/* ---------- Page text (website_content) ---------- */
+async function loadContent() {
+  var pageKey = document.getElementById('content-page-filter').value;
+  var { data } = await sb.from('website_content').select('*').eq('page', pageKey).order('key');
+  var wrap = document.getElementById('content-list');
+  wrap.innerHTML = '';
+  (data || []).forEach(function(row) {
+    var block = document.createElement('div');
+    block.style.cssText = 'border:1px solid var(--line);border-radius:8px;padding:12px';
+    var isLong = (row.content_en || '').length > 80;
+    var tag = isLong ? 'textarea' : 'input';
+    var rows = isLong ? ' rows="3"' : '';
+    var isPhone = row.key.toLowerCase().indexOf('phone') !== -1;
+    var arDir = isPhone ? 'ltr' : 'rtl';
+    block.innerHTML =
+      '<div style="font-family:var(--font-mono);font-size:.72rem;color:var(--ink-soft);margin-bottom:6px">'+row.key+(isPhone?' <span style="color:var(--orange-dark)">(phone — kept left-to-right)</span>':'')+'</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+      '<'+tag+' data-field="content_en"'+rows+' style="padding:8px;border:1px solid var(--line);border-radius:5px;font-family:var(--font-body)" placeholder="English">'+(tag==='textarea'?esc(row.content_en||''):'')+'</'+tag+'>' +
+      '<'+tag+' data-field="content_ar"'+rows+' dir="'+arDir+'" style="padding:8px;border:1px solid var(--line);border-radius:5px;font-family:var(--font-body)" placeholder="Arabic">'+(tag==='textarea'?esc(row.content_ar||''):'')+'</'+tag+'>' +
+      '</div>';
+    if (tag === 'input') {
+      block.querySelector('[data-field=content_en]').value = row.content_en || '';
+      block.querySelector('[data-field=content_ar]').value = row.content_ar || '';
+    }
+    block.querySelectorAll('[data-field]').forEach(function(el) {
+      el.addEventListener('change', async function() {
+        var payload = {}; payload[el.getAttribute('data-field')] = el.value; payload.updated_at = new Date().toISOString();
+        await sb.from('website_content').update(payload).eq('key', row.key);
+      });
+    });
+    wrap.appendChild(block);
+  });
+}
+
+/* ---------- Drag & drop reordering ---------- */
+function makeSortable(tbodyId, tableName, idKey) {
+  var tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  var dragEl = null;
+  Array.from(tbody.children).forEach(function(row) {
+    row.setAttribute('draggable', 'true');
+    row.style.cursor = 'grab';
+    row.addEventListener('dragstart', function() { dragEl = row; row.style.opacity = '0.4'; });
+    row.addEventListener('dragend', function() { row.style.opacity = '1'; });
+    row.addEventListener('dragover', function(e) { e.preventDefault(); });
+    row.addEventListener('drop', function(e) {
+      e.preventDefault();
+      if (!dragEl || dragEl === row) return;
+      var rows = Array.from(tbody.children);
+      var dragIdx = rows.indexOf(dragEl), dropIdx = rows.indexOf(row);
+      if (dragIdx < dropIdx) row.after(dragEl); else row.before(dragEl);
+      Array.from(tbody.children).forEach(async function(r, i) {
+        var id = r.getAttribute('data-id');
+        if (id) await sb.from(tableName).update({ sort_order: i }).eq('id', id);
+      });
+    });
+  });
+}
+
+checkSession();
+sb.auth.onAuthStateChange(function (event, session) {
+  if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') checkSession();
+});
+
+/* ---------- Upcoming event ---------- */
+async function loadUpcomingEvent() {
+  var { data } = await sb.from('website_upcoming_event').select('*').eq('id', 1).single();
+  if (!data) return;
+  document.getElementById('ev-enabled').checked = !!data.enabled;
+  document.getElementById('ev-title-en').value = data.title_en || '';
+  document.getElementById('ev-title-ar').value = data.title_ar || '';
+  document.getElementById('ev-location-en').value = data.location_en || '';
+  document.getElementById('ev-location-ar').value = data.location_ar || '';
+  document.getElementById('ev-image').value = data.image_url || '';
+  if (data.event_date) {
+    var d = new Date(data.event_date);
+    var pad = function(n){ return String(n).padStart(2,'0'); };
+    var local = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+    document.getElementById('ev-date').value = local;
+  }
+}
+async function saveUpcomingEvent() {
+  var dateVal = document.getElementById('ev-date').value;
+  var payload = {
+    id: 1,
+    enabled: document.getElementById('ev-enabled').checked,
+    title_en: document.getElementById('ev-title-en').value || 'Upcoming Event',
+    title_ar: document.getElementById('ev-title-ar').value || 'فعالية قادمة',
+    location_en: document.getElementById('ev-location-en').value,
+    location_ar: document.getElementById('ev-location-ar').value,
+    image_url: document.getElementById('ev-image').value,
+    event_date: dateVal ? new Date(dateVal).toISOString() : null
+  };
+  var { error } = await sb.from('website_upcoming_event').upsert(payload);
+  var statusEl = document.getElementById('ev-status');
+  statusEl.style.color = error ? 'var(--orange-dark)' : '#2FBE7A';
+  statusEl.textContent = error ? ('Error: ' + error.message) : 'Saved — check the homepage.';
+}
+loadUpcomingEvent();
+</script>
+</body>
+</html>
