@@ -106,6 +106,8 @@
           <label>Certificate orientation<select id="rg-cert_orientation" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="landscape">A4 landscape</option><option value="portrait">A4 portrait</option></select></label>
           <label>Certificates for<select id="rg-cert_scope" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="attended">Attended only</option><option value="all">All confirmed + attended</option></select></label>
         </div>
+        <div style="margin:12px 0 0"><b>Name tag background / design</b> — صورة أو PDF <input type="file" accept="image/*,application/pdf" onchange="rgBadgeBgUpload(this)"><input id="rg-badge_bg_url" type="hidden"> <button class="mini-btn" onclick="rgBadgeBgClear()">Remove</button>
+          <span style="font-size:.8rem;color:var(--ink-soft)">PDF بيتحوّل لصورة، ومقاس النيم تاج بياخد مقاس الـ PDF تلقائي.</span></div>
         <div style="margin:12px 0"><b>Name tag layout — اسحب الاسم والـ QR بالماوس</b>
           <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">
             <div style="min-width:200px;max-width:320px;flex:0 0 auto"><div id="rg-badge-pv" style="position:relative;background:#fff;border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden;margin:0 auto"></div></div>
@@ -119,7 +121,7 @@
             </div>
           </div></div>
         <p style="font-size:.85rem;color:var(--ink-soft)">النيم تاج: اللقب + الاسم (إنجليزي) + QR. الشهادة: ارفع تصميم الشهادة (صورة) وحدد مكان الاسم.</p>
-        <div style="margin-top:8px"><b>Certificate template</b> <input type="file" accept="image/*" onchange="rgCertUpload(this)"><input id="rg-cert_template_url" type="hidden"></div>
+        <div style="margin-top:8px"><b>Certificate template</b> — صورة أو PDF <input type="file" accept="image/*,application/pdf" onchange="rgCertUpload(this)"> <button class="mini-btn" onclick="rgCertClear()">Remove</button><input id="rg-cert_template_url" type="hidden"></div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0">
           <label>Name X % <input id="rg-cert_name_x" type="number" min="0" max="100" step="0.5" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
           <label>Name Y % <input id="rg-cert_name_y" type="number" min="0" max="100" step="0.5" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
@@ -384,6 +386,9 @@ if (location.hash && location.hash.indexOf('access_token') !== -1) {
 async function checkSession() {
   var { data } = await sb.auth.getSession();
   if (data.session) {
+    // supabase fires SIGNED_IN again whenever the tab regains focus — don't reload (and wipe) the forms every time
+    if (window._dashFor === data.session.user.id) return;
+    window._dashFor = data.session.user.id;
     document.getElementById('login-card').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     document.getElementById('auth-status').textContent = data.session.user.email;
