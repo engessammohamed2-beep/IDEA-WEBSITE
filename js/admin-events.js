@@ -27,8 +27,14 @@ async function pick(){
   $('rg-start_at').value=toLocal(EV.start_at);$('rg-end_at').value=toLocal(EV.end_at);$('rg-registration_deadline').value=toLocal(EV.registration_deadline);
   ['published','registration_open','show_countdown','show_payment','notify_admin'].forEach(function(k){$('rg-'+k).checked=!!EV[k];});
   $('rg-link').value=location.origin+'/event.html?e='+EV.slug;
-  renderFields();await loadPkgs();await loadRegs();
+  renderFields();await loadPkgs();await loadRegs();rgPreview();
 }
+window.rgPreview=function(w){
+  if(!EV)return;var f=$('rg-frame');
+  if(w)f.style.maxWidth=w==='m'?'390px':'100%';
+  f.src='event.html?e='+encodeURIComponent(EV.slug)+'&preview=1&t='+Date.now();
+};
+window.rgOpenPreview=function(){window.open('event.html?e='+encodeURIComponent(EV.slug)+'&preview=1','_blank');};
 window.rgNew=async function(){
   var slug=prompt('Event URL slug (letters/numbers/dashes) e.g. ontic2026');if(!slug)return;
   slug=slug.toLowerCase().replace(/[^a-z0-9-]/g,'-');
@@ -47,7 +53,7 @@ window.rgSave=async function(){
   o.form_fields=readFields();
   var r=await sb.from('reg_events').update(o).eq('id',EV.id);
   if(r.error)return msg(r.error.message,true);
-  msg('Saved ✓');loadRegAdmin();
+  msg('Saved ✓');await loadRegAdmin();
 };
 window.rgDelete=async function(){
   if(!confirm('Delete this event with ALL its packages and registrations?'))return;
@@ -108,16 +114,16 @@ async function loadPkgs(){
 }
 window.rgAddPkg=async function(){
   var r=await sb.from('reg_packages').insert({event_id:EV.id,name_en:'New package',sort_order:PKS.length}).select();
-  if(r.error)return msg(r.error.message,true);loadPkgs();
+  if(r.error)return msg(r.error.message,true);await loadPkgs();rgPreview();
 };
 window.rgSavePkg=async function(id){
   var row=document.querySelector('.rg-pk[data-id="'+id+'"]'),o={};
   row.querySelectorAll('[data-k]').forEach(function(el){o[el.dataset.k]=el.type==='checkbox'?el.checked:el.value;});
   o.price=Number(o.price)||0;o.capacity=o.capacity===''?null:Number(o.capacity);o.sort_order=Number(o.sort_order)||0;
   var r=await sb.from('reg_packages').update(o).eq('id',id);
-  msg(r.error?r.error.message:'Package saved ✓',!!r.error);
+  msg(r.error?r.error.message:'Package saved ✓',!!r.error);rgPreview();
 };
-window.rgDelPkg=async function(id){if(!confirm('Delete package?'))return;await sb.from('reg_packages').delete().eq('id',id);loadPkgs();};
+window.rgDelPkg=async function(id){if(!confirm('Delete package?'))return;await sb.from('reg_packages').delete().eq('id',id);await loadPkgs();rgPreview();};
 
 /* ---- registrations ---- */
 async function loadRegs(){

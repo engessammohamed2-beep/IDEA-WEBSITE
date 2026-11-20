@@ -181,6 +181,7 @@ function f(o,k){var v=o[k+'_'+L()];return v||o[k+'_en']||o[k+'_ar']||'';}
 function safeUrl(u){return /^https?:\/\//i.test(u||'')?u:'';}
 function fmt(d){return new Date(d).toLocaleString(L()==='ar'?'ar-EG':'en-GB',{dateStyle:'full',timeStyle:'short'});}
 var slug=new URLSearchParams(location.search).get('e');
+var preview=new URLSearchParams(location.search).get('preview')==='1';
 
 async function init(){
   if(!slug){
@@ -189,10 +190,12 @@ async function init(){
     root.innerHTML='<h1>'+esc(T('المؤتمرات','Events'))+'</h1>'+(list.length?list.map(function(e){return '<p><a class="btn btn-ghost" href="event.html?e='+encodeURIComponent(e.slug)+'">'+esc(f(e,'title'))+'</a></p>';}).join(''):'<p>'+esc(T('لا توجد مؤتمرات حالياً','No events right now'))+'</p>');
     return;
   }
-  var r1=await sb.from('reg_events').select('*').eq('slug',slug).eq('published',true).maybeSingle();
+  var q1=sb.from('reg_events').select('*').eq('slug',slug);if(!preview)q1=q1.eq('published',true);
+  var r1=await q1.maybeSingle();
   if(!r1.data){root.innerHTML='<h1>404</h1><p>'+esc(T('المؤتمر غير موجود','Event not found'))+'</p>';return;}
   EV=r1.data;
-  var r2=await sb.from('reg_packages').select('*').eq('event_id',EV.id).eq('active',true).order('sort_order');
+  var q2=sb.from('reg_packages').select('*').eq('event_id',EV.id);if(!preview)q2=q2.eq('active',true);
+  var r2=await q2.order('sort_order');
   PKS=r2.data||[];
   // remaining seats via registrations count is private; use rpc-free approach: capacity shown only
   document.title=f(EV,'title')+' | IDEA-EG';
@@ -202,6 +205,7 @@ function render(){
   if(!EV)return;
   var open=EV.registration_open&&!(EV.registration_deadline&&new Date()>new Date(EV.registration_deadline));
   var h='';
+  if(preview)h+='<div style="background:#FFF4CC;border:1px solid #E6C200;border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:.85rem">'+esc(T('وضع المعاينة — التسجيل معطّل، والعرض للأدمن فقط','Preview mode — registration is disabled, admin only'))+(EV.published?'':' · '+esc(T('المؤتمر غير منشور','Not published')))+'</div>';
   if(safeUrl(EV.cover_image_url))h+='<img class="ev-hero-img" src="'+esc(EV.cover_image_url)+'" alt="">';
   h+='<h1 style="margin:22px 0 4px">'+esc(f(EV,'title'))+'</h1><div class="ev-meta">';
   if(EV.start_at)h+='<span>📅 '+esc(fmt(EV.start_at))+'</span>';
@@ -272,6 +276,7 @@ async function submit(e){
   e.preventDefault();
   var fm=e.target,err=document.getElementById('rf-err'),btn=document.getElementById('rf-btn');
   if(fm.website.value)return;
+  if(preview){err.textContent=T('المعاينة فقط — لا يتم حفظ التسجيل','Preview only — nothing is saved');return;}
   var data={},ok=true;
   (EV.form_fields||[]).forEach(function(fl){var el=fm.elements[fl.key];if(!el)return;var v=fl.type==='checkbox'?el.checked:el.value.trim();if(fl.required&&(v===''||v===false))ok=false;data[fl.key]=v;});
   if(!fm.__name.value.trim()||!/^\S+@\S+\.\S+$/.test(fm.__email.value.trim()))ok=false;

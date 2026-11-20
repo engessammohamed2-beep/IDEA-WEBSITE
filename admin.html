@@ -77,7 +77,12 @@
           <label><input type="checkbox" id="rg-show_payment"> Show prices / payment</label>
           <label><input type="checkbox" id="rg-notify_admin"> Email me on each registration</label>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><input id="rg-link" readonly dir="ltr" style="flex:1;min-width:240px;padding:8px;border:1px solid var(--line);border-radius:5px"><button class="mini-btn" onclick="rgCopy()">Copy link</button></div>
+        <div style="margin:6px 0 4px;padding:14px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px">
+          <b>👁 Live preview — معاينة صفحة التسجيل</b>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><input id="rg-link" readonly dir="ltr" style="flex:1;min-width:240px;padding:8px;border:1px solid var(--line);border-radius:5px"><button class="mini-btn" onclick="rgCopy()">Copy link</button><button class="mini-btn" onclick="rgPreview()">↻ Refresh</button><button class="mini-btn" onclick="rgPreview('d')">🖥 Desktop</button><button class="mini-btn" onclick="rgPreview('m')">📱 Mobile</button><button class="mini-btn" onclick="rgOpenPreview()">↗ Open</button></div>
+          <iframe id="rg-frame" title="preview" style="width:100%;max-width:100%;height:620px;border:1px solid var(--line);border-radius:8px;background:#fff;display:block;margin:0 auto"></iframe>
+          <p style="font-size:.8rem;color:var(--ink-soft);margin:6px 0 0">المعاينة بتتحدّث بعد كل Save (حتى لو المؤتمر غير منشور). Updates after each Save, even for drafts.</p>
+        </div>
 
         <h4>2. Registration form fields (name + email always included)</h4>
         <div id="rg-fields"></div>
