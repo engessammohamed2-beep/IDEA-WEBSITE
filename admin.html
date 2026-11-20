@@ -41,6 +41,73 @@
       <button class="mini-btn" onclick="signOut()">Sign out</button>
     </div>
 
+    <div class="admin-card" id="rg-card">
+      <h3 style="margin-top:0">Events &amp; Registration — المؤتمرات والتسجيل</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+        <select id="rg-select" style="padding:8px;border:1px solid var(--line);border-radius:5px;min-width:220px"></select>
+        <button class="mini-btn primary" onclick="rgNew()">+ New event</button>
+        <span id="rg-msg" style="font-size:.85rem"></span>
+      </div>
+      <div id="rg-body"></div>
+      <div id="rg-main" style="display:none">
+        <h4>1. Event details</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">
+          <label>URL slug<input id="rg-slug" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Title (EN)<input id="rg-title_en" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>العنوان (عربي)<input id="rg-title_ar" dir="rtl" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Start<input id="rg-start_at" type="datetime-local" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>End<input id="rg-end_at" type="datetime-local" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Registration deadline<input id="rg-registration_deadline" type="datetime-local" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Location (EN)<input id="rg-location_en" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>المكان (عربي)<input id="rg-location_ar" dir="rtl" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Google Maps link<input id="rg-map_url" dir="ltr" placeholder="https://maps.app.goo.gl/..." style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Contact email (shown + reply-to)<input id="rg-contact_email" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Admin notification email<input id="rg-admin_email" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Currency<input id="rg-currency" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label style="grid-column:1/-1">Cover image URL <input type="file" accept="image/*" onchange="rgUpload(this)" style="margin-inline-start:8px"><input id="rg-cover_image_url" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px;margin-top:4px"></label>
+          <label>Description (EN)<textarea id="rg-description_en" rows="4" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></textarea></label>
+          <label>الوصف (عربي)<textarea id="rg-description_ar" rows="4" dir="rtl" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></textarea></label>
+          <label>Payment note (EN)<input id="rg-payment_note_en" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>ملاحظة الدفع (عربي)<input id="rg-payment_note_ar" dir="rtl" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+        </div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;margin:14px 0;font-size:.9rem">
+          <label><input type="checkbox" id="rg-published"> Published (visible)</label>
+          <label><input type="checkbox" id="rg-registration_open"> Registration open</label>
+          <label><input type="checkbox" id="rg-show_countdown"> Show countdown</label>
+          <label><input type="checkbox" id="rg-show_payment"> Show prices / payment</label>
+          <label><input type="checkbox" id="rg-notify_admin"> Email me on each registration</label>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><input id="rg-link" readonly dir="ltr" style="flex:1;min-width:240px;padding:8px;border:1px solid var(--line);border-radius:5px"><button class="mini-btn" onclick="rgCopy()">Copy link</button></div>
+
+        <h4>2. Registration form fields (name + email always included)</h4>
+        <div id="rg-fields"></div>
+        <button class="mini-btn" onclick="rgAddField()">+ Add field</button>
+        <div style="margin:14px 0"><button class="mini-btn primary" onclick="rgSave()">Save event &amp; form</button> <button class="mini-btn" onclick="rgDelete()">Delete event</button></div>
+
+        <h4>3. Packages</h4>
+        <div id="rg-pkgs"></div>
+        <button class="mini-btn" onclick="rgAddPkg()">+ Add package</button>
+
+        <h4 style="margin-top:26px">4. Check-in</h4>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="rg-ci-code" dir="ltr" placeholder="Code" style="padding:8px;border:1px solid var(--line);border-radius:5px" onkeydown="if(event.key==='Enter')rgCheckin()"><button class="mini-btn primary" onclick="rgCheckin()">Check in</button><button class="mini-btn" onclick="rgScan()">📷 Scan QR</button></div>
+        <div id="rg-reader" style="display:none;max-width:320px;margin-top:10px"></div>
+        <p id="rg-ci-out" style="font-weight:600;min-height:1.4em"></p>
+
+        <h4>5. Registrations</h4>
+        <p id="rg-stats" style="color:var(--ink-soft);font-size:.88rem"></p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <select id="rg-f-status" style="padding:7px;border:1px solid var(--line);border-radius:5px"><option value="">All status</option><option>confirmed</option><option>waitlist</option><option>attended</option><option>cancelled</option></select>
+          <select id="rg-f-pkg" style="padding:7px;border:1px solid var(--line);border-radius:5px"></select>
+          <input id="rg-f-q" placeholder="Search…" style="padding:7px;border:1px solid var(--line);border-radius:5px">
+          <button class="mini-btn" onclick="rgXlsx()">⬇ Excel</button>
+          <button class="mini-btn" onclick="rgPdf('list')">⬇ PDF list</button>
+          <button class="mini-btn" onclick="rgPdf('badges')">⬇ PDF badges</button>
+          <button class="mini-btn" onclick="rgPdf('both')">⬇ PDF both</button>
+        </div>
+        <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Code</th><th>Name</th><th>Contact</th><th>Package</th><th>Status</th><th>Payment</th><th>Date</th><th></th></tr></thead><tbody id="rg-tbody"></tbody></table></div>
+      </div>
+    </div>
+
     <div class="admin-card">
       <h3>Team members</h3>
       <table class="admin-table" id="team-table">
@@ -271,6 +338,7 @@ async function checkSession() {
     loadMedia();
     loadPageImages();
     loadArticles();
+    if(window.loadRegAdmin)loadRegAdmin();
     loadMessages();
     loadContent();
   }
@@ -723,5 +791,8 @@ async function saveUpcomingEvent() {
 }
 loadUpcomingEvent();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="js/admin-events.js"></script>
 </body>
 </html>
