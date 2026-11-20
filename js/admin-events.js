@@ -169,7 +169,7 @@ function renderRegs(){
    '<td>'+sel(ST,x.status,'rgSet('+id+',\'status\',this.value)')+'</td>'+
    '<td>'+sel(PY,x.payment_status,'rgSet('+id+',\'payment_status\',this.value)')+'<br>'+sel(PM,x.payment_method||'','rgSet('+id+',\'payment_method\',this.value)')+'</td>'+
    '<td style="font-size:.78rem">'+(x.source==='walkin'?'🚶 walk-in':'🌐 online')+'<br>'+new Date(x.created_at).toLocaleString()+'</td>'+
-   '<td style="white-space:nowrap"><button class="mini-btn" title="Name tag" onclick="rgBadgeOne('+id+')">🏷</button><button class="mini-btn" title="Certificate" onclick="rgCertOne('+id+')">🎓</button><button class="mini-btn" onclick="rgDelReg('+id+')">✕</button></td></tr>';}).join('')||'<tr><td colspan="8" style="color:var(--ink-soft)">No registrations</td></tr>';
+   '<td style="white-space:nowrap"><button class="mini-btn pm-print" title="Name tag" onclick="rgBadgeOne('+id+')">🏷</button><button class="mini-btn pm-print" title="Certificate" onclick="rgCertOne('+id+')">🎓</button><button class="mini-btn pm-edit" onclick="rgDelReg('+id+')">✕</button></td></tr>';}).join('')||'<tr><td colspan="8" style="color:var(--ink-soft)">No registrations</td></tr>';
 }
 window.rgRender=renderRegs;
 window.rgSet=async function(id,k,v){var o={};o[k]=v;if(k==='status')o.attended_at=v==='attended'?new Date().toISOString():null;var r=await sb.from('reg_registrations').update(o).eq('id',id);if(r.error)msg(r.error.message,true);else msg('تم الحفظ ✓');loadRegs();};

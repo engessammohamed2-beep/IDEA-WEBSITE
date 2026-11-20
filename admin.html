@@ -50,12 +50,13 @@
 
     <div class="admin-card" id="staff-card">
       <h3 style="margin-top:0">👥 Staff access — صلاحيات الموظفين</h3>
-      <p style="color:var(--ink-soft);font-size:.9rem">الموظف بيدخل على صفحة المؤتمرات فقط: تسجيل في المكان، Check-in، المسجلين، الطباعة. مبيقدرش يغيّر إعدادات المؤتمر ولا الموقع. الدخول برقم التليفون والباسورد.</p>
-      <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Name</th><th>Phone</th><th>Status</th><th></th></tr></thead><tbody id="staff-tbody"></tbody></table></div>
+      <p style="color:var(--ink-soft);font-size:.9rem">كل موظف بصلاحياته: تقدر تديه تحكم كامل في المؤتمرات (⭐) أو صلاحيات معينة بس. الموظف مبيدخلش على لوحة الموقع، والدخول برقم التليفون والباسورد.</p>
+      <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Name / Phone</th><th>Permissions — الصلاحيات</th><th>Status</th><th></th></tr></thead><tbody id="staff-tbody"></tbody></table></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
         <input id="st-name" placeholder="Name — الاسم" style="padding:8px;border:1px solid var(--line);border-radius:5px;flex:1;min-width:150px">
         <input id="st-phone" placeholder="Phone — رقم التليفون" dir="ltr" style="padding:8px;border:1px solid var(--line);border-radius:5px;flex:1;min-width:150px">
         <input id="st-pass" placeholder="Password (8+ chars)" dir="ltr" style="padding:8px;border:1px solid var(--line);border-radius:5px;flex:1;min-width:150px">
+        <span id="st-preset"></span>
         <button class="mini-btn primary" onclick="staffAdd()">+ Add staff</button>
       </div>
       <div id="staff-msg" style="font-size:.85rem;margin-top:8px"></div>

@@ -16,7 +16,10 @@
   </div>
 </header>
 
-<style>.role-staff .adm-only{display:none !important}</style>
+<style>
+.no-manage_events .adm-only,.no-checkin .pm-checkin,.no-walkin .pm-walkin,.no-view .pm-view,.no-export .pm-export,.no-print .pm-print,.no-edit .pm-edit,.not-admin .sa-only{display:none !important}
+.no-edit #rg-tbody select,.no-edit #rg-tbody input{pointer-events:none;opacity:.65}
+</style>
 <div class="admin-shell">
   <div id="login-card" class="admin-card">
     <h3>Sign in — تسجيل الدخول</h3>
@@ -30,7 +33,7 @@
   <div id="dashboard" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <h2 style="margin:0">Events &amp; Registration</h2>
-      <div style="display:flex;gap:8px"><a class="mini-btn adm-only" href="admin.html">← Website admin</a><button class="mini-btn" onclick="signOut()">Sign out</button></div>
+      <div style="display:flex;gap:8px"><a class="mini-btn sa-only" href="admin.html">← Website admin</a><button class="mini-btn" onclick="signOut()">Sign out</button></div>
     </div>
     <div class="admin-card" id="rg-card">
       <h3 style="margin-top:0">Events &amp; Registration — المؤتمرات والتسجيل</h3>
@@ -125,12 +128,13 @@
         <div style="margin:8px 0"><button class="mini-btn primary" onclick="rgCertAll()">🎓 Print certificates (PDF)</button></div>
 
         </div>
-        <h4 style="margin-top:26px">4. Check-in</h4>
+        <div class="pm-checkin"><h4 style="margin-top:26px">4. Check-in</h4>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="rg-ci-code" dir="ltr" placeholder="Code" style="padding:8px;border:1px solid var(--line);border-radius:5px" onkeydown="if(event.key==='Enter')rgCheckin()"><button class="mini-btn primary" onclick="rgCheckin()">Check in</button><button class="mini-btn" onclick="rgScan()">📷 Scan QR</button></div>
         <div id="rg-reader" style="display:none;max-width:320px;margin-top:10px"></div>
         <p id="rg-ci-out" style="font-weight:600;min-height:1.4em"></p>
 
-        <h4>4b. Reception — walk-in registration · تسجيل في المكان</h4>
+        </div>
+        <div class="pm-walkin"><h4>4b. Reception — walk-in registration · تسجيل في المكان</h4>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:12px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px">
           <select id="rg-w-pkg" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></select>
           <select id="rg-w-title" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="Dr.">Dr.</option><option value="Prof.">Prof.</option><option value="Mr.">Mr.</option><option value="Ms.">Ms.</option><option value="Mrs.">Mrs.</option><option value="">—</option></select>
@@ -144,18 +148,20 @@
         </div>
         <p style="font-size:.8rem;color:var(--ink-soft)">التسجيل هنا بيتعلّم "حضر" فوراً، ويتخطى حد الأماكن، والقايمة بتتحدّث كل 20 ثانية لو أكتر من موظف شغال.</p>
 
-        <h4>5. Registrations</h4>
+        </div>
+        <div class="pm-view"><h4>5. Registrations</h4>
         <p id="rg-stats" style="color:var(--ink-soft);font-size:.88rem"></p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
           <select id="rg-f-status" style="padding:7px;border:1px solid var(--line);border-radius:5px"><option value="">All status</option><option>confirmed</option><option>waitlist</option><option>attended</option><option>cancelled</option></select>
           <select id="rg-f-pkg" style="padding:7px;border:1px solid var(--line);border-radius:5px"></select>
           <input id="rg-f-q" placeholder="Search…" style="padding:7px;border:1px solid var(--line);border-radius:5px">
-          <button class="mini-btn" onclick="rgXlsx()">⬇ Excel</button>
-          <button class="mini-btn" onclick="rgPdf('list')">⬇ PDF list</button>
-          <button class="mini-btn" onclick="rgPdf('badges')">⬇ PDF badges</button>
-          <button class="mini-btn" onclick="rgPdf('both')">⬇ PDF both</button>
+          <button class="mini-btn pm-export" onclick="rgXlsx()">⬇ Excel</button>
+          <button class="mini-btn pm-export" onclick="rgPdf('list')">⬇ PDF list</button>
+          <button class="mini-btn pm-print" onclick="rgPdf('badges')">⬇ PDF badges</button>
+          <button class="mini-btn pm-print" onclick="rgPdf('both')">⬇ PDF both</button><button class="mini-btn pm-print" onclick="rgCertAll()">🎓 Certificates</button>
         </div>
         <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Code</th><th>Title / Name</th><th>Contact</th><th>Package</th><th>Status</th><th>Payment</th><th>Source / Date</th><th></th></tr></thead><tbody id="rg-tbody"></tbody></table></div>
+        </div>
       </div>
     </div>
 
@@ -180,9 +186,11 @@ async function signOut(){await sb.auth.signOut();location.reload();}
 async function boot(){
   var s=(await sb.auth.getSession()).data.session;if(!s)return;
   if(booted===s.user.id)return;booted=s.user.id;
-  var me=(await sb.from('staff_members').select('name,role,active').eq('user_id',s.user.id).maybeSingle()).data;
+  var me=(await sb.from('staff_members').select('name,role,active,perms').eq('user_id',s.user.id).maybeSingle()).data;
   if(!me||!me.active){await sb.auth.signOut();booted=null;document.getElementById('auth-msg').textContent='الحساب ده مش مصرّح له بالدخول — This account has no access';return;}
-  document.body.classList.toggle('role-staff',me.role!=='admin');
+  var perms=me.perms||{},isA=me.role==='admin';
+  ['view','edit','walkin','checkin','print','export','manage_events'].forEach(function(k){document.body.classList.toggle('no-'+k,!(isA||perms[k]));});
+  document.body.classList.toggle('not-admin',!isA);
   document.getElementById('login-card').style.display='none';document.getElementById('dashboard').style.display='block';
   document.getElementById('auth-status').textContent=me.name+(me.role==='admin'?' (admin)':'');
   loadRegAdmin();
