@@ -204,7 +204,7 @@ function badgeBlock(x,W,H){
   var fs=Math.max(4,Math.min(W*0.1,(W*1.7)/Math.max(10,nm.length)*1.0));
   return '<div class="bg" style="width:'+W+'mm;height:'+H+'mm"><div style="font-size:'+(W*0.045)+'mm;color:#555;margin-bottom:'+(H*0.03)+'mm">'+h(EV.title_en||EV.title_ar)+'</div>'+
    '<div style="font-size:'+fs+'mm;font-weight:700;line-height:1.15;word-break:break-word">'+h(nm)+'</div>'+
-   '<img style="width:'+(m*0.42)+'mm;height:'+(m*0.42)+'mm;margin-top:'+(H*0.04)+'mm" alt="" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(x.code)+'">'+
+   '<img style="width:'+(m*0.42)+'mm;height:'+(m*0.42)+'mm;margin-top:'+(H*0.04)+'mm" alt="" src="'+qrDataUrl(x.code,300)+'">'+
    '<div style="font:700 '+(W*0.04)+'mm monospace;letter-spacing:.1em;margin-top:'+(H*0.01)+'mm">'+h(x.code)+'</div></div>';
 }
 function printBadges(list){
@@ -244,7 +244,7 @@ window.rgCertOne=function(id){var x=REGS.filter(function(r){return r.id===id;})[
 window.rgPoster=function(){
   var url=location.origin+'/event.html?e='+EV.slug;
   var w=window.open('','_blank');if(!w){alert('Allow pop-ups');return;}
-  w.document.write('<!doctype html><meta charset="utf-8"><title>Poster</title><style>@page{size:A4 portrait;margin:0}body{margin:0;font-family:Arial,Tahoma,sans-serif;text-align:center;padding:30mm 15mm}h1{font-size:34pt;margin:0 0 6mm}h2{font-size:22pt;margin:6mm 0}img{width:130mm;height:130mm}p{font-size:14pt;color:#444}.np{position:fixed;top:6px;left:6px}@media print{.np{display:none}}</style><div class="np"><button onclick="print()">Print</button></div><h1>'+h(EV.title_en||'')+'</h1><h1 dir="rtl">'+h(EV.title_ar||'')+'</h1><img alt="" src="https://api.qrserver.com/v1/create-qr-code/?size=700x700&data='+encodeURIComponent(url)+'"><h2>Scan to register — امسح للتسجيل</h2><p dir="ltr">'+h(url)+'</p>');
+  w.document.write('<!doctype html><meta charset="utf-8"><title>Poster</title><style>@page{size:A4 portrait;margin:0}body{margin:0;font-family:Arial,Tahoma,sans-serif;text-align:center;padding:30mm 15mm}h1{font-size:34pt;margin:0 0 6mm}h2{font-size:22pt;margin:6mm 0}img{width:130mm;height:130mm}p{font-size:14pt;color:#444}.np{position:fixed;top:6px;left:6px}@media print{.np{display:none}}</style><div class="np"><button onclick="print()">Print</button></div><h1>'+h(EV.title_en||'')+'</h1><h1 dir="rtl">'+h(EV.title_ar||'')+'</h1><img alt="" src="'+qrDataUrl(url,700)+'"><h2>Scan to register — امسح للتسجيل</h2><p dir="ltr">'+h(url)+'</p>');
   w.document.close();
 };
 /* reception (walk-in) */

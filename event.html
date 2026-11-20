@@ -123,7 +123,8 @@
 <script src="js/supabase-init.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/main.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/qrcode-lib.js"></script>
+<script src="js/qr.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="js/emailjs-config.js"></script>
 <script>
@@ -147,6 +148,7 @@ function safeUrl(u){return /^https?:\/\//i.test(u||'')?u:'';}
 function fmt(d){return new Date(d).toLocaleString(L()==='ar'?'ar-EG':'en-GB',{dateStyle:'full',timeStyle:'short'});}
 var slug=new URLSearchParams(location.search).get('e');
 var preview=new URLSearchParams(location.search).get('preview')==='1';
+var ticket=new URLSearchParams(location.search).get('ticket');
 
 async function init(){
   if(!slug){
@@ -166,6 +168,13 @@ async function init(){
   document.title=f(EV,'title')+' | IDEA-EG';
   if(EV.form_lang==='ar'||EV.form_lang==='en'){document.documentElement.lang=EV.form_lang;document.documentElement.dir=EV.form_lang==='ar'?'rtl':'ltr';}
   render();
+  if(ticket)showTicket();
+}
+async function showTicket(){
+  var r=await sb.rpc('get_registration',{p_code:ticket});var o=r.data;var box=document.getElementById('reg-area');if(!box)return;
+  if(!o){box.innerHTML='<p>'+esc(T('التذكرة غير موجودة','Ticket not found'))+'</p>';return;}
+  box.innerHTML='<div class="ok-box"><h2 style="margin:0 0 6px">'+esc(T('تذكرتك','Your ticket'))+'</h2><p>'+esc(o.name)+'</p><div class="code" dir="ltr">'+esc(o.code)+'</div><div id="qr"></div><p style="color:var(--ink-soft)">'+esc(o.status)+'</p><button class="btn btn-primary" id="qr-btn">'+esc(T('⬇ تحميل الـ QR','⬇ Download QR'))+'</button></div>';
+  showQr(o.code);document.getElementById('qr-btn').onclick=function(){var a=document.createElement('a');a.href=document.querySelector('#qr img').src;a.download='QR-'+o.code+'.png';document.body.appendChild(a);a.click();a.remove();};
 }
 function render(){
   if(!EV)return;
@@ -265,6 +274,7 @@ async function submit(e){
   var p=PKS.filter(function(x){return x.id===sel;})[0];
   success(o,fullName,fm.__email.value,p,data);
 }
+function showQr(code){document.getElementById('qr').innerHTML='<img alt="QR" width="200" height="200" src="'+qrDataUrl(code,400)+'">';}
 function ics(){
   var z=function(d){return new Date(d).toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';};
   var s='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:'+EV.id+'@ideaeg.online\r\nDTSTAMP:'+z(Date.now())+'\r\nDTSTART:'+z(EV.start_at)+'\r\nDTEND:'+z(EV.end_at||EV.start_at)+'\r\nSUMMARY:'+(EV.title_en||EV.title_ar)+'\r\nLOCATION:'+(EV.location_en||EV.location_ar||'')+'\r\nEND:VEVENT\r\nEND:VCALENDAR';
@@ -278,10 +288,10 @@ function success(o,name,email,p,data){
    '<button class="btn btn-primary" id="qr-btn">'+esc(T('⬇ تحميل الـ QR','⬇ Download QR'))+'</button> '+
    (EV.start_at?'<button class="btn btn-ghost" id="ics-btn">'+esc(T('أضف للتقويم','Add to calendar'))+'</button> ':'')+
    (safeUrl(EV.map_url)?'<a class="btn btn-ghost" target="_blank" rel="noopener" href="'+esc(EV.map_url)+'">'+esc(T('الموقع على الخريطة','Map'))+'</a>':'')+'</div>';
-  new QRCode(document.getElementById('qr'),{text:o.code,width:180,height:180});
+  showQr(o.code);
   var ib=document.getElementById('ics-btn');if(ib)ib.onclick=ics;
   document.getElementById('qr-btn').onclick=function(){
-    var cv=document.querySelector('#qr canvas'),im=document.querySelector('#qr img'),url=cv?cv.toDataURL('image/png'):(im?im.src:'');
+    var im=document.querySelector('#qr img'),url=im?im.src:'';
     if(!url)return;var a=document.createElement('a');a.href=url;a.download='QR-'+o.code+'.png';document.body.appendChild(a);a.click();a.remove();
   };
   window.scrollTo({top:0,behavior:'smooth'});
@@ -293,7 +303,7 @@ function sendMails(o,name,email,p){
   emailjs.init({publicKey:C.publicKey});
   var base={event_title:f(EV,'title'),package_name:f(p,'name'),code:o.code,status:o.status==='waitlist'?'Waitlist / قائمة انتظار':'Confirmed / مؤكد',
     event_date:EV.start_at?fmt(EV.start_at):'',location:f(EV,'location'),map_url:EV.map_url||'',
-    qr_url:'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(o.code),reply_to:EV.contact_email||'info@ideaeg.online',registrant_name:name,registrant_email:email};
+    ticket_url:location.origin+'/event.html?e='+encodeURIComponent(EV.slug)+'&ticket='+encodeURIComponent(o.code),reply_to:EV.contact_email||'info@ideaeg.online',registrant_name:name,registrant_email:email};
   emailjs.send(C.serviceId,C.registerTemplateId,Object.assign({to_email:email,to_name:name,is_admin_copy:''},base)).catch(function(){});
   if(EV.notify_admin&&EV.admin_email)emailjs.send(C.serviceId,C.registerTemplateId,Object.assign({},base,{to_email:EV.admin_email,to_name:'Admin',is_admin_copy:'yes'})).catch(function(){});
 }
