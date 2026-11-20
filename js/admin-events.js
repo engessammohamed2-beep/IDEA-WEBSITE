@@ -26,6 +26,7 @@ async function pick(){
   var f=['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar'];
   f.forEach(function(k){$('rg-'+k).value=EV[k]||'';});
   $('rg-start_at').value=toLocal(EV.start_at);$('rg-end_at').value=toLocal(EV.end_at);$('rg-registration_deadline').value=toLocal(EV.registration_deadline);
+  $('rg-form_lang').value=EV.form_lang||'auto';
   ['published','registration_open','show_countdown','show_payment','notify_admin'].forEach(function(k){$('rg-'+k).checked=!!EV[k];});
   $('rg-link').value=location.origin+'/event.html?e='+EV.slug;
   renderFields();await loadPkgs();await loadRegs();
@@ -50,6 +51,7 @@ window.rgSave=async function(auto){
   if(!EV)return;var o={};
   ['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar'].forEach(function(k){o[k]=$('rg-'+k).value.trim();});
   o.slug=o.slug.toLowerCase().replace(/[^a-z0-9-]/g,'-');
+  o.form_lang=$('rg-form_lang').value;
   o.start_at=fromLocal($('rg-start_at').value);o.end_at=fromLocal($('rg-end_at').value);o.registration_deadline=fromLocal($('rg-registration_deadline').value);
   ['published','registration_open','show_countdown','show_payment','notify_admin'].forEach(function(k){o[k]=$('rg-'+k).checked;});
   o.form_fields=readFields();

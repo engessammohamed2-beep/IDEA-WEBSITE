@@ -139,7 +139,7 @@ var sb;
 })();
 var root=document.getElementById('ev-root');
 var EV=null,PKS=[],sel=null,timer=null;
-function L(){return localStorage.getItem('idea_lang')==='ar'?'ar':'en';}
+function L(){if(EV&&(EV.form_lang==='ar'||EV.form_lang==='en'))return EV.form_lang;return localStorage.getItem('idea_lang')==='ar'?'ar':'en';}
 function T(a,b){return L()==='ar'?a:b;}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function f(o,k){var v=o[k+'_'+L()];return v||o[k+'_en']||o[k+'_ar']||'';}
@@ -162,9 +162,9 @@ async function init(){
   var q2=sb.from('reg_packages').select('*').eq('event_id',EV.id);if(!preview)q2=q2.eq('active',true);
   var r2=await q2.order('sort_order');
   PKS=r2.data||[];
-  if(PKS.length===1)sel=PKS[0].id;
   // remaining seats via registrations count is private; use rpc-free approach: capacity shown only
   document.title=f(EV,'title')+' | IDEA-EG';
+  if(EV.form_lang==='ar'||EV.form_lang==='en'){document.documentElement.lang=EV.form_lang;document.documentElement.dir=EV.form_lang==='ar'?'rtl':'ltr';}
   render();
 }
 function render(){
@@ -191,10 +191,10 @@ function render(){
       var price=EV.show_payment?(Number(p.price)>0?Number(p.price).toLocaleString()+' '+esc(EV.currency||''):esc(T('مجاني','Free'))):(Number(p.price)>0?'':esc(T('مجاني','Free')));
       h+='<div class="pk'+(sel===p.id?' sel':'')+'" data-id="'+p.id+'"><h3>'+esc(f(p,'name'))+'</h3>'+(price?'<div class="pr">'+price+'</div>':'')+
         (f(p,'desc')?'<p style="margin:4px 0;color:var(--ink-soft);font-size:.92rem">'+esc(f(p,'desc'))+'</p>':'')+
-        (feats.length?'<ul>'+feats.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'')+'<button type="button" class="btn '+(sel===p.id?'btn-primary':'btn-ghost')+'" style="width:100%;justify-content:center;margin-top:8px">'+esc(sel===p.id?T('✓ تم الاختيار','✓ Selected'):T('اختر هذه الباقة','Select this package'))+'</button></div>';
+        (feats.length?'<ul>'+feats.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'')+'<button type="button" class="btn '+(sel===p.id?'btn-primary':'btn-ghost')+'" style="width:100%;justify-content:center;margin-top:8px">'+esc(T('سجّل الآن','Register now'))+'</button></div>';
     });
     h+='</div>';
-    if(!sel&&PKS.length>1)h+='<p style="color:var(--orange-dark);font-weight:600">'+esc(T('اختر باقة لإظهار نموذج التسجيل','Select a package to show the registration form'))+'</p>';
+    if(!sel)h+='<p style="color:var(--orange-dark);font-weight:600">'+esc(T('اضغط «سجّل الآن» على الباقة المناسبة لإظهار نموذج التسجيل','Press “Register now” on a package to show the registration form'))+'</p>';
     if(EV.show_payment&&f(EV,'payment_note'))h+='<p style="color:var(--ink-soft);font-size:.9rem">'+esc(f(EV,'payment_note'))+'</p>';
     h+='<div id="form-box"></div>';
   }
