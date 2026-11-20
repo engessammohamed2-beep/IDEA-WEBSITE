@@ -6,22 +6,30 @@ var EVS=[],EV=null,PKS=[],REGS=[],scanner=null;
 var $=function(i){return document.getElementById(i);};
 function h(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 var IN='padding:8px;border:1px solid var(--line);border-radius:5px;font:inherit';
-function msg(t,bad){var e=$('rg-msg');e.style.color=bad?'var(--orange-dark)':'#2FBE7A';e.textContent=t;if(!bad)setTimeout(function(){e.textContent='';},3500);}
+function toast(t,bad){
+  var d=document.getElementById('rg-toast');
+  if(!d){d=document.createElement('div');d.id='rg-toast';d.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);padding:12px 22px;border-radius:10px;color:#fff;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:9999;transition:opacity .3s';document.body.appendChild(d);}
+  d.style.background=bad?'#C0392B':'#1a8f55';d.textContent=t;d.style.opacity='1';
+  clearTimeout(d._t);d._t=setTimeout(function(){d.style.opacity='0';},3200);
+}
+function msg(t,bad){toast(bad?('✕ '+t):(/✓/.test(t)?t.replace('✓','').trim()+' ✓':t),bad);var e=$('rg-msg');e.style.color=bad?'var(--orange-dark)':'#2FBE7A';e.textContent=t;if(!bad)setTimeout(function(){e.textContent='';},3500);}
 function toLocal(d){if(!d)return '';var x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,16);}
 function fromLocal(v){return v?new Date(v).toISOString():null;}
 
+function label(e){return (e.title_en||e.title_ar||'(no title)')+' — '+e.slug+(e.published?' ● Published':' ○ Draft');}
 window.loadRegAdmin=async function(){
   var r=await sb.from('reg_events').select('*').order('created_at',{ascending:false});
   if(r.error){$('rg-body').innerHTML='<p style="color:var(--orange-dark)">'+h(r.error.message)+' — شغّل ملف events-setup.sql في Supabase أولاً / Run events-setup.sql in Supabase first.</p>';return;}
   EVS=r.data||[];
-  var keep=EV&&EV.id;
-  $('rg-select').innerHTML=EVS.map(function(e){return '<option value="'+e.id+'">'+h(e.title_en||e.title_ar||e.slug)+(e.published?'':' (draft)')+'</option>';}).join('');
+  var keep=(EV&&EV.id)||(function(){try{return localStorage.getItem('rg_last_event');}catch(e){return null;}})();
+  $('rg-select').innerHTML=EVS.map(function(e){return '<option value="'+e.id+'">'+h(label(e))+'</option>';}).join('');
   if(EVS.length){$('rg-select').value=(EVS.some(function(e){return e.id===keep;})?keep:EVS[0].id);pick();}
   else{EV=null;$('rg-main').style.display='none';}
 };
 async function pick(){
   EV=EVS.filter(function(e){return e.id===$('rg-select').value;})[0];
   if(!EV)return;
+  try{localStorage.setItem('rg_last_event',EV.id);}catch(e){}
   $('rg-main').style.display='block';
   var f=['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar'];
   f.forEach(function(k){$('rg-'+k).value=EV[k]||'';});
@@ -57,8 +65,8 @@ window.rgSave=async function(auto){
   o.form_fields=readFields();
   var r=await sb.from('reg_events').update(o).eq('id',EV.id);
   if(r.error)return msg(r.error.message,true);
-  if(auto===true){Object.assign(EV,o);var op=$('rg-select').selectedOptions[0];if(op)op.textContent=(o.title_en||o.title_ar||o.slug)+(o.published?'':' (draft)');$('rg-link').value=location.origin+'/event.html?e='+o.slug;msg('Saved automatically ✓');rgPreview();return;}
-  msg('Saved ✓');await loadRegAdmin();
+  if(auto===true){Object.assign(EV,o);var op=$('rg-select').selectedOptions[0];if(op)op.textContent=label(o);$('rg-link').value=location.origin+'/event.html?e='+o.slug;msg('تم الحفظ تلقائياً ✓');rgPreview();return;}
+  msg('تم الحفظ — Saved ✓');await loadRegAdmin();
 };
 window.rgDelete=async function(){
   if(!confirm('Delete this event with ALL its packages and registrations?'))return;
@@ -128,7 +136,7 @@ window.rgSavePkg=async function(id){
   row.querySelectorAll('[data-k]').forEach(function(el){o[el.dataset.k]=el.type==='checkbox'?el.checked:el.value;});
   o.price=Number(o.price)||0;o.capacity=o.capacity===''?null:Number(o.capacity);o.sort_order=Number(o.sort_order)||0;
   var r=await sb.from('reg_packages').update(o).eq('id',id);
-  msg(r.error?r.error.message:'Package saved ✓',!!r.error);rgPreview();
+  msg(r.error?r.error.message:'تم حفظ الباقة ✓',!!r.error);rgPreview();
 };
 window.rgDelPkg=async function(id){if(!confirm('Delete package?'))return;await sb.from('reg_packages').delete().eq('id',id);await loadPkgs();rgPreview();};
 
