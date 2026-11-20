@@ -127,7 +127,15 @@
 <script src="js/emailjs-config.js"></script>
 <script>
 (function(){
-var sb=window.getSupabaseClient();
+var sb;
+(function(){
+  var pv=new URLSearchParams(location.search).get('preview')==='1';
+  if(pv){
+    // Preview inside admin: reuse the admin's token WITHOUT touching auth state (avoids auth events reloading the admin page)
+    var tok=null;try{var raw=localStorage.getItem('sb-'+window.SUPABASE_URL.split('//')[1].split('.')[0]+'-auth-token');if(raw)tok=JSON.parse(raw).access_token;}catch(e){}
+    sb=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},global:{headers:tok?{Authorization:'Bearer '+tok}:{}}});
+  }else sb=window.getSupabaseClient();
+})();
 var root=document.getElementById('ev-root');
 var EV=null,PKS=[],sel=null,timer=null;
 function L(){return localStorage.getItem('idea_lang')==='ar'?'ar':'en';}

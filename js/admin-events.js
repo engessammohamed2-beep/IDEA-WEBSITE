@@ -28,11 +28,13 @@ async function pick(){
   $('rg-start_at').value=toLocal(EV.start_at);$('rg-end_at').value=toLocal(EV.end_at);$('rg-registration_deadline').value=toLocal(EV.registration_deadline);
   ['published','registration_open','show_countdown','show_payment','notify_admin'].forEach(function(k){$('rg-'+k).checked=!!EV[k];});
   $('rg-link').value=location.origin+'/event.html?e='+EV.slug;
-  renderFields();await loadPkgs();await loadRegs();rgPreview();
+  renderFields();await loadPkgs();await loadRegs();
+  if($('rg-frame').dataset.slug!==EV.slug)rgPreview();
 }
 window.rgPreview=function(w){
   if(!EV)return;var f=$('rg-frame');
   if(w)f.style.maxWidth=w==='m'?'390px':'100%';
+  f.dataset.slug=EV.slug;
   f.src='event.html?e='+encodeURIComponent(EV.slug)+'&preview=1&t='+Date.now();
 };
 window.rgOpenPreview=function(){window.open('event.html?e='+encodeURIComponent(EV.slug)+'&preview=1','_blank');};
