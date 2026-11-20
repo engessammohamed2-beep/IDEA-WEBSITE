@@ -246,7 +246,8 @@
           <input id="ev-date" type="datetime-local" style="padding:8px;border:1px solid var(--line);border-radius:5px">
         </div>
         <div>
-          <label style="font-size:.82rem;color:var(--ink-soft);display:block;margin-bottom:4px">Image URL (upload in Media library above, then paste link here)</label>
+          <label style="font-size:.82rem;color:var(--ink-soft);display:block;margin-bottom:4px">Event image — ارفع الصورة من هنا مباشرة / Upload here</label>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><img id="ev-image-preview" alt="" style="width:90px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line);background:#f3f3f3"><input type="file" accept="image/*" onchange="uploadEventImage(this)"><button class="mini-btn" onclick="document.getElementById('ev-image').value='';document.getElementById('ev-image-preview').removeAttribute('src');saveUpcomingEvent()">Remove image</button></div>
           <input id="ev-image" placeholder="https://..." style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px">
         </div>
         <button class="mini-btn primary" style="align-self:flex-start" onclick="saveUpcomingEvent()">Save event</button>
@@ -568,15 +569,35 @@ async function uploadMedia() {
   fileInput.value = '';
   loadMedia();
 }
+async function deleteMedia(name) {
+  if (!confirm('Delete this image permanently?\nلو الصورة مستخدمة في مكان هتختفي منه.')) return;
+  var { error } = await sb.storage.from('website-media').remove([name]);
+  if (error) return alert('Error: ' + error.message);
+  loadMedia();
+}
+async function uploadEventImage(inp) {
+  var file = inp.files[0]; if (!file) return;
+  var st = document.getElementById('ev-status'); st.style.color = 'var(--ink-soft)'; st.textContent = 'Uploading...';
+  var path = Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+  var { error } = await sb.storage.from('website-media').upload(path, file, { upsert: true });
+  if (error) { st.style.color = 'var(--orange-dark)'; st.textContent = 'Error: ' + error.message; return; }
+  var url = sb.storage.from('website-media').getPublicUrl(path).data.publicUrl;
+  document.getElementById('ev-image').value = url;
+  document.getElementById('ev-image-preview').src = url;
+  inp.value = '';
+  await saveUpcomingEvent();
+  loadMedia();
+}
 async function loadMedia() {
   var { data, error } = await sb.storage.from('website-media').list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
   var grid = document.getElementById('media-grid');
   if (error || !data) { grid.innerHTML = ''; return; }
-  grid.innerHTML = data.filter(function(f){return f.name;}).map(function(f) {
+  grid.innerHTML = data.filter(function(f){return f.name && f.id;}).map(function(f) {
     var url = sb.storage.from('website-media').getPublicUrl(f.name).data.publicUrl;
     return '<div style="cursor:pointer" onclick="navigator.clipboard.writeText(\''+url+'\');this.querySelector(\'.tag\').textContent=\'Copied!\'" title="Click to copy link">' +
       '<img src="'+url+'" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;border:1px solid var(--line)">' +
-      '<div class="tag" style="font-size:.65rem;text-align:center;color:var(--ink-soft);margin-top:2px">Copy link</div></div>';
+      '<div class="tag" style="font-size:.65rem;text-align:center;color:var(--ink-soft);margin-top:2px">Copy link</div>' +
+      '<button class="mini-btn" style="width:100%;margin-top:4px;color:#B33" onclick="event.stopPropagation();deleteMedia(\''+f.name.replace(/'/g,"\\'")+'\')">🗑 Delete</button></div>';
   }).join('');
 }
 
@@ -770,6 +791,7 @@ async function loadUpcomingEvent() {
   document.getElementById('ev-location-en').value = data.location_en || '';
   document.getElementById('ev-location-ar').value = data.location_ar || '';
   document.getElementById('ev-image').value = data.image_url || '';
+  var _pv = document.getElementById('ev-image-preview'); if (data.image_url) _pv.src = data.image_url; else _pv.removeAttribute('src');
   if (data.event_date) {
     var d = new Date(data.event_date);
     var pad = function(n){ return String(n).padStart(2,'0'); };

@@ -36,16 +36,15 @@ window.rgPreview=function(w){
 };
 window.rgOpenPreview=function(){window.open('event.html?e='+encodeURIComponent(EV.slug)+'&preview=1','_blank');};
 window.rgNew=async function(){
-  var slug=prompt('Event URL slug (letters/numbers/dashes) e.g. ontic2026');if(!slug)return;
-  slug=slug.toLowerCase().replace(/[^a-z0-9-]/g,'-');
+  var slug='event-'+Date.now().toString(36);
   var fields=[{key:'phone',label_en:'Phone',label_ar:'رقم الهاتف',type:'tel',required:true},{key:'organization',label_en:'Organization / Hospital',label_ar:'الجهة / المستشفى',type:'text',required:false},{key:'specialty',label_en:'Specialty',label_ar:'التخصص',type:'text',required:false}];
   var r=await sb.from('reg_events').insert({slug:slug,title_en:'New event',form_fields:fields}).select().single();
   if(r.error)return msg(r.error.message,true);
   EV=r.data;await loadRegAdmin();$('rg-select').value=r.data.id;pick();
 };
 window.rgPick=pick;
-window.rgSave=async function(){
-  var o={};
+window.rgSave=async function(auto){
+  if(!EV)return;var o={};
   ['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar'].forEach(function(k){o[k]=$('rg-'+k).value.trim();});
   o.slug=o.slug.toLowerCase().replace(/[^a-z0-9-]/g,'-');
   o.start_at=fromLocal($('rg-start_at').value);o.end_at=fromLocal($('rg-end_at').value);o.registration_deadline=fromLocal($('rg-registration_deadline').value);
@@ -53,6 +52,7 @@ window.rgSave=async function(){
   o.form_fields=readFields();
   var r=await sb.from('reg_events').update(o).eq('id',EV.id);
   if(r.error)return msg(r.error.message,true);
+  if(auto===true){Object.assign(EV,o);var op=$('rg-select').selectedOptions[0];if(op)op.textContent=(o.title_en||o.title_ar||o.slug)+(o.published?'':' (draft)');$('rg-link').value=location.origin+'/event.html?e='+o.slug;msg('Saved automatically ✓');rgPreview();return;}
   msg('Saved ✓');await loadRegAdmin();
 };
 window.rgDelete=async function(){
@@ -63,11 +63,11 @@ window.rgDelete=async function(){
 };
 window.rgUpload=async function(inp){
   var file=inp.files[0];if(!file)return;
-  var name='events/'+Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  var name=Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
   var r=await sb.storage.from('website-media').upload(name,file);
   if(r.error)return msg(r.error.message,true);
   $('rg-cover_image_url').value=sb.storage.from('website-media').getPublicUrl(name).data.publicUrl;
-  msg('Uploaded — press Save');
+  msg('Uploaded ✓');rgSave(true);
 };
 window.rgCopy=function(){$('rg-link').select();document.execCommand('copy');msg('Link copied ✓');};
 
@@ -193,6 +193,14 @@ window.rgScan=function(){
   $('rg-reader').style.display='block';scanner=new Html5Qrcode('rg-reader');var last='',t=0;
   scanner.start({facingMode:'environment'},{fps:10,qrbox:220},function(txt){if(txt===last&&Date.now()-t<4000)return;last=txt;t=Date.now();checkin(txt);}).catch(function(e){alert(e);});
 };
+var tm=null;
+function autosave(e){
+  var t=e.target;if(!t.closest)return;
+  var pk=t.closest('.rg-pk');
+  if(pk){clearTimeout(tm);tm=setTimeout(function(){rgSavePkg(pk.dataset.id);},900);return;}
+  if(t.closest('#rg-main')&&/^rg-/.test(t.id||'')&&!/^rg-(f-|ci-|link)/.test(t.id)||t.closest('.rg-ff')){clearTimeout(tm);tm=setTimeout(function(){rgSave(true);},900);}
+}
+$('rg-main').addEventListener('input',autosave);$('rg-main').addEventListener('change',autosave);
 $('rg-select').onchange=pick;
 ['rg-f-status','rg-f-pkg'].forEach(function(i){$(i).onchange=renderRegs;});$('rg-f-q').oninput=renderRegs;
 })();
