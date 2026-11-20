@@ -236,7 +236,8 @@ function fieldHtml(fl){
 function renderForm(){
   var p=PKS.filter(function(x){return x.id===sel;})[0];if(!p)return;
   var h='<form class="rf" id="rf" novalidate><h3 style="margin:0">'+esc(T('بياناتك — ','Your details — '))+esc(f(p,'name'))+'</h3>'+
-   '<label>'+esc(T('الاسم الكامل','Full name'))+' <span class="req">*</span></label><input name="__name" required>'+
+   '<label>'+esc(T('الاسم الأول (بالإنجليزية)','First name (English)'))+' <span class="req">*</span></label><input name="__first" dir="ltr" required>'+
+   '<label>'+esc(T('اسم العائلة (بالإنجليزية)','Last name (English)'))+' <span class="req">*</span></label><input name="__last" dir="ltr" required>'+
    '<label>'+esc(T('البريد الإلكتروني','Email'))+' <span class="req">*</span></label><input name="__email" type="email" dir="ltr" required>'+
    (EV.form_fields||[]).map(fieldHtml).join('')+
    '<input class="hp" name="website" tabindex="-1" autocomplete="off">'+
@@ -253,14 +254,16 @@ async function submit(e){
   if(preview){err.textContent=T('المعاينة فقط — لا يتم حفظ التسجيل','Preview only — nothing is saved');return;}
   var data={},ok=true;
   (EV.form_fields||[]).forEach(function(fl){var el=fm.elements[fl.key];if(!el)return;var v=fl.type==='checkbox'?el.checked:el.value.trim();if(fl.required&&(v===''||v===false))ok=false;data[fl.key]=v;});
-  if(!fm.__name.value.trim()||!/^\S+@\S+\.\S+$/.test(fm.__email.value.trim()))ok=false;
+  data.first_name=fm.__first.value.trim();data.last_name=fm.__last.value.trim();
+  var fullName=data.first_name+' '+data.last_name;
+  if(!fm.__first.value.trim()||!fm.__last.value.trim()||!/^\S+@\S+\.\S+$/.test(fm.__email.value.trim()))ok=false;
   if(!ok){err.textContent=T('من فضلك املأ الحقول المطلوبة بشكل صحيح','Please fill the required fields correctly');return;}
   btn.disabled=true;err.textContent='';
-  var res=await sb.rpc('register_for_event',{p_event:EV.id,p_package:sel,p_name:fm.__name.value,p_email:fm.__email.value,p_phone:String(data.phone||''),p_data:data});
+  var res=await sb.rpc('register_for_event',{p_event:EV.id,p_package:sel,p_name:fullName,p_email:fm.__email.value,p_phone:String(data.phone||''),p_data:data});
   var o=res.data;
   if(res.error||!o||o.error){btn.disabled=false;var m=ERR[o&&o.error];err.textContent=m?T(m[0],m[1]):T('حدث خطأ، حاول مرة أخرى','Something went wrong, please try again');return;}
   var p=PKS.filter(function(x){return x.id===sel;})[0];
-  success(o,fm.__name.value,fm.__email.value,p,data);
+  success(o,fullName,fm.__email.value,p,data);
 }
 function ics(){
   var z=function(d){return new Date(d).toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';};

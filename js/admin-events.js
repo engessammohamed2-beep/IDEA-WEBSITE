@@ -35,6 +35,8 @@ async function pick(){
   f.forEach(function(k){$('rg-'+k).value=EV[k]||'';});
   $('rg-start_at').value=toLocal(EV.start_at);$('rg-end_at').value=toLocal(EV.end_at);$('rg-registration_deadline').value=toLocal(EV.registration_deadline);
   $('rg-form_lang').value=EV.form_lang||'auto';
+  ['badge_size','badge_w_mm','badge_h_mm','cert_template_url','cert_orientation','cert_name_x','cert_name_y','cert_font','cert_font_mm','cert_color','cert_scope'].forEach(function(k){var el=$('rg-'+k);if(el&&EV[k]!=null)el.value=EV[k];});
+  rgBadgeSizeUI();rgCertPreview();fillReception();
   ['published','registration_open','show_countdown','show_payment','notify_admin'].forEach(function(k){$('rg-'+k).checked=!!EV[k];});
   $('rg-link').value=location.origin+'/event.html?e='+EV.slug;
   renderFields();await loadPkgs();await loadRegs();
@@ -60,6 +62,9 @@ window.rgSave=async function(auto){
   ['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar'].forEach(function(k){o[k]=$('rg-'+k).value.trim();});
   o.slug=o.slug.toLowerCase().replace(/[^a-z0-9-]/g,'-');
   o.form_lang=$('rg-form_lang').value;
+  ['badge_size','cert_template_url','cert_orientation','cert_font','cert_color','cert_scope'].forEach(function(k){o[k]=$('rg-'+k).value;});
+  ['badge_w_mm','badge_h_mm','cert_name_x','cert_name_y','cert_font_mm'].forEach(function(k){o[k]=Number($('rg-'+k).value)||0;});
+  var pr=BADGE_PRESETS[o.badge_size];if(pr){o.badge_w_mm=pr[0];o.badge_h_mm=pr[1];$('rg-badge_w_mm').value=pr[0];$('rg-badge_h_mm').value=pr[1];}
   o.start_at=fromLocal($('rg-start_at').value);o.end_at=fromLocal($('rg-end_at').value);o.registration_deadline=fromLocal($('rg-registration_deadline').value);
   ['published','registration_open','show_countdown','show_payment','notify_admin'].forEach(function(k){o[k]=$('rg-'+k).checked;});
   o.form_fields=readFields();
@@ -152,22 +157,26 @@ function filtered(){
 function pname(id){var p=PKS.filter(function(x){return x.id===id;})[0];return p?(p.name_en||p.name_ar):'';}
 function renderRegs(){
   var list=filtered();
-  var c={confirmed:0,waitlist:0,cancelled:0,attended:0};REGS.forEach(function(x){c[x.status]++;});
-  $('rg-stats').textContent='Total '+REGS.length+' · Confirmed '+c.confirmed+' · Attended '+c.attended+' · Waitlist '+c.waitlist+' · Cancelled '+c.cancelled;
-  var ST=['confirmed','waitlist','cancelled','attended'],PY=['unpaid','paid','free'];
-  $('rg-tbody').innerHTML=list.map(function(x){return '<tr><td dir="ltr"><b>'+h(x.code)+'</b></td><td>'+h(x.name)+'</td><td dir="ltr">'+h(x.email)+'<br>'+h(x.phone)+'</td><td>'+h(pname(x.package_id))+'</td>'+
-   '<td><select onchange="rgSet(\''+x.id+'\',\'status\',this.value)">'+ST.map(function(s){return '<option'+(s===x.status?' selected':'')+'>'+s+'</option>';}).join('')+'</select></td>'+
-   '<td><select onchange="rgSet(\''+x.id+'\',\'payment_status\',this.value)">'+PY.map(function(s){return '<option'+(s===x.payment_status?' selected':'')+'>'+s+'</option>';}).join('')+'</select></td>'+
-   '<td style="font-size:.78rem">'+new Date(x.created_at).toLocaleString()+'</td><td><button class="mini-btn" onclick="rgDelReg(\''+x.id+'\')">✕</button></td></tr>';}).join('')||'<tr><td colspan="8" style="color:var(--ink-soft)">No registrations</td></tr>';
+  var c={confirmed:0,waitlist:0,cancelled:0,attended:0,walkin:0,paid:0};REGS.forEach(function(x){c[x.status]++;if(x.source==='walkin')c.walkin++;if(x.payment_status==='paid')c.paid++;});
+  $('rg-stats').textContent='Total '+REGS.length+' · Confirmed '+c.confirmed+' · Attended '+c.attended+' · Waitlist '+c.waitlist+' · Cancelled '+c.cancelled+' · Walk-in '+c.walkin+' · Paid '+c.paid;
+  var ST=['confirmed','waitlist','cancelled','attended'],PY=['unpaid','paid','free'],PM=['','cash','card','instapay','other'],TT=['','Dr.','Prof.','Mr.','Ms.','Mrs.'];
+  function sel(arr,val,fn){return '<select onchange="'+fn+'">'+arr.map(function(s){return '<option value="'+s+'"'+(s===val?' selected':'')+'>'+(s||'—')+'</option>';}).join('')+'</select>';}
+  $('rg-tbody').innerHTML=list.map(function(x){var id="'"+x.id+"'";return '<tr><td dir="ltr"><b>'+h(x.code)+'</b></td>'+
+   '<td style="min-width:200px"><div style="display:flex;gap:4px">'+sel(TT,x.title||'','rgSet('+id+',\'title\',this.value)')+'<input value="'+h(x.name)+'" dir="ltr" onchange="rgSet('+id+',\'name\',this.value)" style="padding:5px;border:1px solid var(--line);border-radius:5px;min-width:130px"></div></td>'+
+   '<td dir="ltr" style="font-size:.8rem">'+h(x.email)+'<br>'+h(x.phone)+'</td><td>'+h(pname(x.package_id))+'</td>'+
+   '<td>'+sel(ST,x.status,'rgSet('+id+',\'status\',this.value)')+'</td>'+
+   '<td>'+sel(PY,x.payment_status,'rgSet('+id+',\'payment_status\',this.value)')+'<br>'+sel(PM,x.payment_method||'','rgSet('+id+',\'payment_method\',this.value)')+'</td>'+
+   '<td style="font-size:.78rem">'+(x.source==='walkin'?'🚶 walk-in':'🌐 online')+'<br>'+new Date(x.created_at).toLocaleString()+'</td>'+
+   '<td style="white-space:nowrap"><button class="mini-btn" title="Name tag" onclick="rgBadgeOne('+id+')">🏷</button><button class="mini-btn" title="Certificate" onclick="rgCertOne('+id+')">🎓</button><button class="mini-btn" onclick="rgDelReg('+id+')">✕</button></td></tr>';}).join('')||'<tr><td colspan="8" style="color:var(--ink-soft)">No registrations</td></tr>';
 }
 window.rgRender=renderRegs;
-window.rgSet=async function(id,k,v){var o={};o[k]=v;if(k==='status')o.attended_at=v==='attended'?new Date().toISOString():null;await sb.from('reg_registrations').update(o).eq('id',id);loadRegs();};
+window.rgSet=async function(id,k,v){var o={};o[k]=v;if(k==='status')o.attended_at=v==='attended'?new Date().toISOString():null;var r=await sb.from('reg_registrations').update(o).eq('id',id);if(r.error)msg(r.error.message,true);else msg('تم الحفظ ✓');loadRegs();};
 window.rgDelReg=async function(id){if(!confirm('Delete registration?'))return;await sb.from('reg_registrations').delete().eq('id',id);loadRegs();};
 
 /* ---- export ---- */
 function rows(){
   var ff=EV.form_fields||[];
-  return filtered().map(function(x){var o={Code:x.code,Name:x.name,Email:x.email,Package:pname(x.package_id),Status:x.status,Payment:x.payment_status,Registered:new Date(x.created_at).toLocaleString()};
+  return filtered().map(function(x){var o={Code:x.code,Title:x.title||'',Name:x.name,Email:x.email,Package:pname(x.package_id),Status:x.status,Payment:x.payment_status,Method:x.payment_method||'',Source:x.source||'online',Registered:new Date(x.created_at).toLocaleString()};
     ff.forEach(function(f){var v=(x.data||{})[f.key];o[f.label_en||f.label_ar||f.key]=v===true?'Yes':(v===false?'':(v==null?'':v));});return o;});
 }
 window.rgXlsx=function(){
@@ -183,11 +192,84 @@ function printWin(html){
 window.rgPdf=function(mode){
   var list=filtered();
   var title='<h2>'+h(EV.title_en||EV.title_ar)+'</h2>';
-  var listHtml=title+'<table><tr><th>#</th><th>Code</th><th>Name</th><th>Email</th><th>Phone</th><th>Package</th><th>Status</th><th>Payment</th></tr>'+list.map(function(x,i){return '<tr><td>'+(i+1)+'</td><td>'+h(x.code)+'</td><td>'+h(x.name)+'</td><td>'+h(x.email)+'</td><td>'+h(x.phone)+'</td><td>'+h(pname(x.package_id))+'</td><td>'+h(x.status)+'</td><td>'+h(x.payment_status)+'</td></tr>';}).join('')+'</table>';
+  var listHtml=title+'<table><tr><th>#</th><th>Code</th><th>Name</th><th>Email</th><th>Phone</th><th>Package</th><th>Status</th><th>Payment</th><th>Source</th></tr>'+list.map(function(x,i){return '<tr><td>'+(i+1)+'</td><td>'+h(x.code)+'</td><td>'+h((x.title?x.title+' ':'')+x.name)+'</td><td>'+h(x.email)+'</td><td>'+h(x.phone)+'</td><td>'+h(pname(x.package_id))+'</td><td>'+h(x.status)+'</td><td>'+h(x.payment_status)+(x.payment_method?' ('+h(x.payment_method)+')':'')+'</td><td>'+h(x.source||'online')+'</td></tr>';}).join('')+'</table>';
   if(mode==='list')return printWin(listHtml);
-  var badges=list.map(function(x){return '<div class="b"><h3>'+h(EV.title_en||EV.title_ar)+'</h3><div class="n">'+h(x.name)+'</div><div>'+h(pname(x.package_id))+'</div><img width="130" height="130" alt="" src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data='+encodeURIComponent(x.code)+'"><div class="c">'+h(x.code)+'</div></div>';}).join('');
-  printWin(mode==='badges'?badges:listHtml+'<div style="page-break-before:always"></div>'+badges);
+  if(mode==='badges')return printBadges(list);
+  printWin(listHtml);setTimeout(function(){printBadges(list);},400);
 };
+var BADGE_PRESETS={'90x120':[90,120],'90x130':[90,130],'100x140':[100,140],'a6':[105,148],'a5':[148,210],'a7':[74,105],'card':[85,55],'100x100':[100,100],'80x50':[80,50]};
+window.rgBadgeSizeUI=function(){var c=$('rg-badge_size').value==='custom';$('rg-badge-custom').style.display=c?'flex':'none';var pr=BADGE_PRESETS[$('rg-badge_size').value];if(pr){$('rg-badge_w_mm').value=pr[0];$('rg-badge_h_mm').value=pr[1];}};
+function badgeBlock(x,W,H){
+  var m=Math.min(W,H),nm=(x.title?x.title+' ':'')+x.name;
+  var fs=Math.max(4,Math.min(W*0.1,(W*1.7)/Math.max(10,nm.length)*1.0));
+  return '<div class="bg" style="width:'+W+'mm;height:'+H+'mm"><div style="font-size:'+(W*0.045)+'mm;color:#555;margin-bottom:'+(H*0.03)+'mm">'+h(EV.title_en||EV.title_ar)+'</div>'+
+   '<div style="font-size:'+fs+'mm;font-weight:700;line-height:1.15;word-break:break-word">'+h(nm)+'</div>'+
+   '<img style="width:'+(m*0.42)+'mm;height:'+(m*0.42)+'mm;margin-top:'+(H*0.04)+'mm" alt="" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(x.code)+'">'+
+   '<div style="font:700 '+(W*0.04)+'mm monospace;letter-spacing:.1em;margin-top:'+(H*0.01)+'mm">'+h(x.code)+'</div></div>';
+}
+function printBadges(list){
+  var W=Number(EV.badge_w_mm)||105,H=Number(EV.badge_h_mm)||148;
+  var w=window.open('','_blank');if(!w){alert('Allow pop-ups');return;}
+  w.document.write('<!doctype html><meta charset="utf-8"><title>Name tags</title><style>@page{size:'+W+'mm '+H+'mm;margin:0}body{margin:0;font-family:Arial,sans-serif;background:#ddd}.bg{background:#fff;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4mm;margin:0 auto 6px;page-break-after:always;overflow:hidden}.np{padding:10px;background:#fff}@media print{.np{display:none}body{background:#fff}.bg{margin:0}}</style><div class="np"><button onclick="print()">Print / Save as PDF ('+W+'×'+H+' mm)</button> — '+list.length+' tag(s)</div>'+list.map(function(x){return badgeBlock(x,W,H);}).join('')+'<script>window.addEventListener("load",function(){setTimeout(function(){print()},700)})<\/script>');
+  w.document.close();
+}
+window.rgBadgeOne=function(id){var x=REGS.filter(function(r){return r.id===id;})[0];if(x)printBadges([x]);};
+/* certificates */
+window.rgCertPreview=function(){
+  var u=$('rg-cert_template_url').value,pv=$('rg-cert-pv'),land=$('rg-cert_orientation').value!=='portrait';
+  pv.style.aspectRatio=land?'297/210':'210/297';
+  pv.innerHTML=(u?'<img src="'+h(u)+'" style="position:absolute;inset:0;width:100%;height:100%">':'<div style="padding:20px;color:#888">Upload a certificate template image</div>')+
+   '<div id="rg-cert-name" style="position:absolute;left:'+$('rg-cert_name_x').value+'%;top:'+$('rg-cert_name_y').value+'%;transform:translate(-50%,-50%);white-space:nowrap;font-family:'+$('rg-cert_font').value+';color:'+$('rg-cert_color').value+';font-size:'+(Number($('rg-cert_font_mm').value||12)*(pv.clientWidth||600)/(land?297:210))+'px">Dr. Sample Name</div>';
+};
+window.rgCertUpload=async function(inp){
+  var file=inp.files[0];if(!file)return;
+  var name='cert-'+Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  var r=await sb.storage.from('website-media').upload(name,file);
+  if(r.error)return msg(r.error.message,true);
+  $('rg-cert_template_url').value=sb.storage.from('website-media').getPublicUrl(name).data.publicUrl;
+  rgCertPreview();rgSave(true);
+};
+function printCerts(list){
+  if(!EV.cert_template_url){alert('Upload the certificate template first');return;}
+  if(!list.length){alert('No registrants match (certificates default to attended only)');return;}
+  var land=EV.cert_orientation!=='portrait',W=land?297:210,H=land?210:297;
+  var w=window.open('','_blank');if(!w){alert('Allow pop-ups');return;}
+  w.document.write('<!doctype html><meta charset="utf-8"><title>Certificates</title><style>@page{size:A4 '+(land?'landscape':'portrait')+';margin:0}body{margin:0;background:#ddd}.c{position:relative;width:'+W+'mm;height:'+H+'mm;margin:0 auto 6px;page-break-after:always;overflow:hidden;background:#fff}.c img{position:absolute;inset:0;width:100%;height:100%}.c div{position:absolute;left:'+EV.cert_name_x+'%;top:'+EV.cert_name_y+'%;transform:translate(-50%,-50%);white-space:nowrap;font-family:'+EV.cert_font+';color:'+EV.cert_color+';font-size:'+EV.cert_font_mm+'mm}.np{padding:10px;background:#fff}@media print{.np{display:none}body{background:#fff}.c{margin:0}}</style><div class="np"><button onclick="print()">Print / Save as PDF</button> — '+list.length+' certificate(s)</div>'+
+   list.map(function(x){return '<div class="c"><img src="'+h(EV.cert_template_url)+'" alt=""><div>'+h((x.title?x.title+' ':'')+x.name)+'</div></div>';}).join('')+'<script>window.addEventListener("load",function(){setTimeout(function(){print()},900)})<\/script>');
+  w.document.close();
+}
+window.rgCertAll=function(){var sc=$('rg-cert_scope').value;printCerts(REGS.filter(function(x){return sc==='all'?(x.status==='confirmed'||x.status==='attended'):x.status==='attended';}));};
+window.rgCertOne=function(id){var x=REGS.filter(function(r){return r.id===id;})[0];if(x)printCerts([x]);};
+/* poster */
+window.rgPoster=function(){
+  var url=location.origin+'/event.html?e='+EV.slug;
+  var w=window.open('','_blank');if(!w){alert('Allow pop-ups');return;}
+  w.document.write('<!doctype html><meta charset="utf-8"><title>Poster</title><style>@page{size:A4 portrait;margin:0}body{margin:0;font-family:Arial,Tahoma,sans-serif;text-align:center;padding:30mm 15mm}h1{font-size:34pt;margin:0 0 6mm}h2{font-size:22pt;margin:6mm 0}img{width:130mm;height:130mm}p{font-size:14pt;color:#444}.np{position:fixed;top:6px;left:6px}@media print{.np{display:none}}</style><div class="np"><button onclick="print()">Print</button></div><h1>'+h(EV.title_en||'')+'</h1><h1 dir="rtl">'+h(EV.title_ar||'')+'</h1><img alt="" src="https://api.qrserver.com/v1/create-qr-code/?size=700x700&data='+encodeURIComponent(url)+'"><h2>Scan to register — امسح للتسجيل</h2><p dir="ltr">'+h(url)+'</p>');
+  w.document.close();
+};
+/* reception (walk-in) */
+function fillReception(){
+  $('rg-w-pkg').innerHTML=PKS.map(function(p){return '<option value="'+p.id+'">'+h(p.name_en||p.name_ar)+(Number(p.price)>0?' — '+p.price+' '+h(EV.currency||''):'')+'</option>';}).join('');
+}
+window.rgWalkin=async function(){
+  var f=function(i){return $(i).value.trim();};
+  var first=f('rg-w-first'),last=f('rg-w-last'),pkg=$('rg-w-pkg').value;
+  if(!first||!last||!pkg)return msg('Package, first and last name are required',true);
+  var p=PKS.filter(function(x){return x.id===pkg;})[0]||{price:0};
+  var code=Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(4)),function(b){return ('0'+b.toString(16)).slice(-2);}).join('').toUpperCase();
+  var method=$('rg-w-pay').value,paid=Number(p.price)>0;
+  var o={event_id:EV.id,package_id:pkg,code:code,name:first+' '+last,title:$('rg-w-title').value,email:f('rg-w-email'),phone:f('rg-w-phone'),
+    data:{first_name:first,last_name:last,title:$('rg-w-title').value,phone:f('rg-w-phone')},status:'attended',attended_at:new Date().toISOString(),source:'walkin',
+    payment_status:paid?(method?'paid':'unpaid'):'free',payment_method:paid?method:''};
+  var r=await sb.from('reg_registrations').insert(o).select().single();
+  if(r.error)return msg(r.error.message,true);
+  msg('تم تسجيل '+o.name+' ✓');
+  ['rg-w-first','rg-w-last','rg-w-email','rg-w-phone'].forEach(function(i){$(i).value='';});
+  await loadRegs();
+  if($('rg-w-print').checked)printBadges([r.data]);
+  $('rg-w-first').focus();
+};
+setInterval(function(){if(EV&&!document.hidden&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#rg-tbody')))loadRegs();},20000);
 
 /* ---- check-in ---- */
 async function checkin(code){
@@ -213,9 +295,11 @@ function autosave(e){
   var t=e.target;if(!t.closest)return;
   var pk=t.closest('.rg-pk');
   if(pk){clearTimeout(tm);tm=setTimeout(function(){rgSavePkg(pk.dataset.id);},900);return;}
-  if(t.closest('#rg-main')&&/^rg-/.test(t.id||'')&&!/^rg-(f-|ci-|link)/.test(t.id)||t.closest('.rg-ff')){clearTimeout(tm);tm=setTimeout(function(){rgSave(true);},900);}
+  if(t.closest('#rg-main')&&/^rg-/.test(t.id||'')&&!/^rg-(f-|ci-|link|w-)/.test(t.id)||t.closest('.rg-ff')){clearTimeout(tm);tm=setTimeout(function(){rgSave(true);},900);}
 }
 $('rg-main').addEventListener('input',autosave);$('rg-main').addEventListener('change',autosave);
 $('rg-select').onchange=pick;
 ['rg-f-status','rg-f-pkg'].forEach(function(i){$(i).onchange=renderRegs;});$('rg-f-q').oninput=renderRegs;
+// checkSession() runs before this file loads, so load now if already signed in
+if(document.getElementById('dashboard').style.display!=='none')window.loadRegAdmin();
 })();
