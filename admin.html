@@ -82,7 +82,7 @@
           <b>👁 Live preview — معاينة صفحة التسجيل</b>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><input id="rg-link" readonly dir="ltr" style="flex:1;min-width:240px;padding:8px;border:1px solid var(--line);border-radius:5px"><button class="mini-btn" onclick="rgCopy()">Copy link</button><button class="mini-btn" onclick="rgPreview()">↻ Refresh</button><button class="mini-btn" onclick="rgPreview('d')">🖥 Desktop</button><button class="mini-btn" onclick="rgPreview('m')">📱 Mobile</button><button class="mini-btn" onclick="rgOpenPreview()">↗ Open</button><button class="mini-btn" onclick="rgPoster()">🖨 Poster QR</button></div>
           <iframe id="rg-frame" title="preview" style="width:100%;max-width:100%;height:620px;border:1px solid var(--line);border-radius:8px;background:#fff;display:block;margin:0 auto"></iframe>
-          <p style="font-size:.8rem;color:var(--ink-soft);margin:6px 0 0">المعاينة بتتحدّث بعد كل Save (حتى لو المؤتمر غير منشور). Updates after each Save, even for drafts.</p>
+          <p style="font-size:.8rem;color:var(--ink-soft);margin:6px 0 0">المعاينة بتتحدّث بعد ما تخلّص كتابة بثانيتين (حتى لو المؤتمر غير منشور).</p>
         </div>
 
         <h4>2. Registration form fields (name + email always included)</h4>
@@ -106,6 +106,18 @@
           <label>Certificate orientation<select id="rg-cert_orientation" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="landscape">A4 landscape</option><option value="portrait">A4 portrait</option></select></label>
           <label>Certificates for<select id="rg-cert_scope" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="attended">Attended only</option><option value="all">All confirmed + attended</option></select></label>
         </div>
+        <div style="margin:12px 0"><b>Name tag layout — اسحب الاسم والـ QR بالماوس</b>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">
+            <div style="min-width:200px;max-width:320px;flex:0 0 auto"><div id="rg-badge-pv" style="position:relative;background:#fff;border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden;margin:0 auto"></div></div>
+            <div style="display:grid;grid-template-columns:repeat(2,110px);gap:8px;align-content:start">
+              <label>Name X % <input id="rg-badge_name_x" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+              <label>Name Y % <input id="rg-badge_name_y" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+              <label>Name size mm <input id="rg-badge_name_mm" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+              <label>QR size mm <input id="rg-badge_qr_mm" type="number" step="1" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+              <label>QR X % <input id="rg-badge_qr_x" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+              <label>QR Y % <input id="rg-badge_qr_y" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+            </div>
+          </div></div>
         <p style="font-size:.85rem;color:var(--ink-soft)">النيم تاج: اللقب + الاسم (إنجليزي) + QR. الشهادة: ارفع تصميم الشهادة (صورة) وحدد مكان الاسم.</p>
         <div style="margin-top:8px"><b>Certificate template</b> <input type="file" accept="image/*" onchange="rgCertUpload(this)"><input id="rg-cert_template_url" type="hidden"></div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0">
