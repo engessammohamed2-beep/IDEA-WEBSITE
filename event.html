@@ -271,11 +271,16 @@ function success(o,name,email,p,data){
   var wl=o.status==='waitlist';
   document.getElementById('reg-area').innerHTML='<div class="ok-box"><h2 style="margin:0 0 6px">'+esc(wl?T('تم وضعك في قائمة الانتظار','You are on the waitlist'):T('تم التسجيل بنجاح ✓','Registration confirmed ✓'))+'</h2>'+
    '<p>'+esc(name)+' — '+esc(f(p,'name'))+'</p><div class="code" dir="ltr">'+esc(o.code)+'</div><div id="qr"></div>'+
-   '<p style="font-size:.88rem;color:var(--ink-soft)">'+esc(T('احتفظ بالكود أو الـ QR للدخول يوم المؤتمر. أرسلنا نسخة على بريدك.','Keep this code / QR for entry on the event day. A copy was sent to your email.'))+'</p>'+
+   '<p style="font-size:.88rem;color:var(--ink-soft)">'+esc(T('حمّل الـ QR أو خد له سكرين شوت، وأظهره عند الدخول يوم المؤتمر ليتم مسحه. كمان معاك الكود المكتوب فوقه.','Download or screenshot this QR and show it at the entrance on the event day to be scanned. The written code above also works.'))+'</p>'+
+   '<button class="btn btn-primary" id="qr-btn">'+esc(T('⬇ تحميل الـ QR','⬇ Download QR'))+'</button> '+
    (EV.start_at?'<button class="btn btn-ghost" id="ics-btn">'+esc(T('أضف للتقويم','Add to calendar'))+'</button> ':'')+
    (safeUrl(EV.map_url)?'<a class="btn btn-ghost" target="_blank" rel="noopener" href="'+esc(EV.map_url)+'">'+esc(T('الموقع على الخريطة','Map'))+'</a>':'')+'</div>';
   new QRCode(document.getElementById('qr'),{text:o.code,width:180,height:180});
   var ib=document.getElementById('ics-btn');if(ib)ib.onclick=ics;
+  document.getElementById('qr-btn').onclick=function(){
+    var cv=document.querySelector('#qr canvas'),im=document.querySelector('#qr img'),url=cv?cv.toDataURL('image/png'):(im?im.src:'');
+    if(!url)return;var a=document.createElement('a');a.href=url;a.download='QR-'+o.code+'.png';document.body.appendChild(a);a.click();a.remove();
+  };
   window.scrollTo({top:0,behavior:'smooth'});
   sendMails(o,name,email,p);
 }
