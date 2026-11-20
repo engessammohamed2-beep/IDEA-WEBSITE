@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="facebook-domain-verification" content="3cmmu447zefrwyxcmiev6oq96y8y5f" />
+<title>About IDEA-EG | Egyptian Events, Broadcast Technology & Software Company</title>
+<meta name="description" content="Learn about IDEA-EG, an Egyptian company specializing in medical conference management, live broadcast technology and custom software development since 2020.">
+<link rel="canonical" href="https://www.ideaeg.online/about.html">
+<meta property="og:title" content="About IDEA-EG | Egyptian Events, Broadcast Technology & Software Company">
+<meta property="og:description" content="Learn about IDEA-EG, an Egyptian company specializing in medical conference management, live broadcast technology and custom software development since 2020.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ideaeg.online/about.html">
+<meta property="og:image" content="https://www.ideaeg.online/images/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="images/favicon-32.png" sizes="32x32">
+<link rel="icon" href="images/favicon-256.png" sizes="256x256">
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+<header class="site-header">
+  <div class="nav">
+    <a class="brand" href="index.html"><img src="images/logo.png" alt="IDEA-EG logo"> IDEA<span style="color:var(--orange)">-EG</span></a>
+    <nav class="nav-links">
+      <a href="index.html" data-i18n="nav.home">Home</a>
+<a href="about.html" style="color:var(--orange-dark)" data-i18n="nav.about">About</a>
+<a href="services.html" data-i18n="nav.services">Services</a>
+<a href="software-development.html" data-i18n="nav.software">Software Development</a>
+<a href="impact.html" data-i18n="nav.impact">Impact</a>
+<a href="clients.html" data-i18n="nav.clients">Clients</a>
+<a href="team.html" data-i18n="nav.team">Team</a>
+<a href="blog.html" data-i18n="nav.blog">Blog</a>
+<a href="contact.html" data-i18n="nav.contact">Contact</a>
+
+      <a class="nav-cta" href="contact.html" data-i18n="nav.cta">Get a quote</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="lang-toggle" onclick="toggleLang()">عربي</button>
+      <button class="nav-toggle" aria-label="Menu">☰</button>
+    </div>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="crumb"><a href="index.html">Home</a> / About</div>
+    <div class="eyebrow" data-i18n="about.eyebrow"><span class="flag"></span>About IDEA-EG</div>
+    <h1 data-i18n="about.h1">An events company that also builds software.</h1>
+    <p class="lead" data-i18n="about.lead">Founded in Egypt, IDEA-EG grew from live medical-conference production into a full-service company spanning event management, broadcast technology, and custom software &mdash; serving pharmaceutical, medical, governmental and corporate clients across Egypt and Saudi Arabia.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap grid-2">
+    <div>
+      <img id="about-team-img" src="images/about-team.jpg" alt="IDEA-EG team planning a conference" style="border-radius:12px;border:1px solid var(--line)">
+    </div>
+    <div>
+      <div class="eyebrow" data-i18n="about.who"><span class="flag"></span>Who we are</div>
+      <h2 data-i18n="about.who">Who we are</h2>
+      <p class="lead" data-i18n="about.who.p">IDEA-EG is a leading Egyptian company in conference and event management, with a distinguished specialization in the medical sector. Backed by extensive experience and a wide network of professional connections, we deliver a seamless integration of science, technology, comfort and engagement &mdash; creating events that are both informative and memorable, supported by the software and broadcast systems we build in-house.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section-alt">
+  <div class="wrap grid-2">
+    <div class="card">
+      <div class="ico">V</div>
+      <h3 data-i18n="about.vision">Our vision</h3>
+      <p data-i18n="about.vision.p">To be the region's benchmark for excellence in event management and event technology, with deep specialized expertise in medical, scientific and governmental sectors.</p>
+    </div>
+    <div class="card">
+      <div class="ico">M</div>
+      <h3 data-i18n="about.mission">Our mission</h3>
+      <p data-i18n="about.mission.p">We bring science to life through immersive, well-orchestrated events, and we back every event with the software and broadcast infrastructure that make it run without failure &mdash; delivering scientific impact, cultural exchange, comfort and meaningful connections.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap grid-2">
+    <div>
+      <img id="about-ceo-img" src="images/ceo.jpg" alt="Karim Taha, Founder and CEO of IDEA-EG" style="border-radius:12px;border:1px solid var(--line);max-width:320px">
+    </div>
+    <div>
+      <div class="eyebrow" data-i18n="about.founder"><span class="flag"></span>Message from the founder</div>
+      <h2 data-i18n="about.founder.h2">A note from Karim Taha, Founder &amp; CEO</h2>
+      <p class="lead" data-i18n="about.founder.p">"At IDEA-EG, we believe that every event is more than just a gathering &mdash; it's a powerful opportunity to inform, inspire and connect. From the very beginning, our mission has been clear: to bring science to life through events that balance precision, innovation and a human touch. With every conference we organize, every screen we light up, every voice we amplify, and every system we build, we're helping build bridges between people, ideas and breakthroughs."</p>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-init.js"></script>
+<script>
+(async function() {
+  try {
+    var sb = window.getSupabaseClient();
+    var { data } = await sb.from('website_page_images').select('*').in('id', ['about_team','about_ceo']);
+    (data || []).forEach(function(row) {
+      var el = document.getElementById(row.id === 'about_team' ? 'about-team-img' : 'about-ceo-img');
+      if (el && row.image_url) el.src = row.image_url;
+    });
+  } catch(e) {}
+})();
+</script>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="brand" style="color:#fff;margin-bottom:14px"><img src="images/logo.png" alt="IDEA-EG logo" style="height:34px"> IDEA<span style="color:var(--orange)">-EG</span></div>
+        <p style="color:#B9B8B2;font-size:.9rem;max-width:280px" data-i18n="foot.tagline">Egypt-based events, broadcast technology, and software development company serving medical, corporate, and governmental clients since 2020.</p>
+      </div>
+      <div>
+        <h4 data-i18n="foot.company">Company</h4>
+        <a href="about.html">About us</a>
+        <a href="team.html">Our team</a>
+        <a href="clients.html">Clients & partners</a>
+        <a href="impact.html">Our impact</a>
+        <a href="privacy.html" data-en="Privacy Policy" data-ar="سياسة الخصوصية">Privacy Policy</a>
+        <a href="terms.html" data-en="Terms of Service" data-ar="الشروط والأحكام">Terms of Service</a>
+      </div>
+      <div>
+        <h4 data-i18n="foot.services">Services</h4>
+        <a href="event-management.html">Event management</a>
+        <a href="media-production.html">Media & broadcast tech</a>
+        <a href="branding-digital.html">Branding & digital</a>
+        <a href="software-development.html">Software development</a>
+      </div>
+      <div>
+        <h4 data-i18n="foot.contact">Contact</h4>
+        <a href="tel:+201061888636" dir="ltr" data-i18n="foot.phone">01061888636</a>
+        <a href="mailto:info@ideaeg.online">info@ideaeg.online</a>
+        <a href="contact.html" data-i18n="foot.address">32 Ahmed Hassan El-Zayat St., Nasr City, 7th District, In front of the Malaysian Embassy, Cairo, Egypt</a>
+      </div>
+    </div>
+    <div class="foot-bottom" style="flex-direction:column;align-items:flex-start;gap:6px">
+      <div style="display:flex;justify-content:space-between;width:100%;flex-wrap:wrap;gap:10px">
+        <span data-i18n="foot.rights">© 2022–2026 IDEA for Conference Organizing (IDEA-EG). All rights reserved.</span>
+        <div style="display:flex;align-items:center;gap:16px">
+          <span>Cairo · Port Said · Jeddah</span>
+          <a href="https://wa.me/201061888636" target="_blank" rel="noopener" aria-label="WhatsApp" style="color:#B9B8B2;display:flex">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.36 5.07L2 22l5.07-1.33A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm0 18c-1.6 0-3.1-.43-4.4-1.19l-.31-.18-3.01.79.8-2.94-.2-.3A7.94 7.94 0 0 1 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8Zm4.38-5.86c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.31-.74-1.79-.2-.47-.4-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.12 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z"/></svg>
+          </a>
+          <a href="https://www.facebook.com/IDEAEG148" target="_blank" rel="noopener" aria-label="Facebook" style="color:#B9B8B2;display:flex">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.91h-2.34V22c4.78-.79 8.44-4.94 8.44-9.94Z"/></svg>
+          </a>
+        </div>
+      </div>
+      <span style="font-size:.76rem;color:#75746D" data-i18n="foot.oscredit">A project of the IDEA-EG Operating System</span>
+    </div>
+  </div>
+</footer>
+<a href="https://wa.me/201061888636" target="_blank" rel="noopener" aria-label="WhatsApp" style="position:fixed;bottom:22px;inset-inline-end:22px;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:60">
+  <svg viewBox="0 0 24 24" width="28" height="28" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.36 5.07L2 22l5.07-1.33A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm0 18c-1.6 0-3.1-.43-4.4-1.19l-.31-.18-3.01.79.8-2.94-.2-.3A7.94 7.94 0 0 1 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8Zm4.38-5.86c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.31-.74-1.79-.2-.47-.4-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.12 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z"/></svg>
+</a>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-init.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
