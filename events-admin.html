@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Events | IDEA-EG</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="images/favicon-32.png">
+</head>
+<body>
+<header class="site-header">
+  <div class="nav">
+    <a class="brand" href="index.html"><img src="images/logo.png" alt="IDEA-EG logo"> IDEA<span style="color:var(--orange)">-EG</span> <span style="color:var(--ink-soft);font-weight:400;font-size:.85rem">/ events</span></a>
+    <div id="auth-status" style="font-size:.85rem;color:var(--ink-soft)"></div>
+  </div>
+</header>
+
+<style>.role-staff .adm-only{display:none !important}</style>
+<div class="admin-shell">
+  <div id="login-card" class="admin-card">
+    <h3>Sign in — تسجيل الدخول</h3>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:360px">
+      <input id="email" placeholder="Phone or email — رقم التليفون أو الإيميل" dir="ltr" autocomplete="username" style="padding:10px;border:1px solid var(--line);border-radius:6px">
+      <input id="password" type="password" placeholder="Password — الباسورد" autocomplete="current-password" style="padding:10px;border:1px solid var(--line);border-radius:6px" onkeydown="if(event.key==='Enter')signIn()">
+      <div><button class="btn btn-primary" onclick="signIn()">Sign in</button></div>
+      <div id="auth-msg" style="font-size:.85rem;color:var(--orange-dark)"></div>
+    </div>
+  </div>
+  <div id="dashboard" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h2 style="margin:0">Events &amp; Registration</h2>
+      <div style="display:flex;gap:8px"><a class="mini-btn adm-only" href="admin.html">← Website admin</a><button class="mini-btn" onclick="signOut()">Sign out</button></div>
+    </div>
+    <div class="admin-card" id="rg-card">
+      <h3 style="margin-top:0">Events &amp; Registration — المؤتمرات والتسجيل</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+        <select id="rg-select" style="padding:8px;border:1px solid var(--line);border-radius:5px;min-width:220px"></select>
+        <button class="mini-btn primary adm-only" onclick="rgNew()">+ New event</button>
+        <span id="rg-msg" style="font-size:.85rem"></span>
+      </div>
+      <div id="rg-body"></div>
+      <div id="rg-main" style="display:none"><div class="adm-only">
+        <h4>1. Event details</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">
+          <label>URL slug<input id="rg-slug" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Title (EN)<input id="rg-title_en" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>العنوان (عربي)<input id="rg-title_ar" dir="rtl" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Start<input id="rg-start_at" type="datetime-local" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>End<input id="rg-end_at" type="datetime-local" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Registration deadline<input id="rg-registration_deadline" type="datetime-local" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Location (EN)<input id="rg-location_en" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>المكان (عربي)<input id="rg-location_ar" dir="rtl" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Google Maps link<input id="rg-map_url" dir="ltr" placeholder="https://maps.app.goo.gl/..." style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Contact email (shown + reply-to)<input id="rg-contact_email" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Admin notification email<input id="rg-admin_email" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Page language — لغة الصفحة<select id="rg-form_lang" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="auto">Visitor chooses (EN/AR toggle)</option><option value="en">English only</option><option value="ar">Arabic only — عربي فقط</option></select></label>
+          <label>Currency<input id="rg-currency" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label style="grid-column:1/-1">Cover image URL <input type="file" accept="image/*" onchange="rgUpload(this)" style="margin-inline-start:8px"><input id="rg-cover_image_url" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px;margin-top:4px"></label>
+          <label>Description (EN)<textarea id="rg-description_en" rows="4" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></textarea></label>
+          <label>الوصف (عربي)<textarea id="rg-description_ar" rows="4" dir="rtl" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></textarea></label>
+          <label>Payment note (EN)<input id="rg-payment_note_en" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>ملاحظة الدفع (عربي)<input id="rg-payment_note_ar" dir="rtl" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+        </div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;margin:14px 0;font-size:.9rem">
+          <label><input type="checkbox" id="rg-published"> Published (visible)</label>
+          <label><input type="checkbox" id="rg-registration_open"> Registration open</label>
+          <label><input type="checkbox" id="rg-show_countdown"> Show countdown</label>
+          <label><input type="checkbox" id="rg-show_payment"> Show prices / payment</label>
+          <label><input type="checkbox" id="rg-notify_admin"> Email me on each registration</label>
+        </div>
+        <div style="margin:6px 0 4px;padding:14px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px">
+          <b>👁 Live preview — معاينة صفحة التسجيل</b>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><input id="rg-link" readonly dir="ltr" style="flex:1;min-width:240px;padding:8px;border:1px solid var(--line);border-radius:5px"><button class="mini-btn" onclick="rgCopy()">Copy link</button><button class="mini-btn" onclick="rgPreview()">↻ Refresh</button><button class="mini-btn" onclick="rgPreview('d')">🖥 Desktop</button><button class="mini-btn" onclick="rgPreview('m')">📱 Mobile</button><button class="mini-btn" onclick="rgOpenPreview()">↗ Open</button><button class="mini-btn" onclick="rgPoster()">🖨 Poster QR</button></div>
+          <iframe id="rg-frame" title="preview" style="width:100%;max-width:100%;height:620px;border:1px solid var(--line);border-radius:8px;background:#fff;display:block;margin:0 auto"></iframe>
+          <p style="font-size:.8rem;color:var(--ink-soft);margin:6px 0 0">المعاينة بتتحدّث بعد ما تخلّص كتابة بثانيتين (حتى لو المؤتمر غير منشور).</p>
+        </div>
+
+        <h4>2. Registration form fields (name + email always included)</h4>
+        <div id="rg-fields"></div>
+        <button class="mini-btn" onclick="rgAddField()">+ Add field</button> <button class="mini-btn" onclick="rgAddTemplate()">+ Add standard medical-conference fields</button>
+        <div style="margin:14px 0"><button class="mini-btn primary" onclick="rgSave()">Save event &amp; form</button> <button class="mini-btn" onclick="rgDelete()">Delete event</button></div>
+
+        <h4>3. Packages</h4>
+        <div id="rg-pkgs"></div>
+        <button class="mini-btn" onclick="rgAddPkg()">+ Add package</button>
+
+        <h4 style="margin-top:26px">3b. Name tag size &amp; certificate — مقاس النيم تاج والشهادة (لكل مؤتمر)</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;align-items:end">
+          <label>Name tag size
+            <select id="rg-badge_size" onchange="rgBadgeSizeUI()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px">
+              <option value="90x120">90 × 120 mm</option><option value="90x130">90 × 130 mm</option><option value="100x140">100 × 140 mm</option>
+              <option value="a6">A6 — 105 × 148 mm</option><option value="a5">A5 — 148 × 210 mm</option><option value="a7">A7 — 74 × 105 mm</option>
+              <option value="card">Card — 85 × 55 mm</option><option value="80x50">80 × 50 mm</option><option value="100x100">100 × 100 mm</option><option value="custom">Custom…</option>
+            </select></label>
+          <div id="rg-badge-custom" style="display:none;gap:6px"><label>W mm<input id="rg-badge_w_mm" type="number" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label><label>H mm<input id="rg-badge_h_mm" type="number" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label></div>
+          <label>Certificate orientation<select id="rg-cert_orientation" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="landscape">A4 landscape</option><option value="portrait">A4 portrait</option></select></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="rg-badge_show_qr" onchange="rgBadgePreview()"> Show QR on name tag — إظهار الـ QR على النيم تاج</label>
+          <label>Certificates for<select id="rg-cert_scope" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="attended">Attended only</option><option value="all">All confirmed + attended</option></select></label>
+        </div>
+        <div style="margin:12px 0 0"><b>Name tag background / design</b> — صورة أو PDF <input type="file" accept="image/*,application/pdf" onchange="rgBadgeBgUpload(this)"><input id="rg-badge_bg_url" type="hidden"> <button class="mini-btn" onclick="rgBadgeBgClear()">Remove</button>
+          <span style="font-size:.8rem;color:var(--ink-soft)">PDF بيتحوّل لصورة، ومقاس النيم تاج بياخد مقاس الـ PDF تلقائي.</span></div>
+        <div style="margin:12px 0"><b>Name tag layout — اسحب الاسم والـ QR بالماوس</b>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">
+            <div style="min-width:200px;max-width:320px;flex:0 0 auto"><div id="rg-badge-pv" style="position:relative;background:#fff;border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden;margin:0 auto"></div></div>
+            <div style="display:grid;grid-template-columns:repeat(2,110px);gap:8px;align-content:start">
+              <label>Name X % <input id="rg-badge_name_x" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+              <label>Name Y % <input id="rg-badge_name_y" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+              <label>Name size mm <input id="rg-badge_name_mm" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+              <label>QR size mm <input id="rg-badge_qr_mm" type="number" step="1" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+              <label>QR X % <input id="rg-badge_qr_x" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+              <label>QR Y % <input id="rg-badge_qr_y" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+            </div>
+          </div></div>
+        <p style="font-size:.85rem;color:var(--ink-soft)">النيم تاج: اللقب + الاسم (إنجليزي) + QR. الشهادة: ارفع تصميم الشهادة (صورة) وحدد مكان الاسم.</p>
+        <div style="margin-top:8px"><b>Certificate template</b> — صورة أو PDF <input type="file" accept="image/*,application/pdf" onchange="rgCertUpload(this)"> <button class="mini-btn" onclick="rgCertClear()">Remove</button><input id="rg-cert_template_url" type="hidden"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0">
+          <label>Name X % <input id="rg-cert_name_x" type="number" min="0" max="100" step="0.5" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Name Y % <input id="rg-cert_name_y" type="number" min="0" max="100" step="0.5" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Font size (mm) <input id="rg-cert_font_mm" type="number" min="3" max="40" step="0.5" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+          <label>Color <input id="rg-cert_color" type="color" oninput="rgCertPreview()" style="width:100%;height:38px"></label>
+          <label>Font <select id="rg-cert_font" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="Georgia, serif">Georgia</option><option value="'Times New Roman', serif">Times New Roman</option><option value="Arial, sans-serif">Arial</option><option value="'Brush Script MT', cursive">Brush Script</option><option value="'Palatino Linotype', serif">Palatino</option></select></label>
+        </div>
+        <div id="rg-cert-pv" style="position:relative;width:100%;max-width:640px;border:1px solid var(--line);background:#fff;overflow:hidden"></div>
+        <div style="margin:8px 0"><button class="mini-btn primary" onclick="rgCertAll()">🎓 Print certificates (PDF)</button></div>
+
+        </div>
+        <h4 style="margin-top:26px">4. Check-in</h4>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="rg-ci-code" dir="ltr" placeholder="Code" style="padding:8px;border:1px solid var(--line);border-radius:5px" onkeydown="if(event.key==='Enter')rgCheckin()"><button class="mini-btn primary" onclick="rgCheckin()">Check in</button><button class="mini-btn" onclick="rgScan()">📷 Scan QR</button></div>
+        <div id="rg-reader" style="display:none;max-width:320px;margin-top:10px"></div>
+        <p id="rg-ci-out" style="font-weight:600;min-height:1.4em"></p>
+
+        <h4>4b. Reception — walk-in registration · تسجيل في المكان</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:12px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px">
+          <select id="rg-w-pkg" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></select>
+          <select id="rg-w-title" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="Dr.">Dr.</option><option value="Prof.">Prof.</option><option value="Mr.">Mr.</option><option value="Ms.">Ms.</option><option value="Mrs.">Mrs.</option><option value="">—</option></select>
+          <input id="rg-w-first" placeholder="First name (English)" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px">
+          <input id="rg-w-last" placeholder="Last name (English)" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px">
+          <input id="rg-w-phone" placeholder="Phone" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px">
+          <input id="rg-w-email" placeholder="Email (optional)" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px">
+          <select id="rg-w-pay" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="cash">Paid: Cash</option><option value="card">Paid: Card</option><option value="instapay">Paid: InstaPay</option><option value="other">Paid: Other</option><option value="">Not paid yet</option></select>
+          <label style="display:flex;align-items:center;gap:6px;font-size:.88rem"><input type="checkbox" id="rg-w-print" checked> Print name tag</label>
+          <button class="mini-btn primary" onclick="rgWalkin()">Register &amp; check in</button>
+        </div>
+        <p style="font-size:.8rem;color:var(--ink-soft)">التسجيل هنا بيتعلّم "حضر" فوراً، ويتخطى حد الأماكن، والقايمة بتتحدّث كل 20 ثانية لو أكتر من موظف شغال.</p>
+
+        <h4>5. Registrations</h4>
+        <p id="rg-stats" style="color:var(--ink-soft);font-size:.88rem"></p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <select id="rg-f-status" style="padding:7px;border:1px solid var(--line);border-radius:5px"><option value="">All status</option><option>confirmed</option><option>waitlist</option><option>attended</option><option>cancelled</option></select>
+          <select id="rg-f-pkg" style="padding:7px;border:1px solid var(--line);border-radius:5px"></select>
+          <input id="rg-f-q" placeholder="Search…" style="padding:7px;border:1px solid var(--line);border-radius:5px">
+          <button class="mini-btn" onclick="rgXlsx()">⬇ Excel</button>
+          <button class="mini-btn" onclick="rgPdf('list')">⬇ PDF list</button>
+          <button class="mini-btn" onclick="rgPdf('badges')">⬇ PDF badges</button>
+          <button class="mini-btn" onclick="rgPdf('both')">⬇ PDF both</button>
+        </div>
+        <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Code</th><th>Title / Name</th><th>Contact</th><th>Package</th><th>Status</th><th>Payment</th><th>Source / Date</th><th></th></tr></thead><tbody id="rg-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-init.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="js/qrcode-lib.js"></script>
+<script src="js/qr.js"></script>
+<script src="js/admin-events.js"></script>
+<script>
+var sb=window.getSupabaseClient(), booted=null;
+function toEmail(v){v=(v||'').trim();if(v.indexOf('@')>-1)return v;var d=v.replace(/\D/g,'');return 'staff-'+d+'@staff.ideaeg.online';}
+async function signIn(){
+  var m=document.getElementById('auth-msg');m.textContent='';
+  var r=await sb.auth.signInWithPassword({email:toEmail(document.getElementById('email').value),password:document.getElementById('password').value});
+  if(r.error)m.textContent='بيانات الدخول غلط — Wrong phone/email or password';
+}
+async function signOut(){await sb.auth.signOut();location.reload();}
+async function boot(){
+  var s=(await sb.auth.getSession()).data.session;if(!s)return;
+  if(booted===s.user.id)return;booted=s.user.id;
+  var me=(await sb.from('staff_members').select('name,role,active').eq('user_id',s.user.id).maybeSingle()).data;
+  if(!me||!me.active){await sb.auth.signOut();booted=null;document.getElementById('auth-msg').textContent='الحساب ده مش مصرّح له بالدخول — This account has no access';return;}
+  document.body.classList.toggle('role-staff',me.role!=='admin');
+  document.getElementById('login-card').style.display='none';document.getElementById('dashboard').style.display='block';
+  document.getElementById('auth-status').textContent=me.name+(me.role==='admin'?' (admin)':'');
+  loadRegAdmin();
+}
+boot();sb.auth.onAuthStateChange(function(e){if(e==='SIGNED_IN'||e==='INITIAL_SESSION')boot();});
+</script>
+</body>
+</html>
