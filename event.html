@@ -83,6 +83,7 @@
         <a href="impact.html">Our impact</a>
         <a href="privacy.html" data-en="Privacy Policy" data-ar="سياسة الخصوصية">Privacy Policy</a>
         <a href="terms.html" data-en="Terms of Service" data-ar="الشروط والأحكام">Terms of Service</a>
+        <a href="event.html" data-en="Events &amp; Registration" data-ar="المؤتمرات والتسجيل">Events &amp; Registration</a>
       </div>
       <div>
         <h4 data-i18n="foot.services">Services</h4>
@@ -216,7 +217,13 @@ function fieldHtml(fl){
   var lab=esc(f(fl,'label'))+(fl.required?' <span class="req">*</span>':'');
   var n='name="'+esc(fl.key)+'" '+(fl.required?'required':'');
   var oe=(fl.options_en||'').split(',').map(function(x){return x.trim();}),oa=(fl.options_ar||'').split(',').map(function(x){return x.trim();});
-  var opts=oe.map(function(v,i){return {v:v||oa[i],t:(L()==='ar'&&oa[i])?oa[i]:(v||oa[i])};}).filter(function(o){return o.v;});
+  var ol=fl.opt_lang||'auto';
+  var opts=oe.map(function(v,i){var e=v,a=oa[i],t;
+    if(ol==='both')t=(e&&a)?e+' — '+a:(e||a);
+    else if(ol==='ar')t=a||e;
+    else if(ol==='en')t=e||a;
+    else t=(L()==='ar'&&a)?a:(e||a);
+    return {v:e||a,t:t};}).filter(function(o){return o.v;});
   var inp;
   if(fl.type==='textarea')inp='<textarea rows="3" '+n+'></textarea>';
   else if(fl.type==='select')inp='<select '+n+'><option value="">—</option>'+opts.map(function(o){return '<option value="'+esc(o.v)+'">'+esc(o.t)+'</option>';}).join('')+'</select>';

@@ -84,6 +84,7 @@ function renderFields(){
    '<input data-k="label_ar" placeholder="الاسم بالعربي" value="'+h(x.label_ar)+'" dir="rtl" style="flex:1;min-width:120px;'+IN+'">'+
    '<select data-k="type" style="'+IN+'">'+TYPES.map(function(t){return '<option'+(t===x.type?' selected':'')+'>'+t+'</option>';}).join('')+'</select>'+
    '<label style="font-size:.82rem"><input type="checkbox" data-k="required"'+(x.required?' checked':'')+'> Required</label>'+
+   '<select data-k="opt_lang" title="Dropdown language" style="'+IN+'">'+[['auto','Dropdown: follow page language'],['both','Dropdown: Arabic + English'],['ar','Dropdown: Arabic only'],['en','Dropdown: English only']].map(function(o){return '<option value="'+o[0]+'"'+((x.opt_lang||'auto')===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'+
    '<input data-k="options_en" placeholder="Options EN (a, b, c) — select only" value="'+h(x.options_en)+'" style="flex:1;min-width:140px;'+IN+'">'+
    '<input data-k="options_ar" placeholder="الخيارات (أ، ب، ج) — لقائمة الاختيار" value="'+h(x.options_ar)+'" dir="rtl" style="flex:1;min-width:140px;'+IN+'">'+
    '<button class="mini-btn" onclick="rgMove('+i+',-1)">↑</button><button class="mini-btn" onclick="rgMove('+i+',1)">↓</button><button class="mini-btn" onclick="rgDelField('+i+')">✕</button></div>';}).join('')||'<p style="color:var(--ink-soft);font-size:.88rem">No extra fields. Name + email are always included.</p>';
