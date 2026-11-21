@@ -149,3 +149,5 @@ ol.obj{padding-left:20px;color:#2a3d4f}ol.obj li{margin:8px 0}
 .slot p em{color:var(--navy2);font-style:normal;font-weight:600}
 .awards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
 .aw{background:#fff;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:14px;padding:14px 18px}.aw span{display:block;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);font-weight:700}.aw b{color:var(--navy)}
+
+.bf-opt{display:inline-flex;align-items:center;gap:8px;font-size:.85rem;color:var(--soft);cursor:pointer;user-select:none}.bf-opt input{width:16px;height:16px;accent-color:var(--blue)}

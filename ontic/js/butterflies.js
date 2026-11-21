@@ -9,7 +9,7 @@ window.startButterflies=function(opts){
   var W=window.innerWidth,H=window.innerHeight;window.addEventListener('resize',function(){W=window.innerWidth;H=window.innerHeight;});
   var cover=document.querySelector('.ev-hero-img'),sx=W/2,sy=H*0.5;
   if(cover){var r=cover.getBoundingClientRect();if(r.bottom>0&&r.top<H){sx=r.left+r.width/2;sy=Math.min(H-40,Math.max(40,r.top+r.height*0.7));}}
-  var bs=[];
+  var bs=[],paused=false;window.bfSet=function(on){paused=!on;box.style.display=on?'':'none';};
   for(var i=0;i<N;i++){
     var wrap=document.createElement('div'),img=new Image();img.src=base+'b'+(i+1)+'.png';img.alt='';img.draggable=false;
     var size=44+Math.random()*30;wrap.style.cssText='position:absolute;left:0;top:0;width:'+size+'px;will-change:transform;opacity:0;transition:opacity 1.2s';
@@ -22,7 +22,7 @@ window.startButterflies=function(opts){
   var last=performance.now(),t0=last;
   function tick(now){
     var dt=Math.min(.05,(now-last)/1000);last=now;var t=(now-t0)/1000;
-    if(!document.hidden){
+    if(!document.hidden&&!paused){
       bs.forEach(function(b){
         if(now-t0<b.delay)return;b.w.style.opacity=1;
         var turn=Math.sin(t*b.fa+b.pa)*.7+Math.sin(t*b.fb+b.pb)*.5;
