@@ -41,6 +41,7 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
         <select id="rg-select" style="padding:8px;border:1px solid var(--line);border-radius:5px;min-width:220px"></select>
         <button class="mini-btn primary adm-only" onclick="rgNew()">+ New event</button>
+        <button class="mini-btn adm-only" style="color:#C0392B;border-color:#C0392B" onclick="rgDelete()">Delete event</button>
         <span id="rg-msg" style="font-size:.85rem"></span>
       </div>
       <div id="rg-body"></div>
@@ -88,7 +89,7 @@
         <h4>2. Registration form fields (name + email always included)</h4>
         <div id="rg-fields"></div>
         <button class="mini-btn" onclick="rgAddField()">+ Add field</button> <button class="mini-btn" onclick="rgAddTemplate()">+ Add standard medical-conference fields</button>
-        <div style="margin:14px 0"><button class="mini-btn primary" onclick="rgSave()">Save event &amp; form</button> <button class="mini-btn" onclick="rgDelete()">Delete event</button></div>
+        <div style="margin:14px 0"><button class="mini-btn primary" onclick="rgSave()">Save event &amp; form</button></div>
 
         <h4>3. Packages</h4>
         <div id="rg-pkgs"></div>

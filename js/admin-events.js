@@ -76,10 +76,13 @@ window.rgSave=async function(auto){
   msg('تم الحفظ — Saved');await loadRegAdmin();
 };
 window.rgDelete=async function(){
-  if(!confirm('Delete this event with ALL its packages and registrations?'))return;
+  if(!EV)return msg('Select an event first',true);
+  var t=prompt('This will permanently delete "'+label(EV)+'" with ALL its packages and registrations. This cannot be undone.\n\nType  idea  to confirm - اكتب idea للتأكيد');
+  if(t===null)return;if(t.trim().toLowerCase()!=='idea')return msg('Not deleted - confirmation word did not match',true);
   var r=await sb.from('reg_events').delete().eq('id',EV.id);
   if(r.error)return msg(r.error.message,true);
-  EV=null;loadRegAdmin();
+  try{localStorage.removeItem('rg_last_event');}catch(e){}
+  EV=null;msg('Event deleted');loadRegAdmin();
 };
 window.rgUpload=async function(inp){
   var file=inp.files[0];if(!file)return;
