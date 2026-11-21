@@ -42,6 +42,7 @@
 <div id="ev-root" class="wrap" style="padding:36px 24px 60px"><p id="ev-loading" style="color:var(--ink-soft)">Loading…</p></div>
 </main>
 <style>
+.cbg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:4px 0 8px}.cbo{display:flex;gap:8px;align-items:center;font-weight:500;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer}.cbo input{width:auto;margin:0}
 .cc-wrap{position:relative}.cc-list{position:absolute;z-index:50;left:0;right:0;top:100%;margin:2px 0 0;padding:4px 0;list-style:none;background:#fff;border:1px solid var(--line);border-radius:8px;max-height:240px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.12)}.cc-list li{padding:9px 12px;cursor:pointer}.cc-list li.on,.cc-list li:hover{background:#FFF1E8}.cc-list li.cc-add{color:#C4500F;font-weight:600;border-top:1px solid var(--line)}.cc-list li.cc-none{color:#888;cursor:default}
 .ev-hero-img{width:100%;height:auto;border-radius:14px;border:1px solid var(--line);display:block}
 .ev-meta{display:flex;flex-wrap:wrap;gap:10px 22px;margin:14px 0;color:var(--ink-soft);font-size:.95rem}
@@ -330,6 +331,7 @@ function fieldHtml(fl){
     var lb=function(en,ar){return ol2==='both'?(en+' — '+ar):ol2==='ar'?ar:ol2==='en'?en:(L()==='ar'?ar:en);};
     return '<label>'+lab+'</label><select '+n+' data-sp="main"><option value="">—</option>'+window.SPECIALTIES.map(function(x){return '<option value="'+esc(x.en)+'">'+esc(lb(x.en,x.ar))+'</option>';}).join('')+'</select>'+
       '<label>'+esc(T('التخصص الدقيق','Subspecialty'))+'</label><select name="'+esc(fl.key)+'_sub" data-sp="sub" data-ol="'+esc(ol2)+'" disabled><option value="">—</option></select>';}
+  else if(fl.type==='checkbox'&&opts.length)return '<label>'+lab+'</label><div class="cbg" data-cbg="'+esc(fl.key)+'">'+opts.map(function(o){return '<label class="cbo"><input type="checkbox" name="'+esc(fl.key)+'" value="'+esc(o.v)+'"> '+esc(o.t)+'</label>';}).join('')+'</div>';
   else if(fl.type==='checkbox')return '<label style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" style="width:auto" '+n+'> '+lab+'</label>';
   else inp='<input type="'+esc(fl.type||'text')+'" '+n+(fl.type==='tel'?' dir="ltr"':'')+'>';
   return '<label>'+lab+'</label>'+inp;
@@ -357,7 +359,8 @@ async function submit(e){
   if(preview){err.textContent=T('المعاينة فقط — لا يتم حفظ التسجيل','Preview only — nothing is saved');return;}
   var data={},ok=true;
   (EV.form_fields||[]).forEach(function(fl){var el=fm.elements[fl.key];if(!el)return;if(fl.type==='specialty'){var se=fm.elements[fl.key+'_sub'];if(se&&se.value)data[fl.key+'_sub']=se.value;}
-    var v=fl.type==='checkbox'?el.checked:el.value.trim();if(isCountryField(fl)&&v){var nz=countryNormalize(v,CX);v=nz.value;if(!nz.known)data[fl.key+'_new']=true;}if(fl.required&&(v===''||v===false))ok=false;data[fl.key]=v;});
+    var hasOpts=fl.type==='checkbox'&&String(fl.options_en||fl.options_ar||'').trim();
+    var v=hasOpts?[].map.call(fm.querySelectorAll('input[name="'+fl.key+'"]:checked'),function(c){return c.value;}).join(', '):(fl.type==='checkbox'?el.checked:el.value.trim());if(isCountryField(fl)&&v){var nz=countryNormalize(v,CX);v=nz.value;if(!nz.known)data[fl.key+'_new']=true;}if(fl.required&&(v===''||v===false))ok=false;data[fl.key]=v;});
   data.first_name=fm.__first.value.trim();data.last_name=fm.__last.value.trim();
   var fullName=data.first_name+' '+data.last_name;
   if(!fm.__first.value.trim()||!fm.__last.value.trim()||!/^\S+@\S+\.\S+$/.test(fm.__email.value.trim()))ok=false;
