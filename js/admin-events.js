@@ -75,10 +75,19 @@ window.rgSave=async function(auto){
   if(auto===true){Object.assign(EV,o);var op=$('rg-select').selectedOptions[0];if(op)op.textContent=label(o);$('rg-link').value=location.origin+'/event.html?e='+o.slug;msg('تم الحفظ تلقائياً');rgPreviewSoon();return;}
   msg('تم الحفظ — Saved');await loadRegAdmin();
 };
+function askPassword(){return new Promise(function(res){
+  var d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+  d.innerHTML='<div style="background:#fff;padding:20px;border-radius:10px;max-width:380px;width:90%"><b>Delete event - مسح المؤتمر</b><p style="font-size:.88rem">This permanently deletes the event with ALL its packages and registrations. Enter your admin password to confirm.<br>اكتب الباسورد بتاعك للتأكيد.</p><input type="password" id="dp-in" autocomplete="current-password" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px"><div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end"><button class="mini-btn" id="dp-no">Cancel</button><button class="mini-btn primary" id="dp-ok" style="background:#C0392B;border-color:#C0392B">Delete</button></div></div>';
+  document.body.appendChild(d);var i=d.querySelector('#dp-in');i.focus();
+  function done(v){d.remove();res(v);}
+  d.querySelector('#dp-no').onclick=function(){done(null);};d.querySelector('#dp-ok').onclick=function(){done(i.value);};i.onkeydown=function(e){if(e.key==='Enter')done(i.value);if(e.key==='Escape')done(null);};});}
 window.rgDelete=async function(){
   if(!EV)return msg('Select an event first',true);
-  var t=prompt('This will permanently delete "'+label(EV)+'" with ALL its packages and registrations. This cannot be undone.\n\nType  idea  to confirm - اكتب idea للتأكيد');
-  if(t===null)return;if(t.trim().toLowerCase()!=='idea')return msg('Not deleted - confirmation word did not match',true);
+  var pw=await askPassword();if(pw===null)return;if(!pw)return msg('Password required',true);
+  var u=await sb.auth.getUser();var em=u.data&&u.data.user&&u.data.user.email;if(!em)return msg('Could not read your account',true);
+  var iso=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  var chk=await iso.auth.signInWithPassword({email:em,password:pw});
+  if(chk.error)return msg('Wrong password - not deleted',true);
   var r=await sb.from('reg_events').delete().eq('id',EV.id);
   if(r.error)return msg(r.error.message,true);
   try{localStorage.removeItem('rg_last_event');}catch(e){}
@@ -316,6 +325,7 @@ window.rgQuickFind=function(){
   var m=REGS.filter(function(x){var ph=(x.phone||'').replace(/\D/g,'');return (d.length>=4&&ph&&ph.indexOf(d.slice(-10))>-1)||x.code.toLowerCase()===q||(x.name||'').toLowerCase().indexOf(q)>-1||(x.email||'').toLowerCase()===q;}).slice(0,8);
   out.innerHTML=m.map(function(x){var id="'"+x.id+"'",at=x.status==='attended';return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px;border:1px solid var(--line);border-radius:6px;margin-top:6px"><span style="width:10px;height:10px;border-radius:50%;background:'+(at?'#22C55E':'#E5382B')+'"></span><b>'+h((x.title?x.title+' ':'')+x.name)+'</b><span dir="ltr" style="color:var(--ink-soft)">'+h(x.phone||'')+' - '+h(x.code)+'</span><span style="flex:1"></span>'+(at?'':'<button class="mini-btn pm-checkin" onclick="checkin(\''+x.code+'\');setTimeout(rgQuickFind,600)">Check-in</button>')+'<button class="mini-btn pm-print" onclick="rgBadgeOne('+id+')">Name tag</button><button class="mini-btn pm-print" onclick="rgCertOne('+id+')">Certificate</button></div>';}).join('')||'<p style="color:var(--ink-soft);font-size:.85rem">No match</p>';};
 window.checkin=checkin;
+window._rg={ev:function(){return EV;},regs:function(){return REGS;}};
 var CCX=null;
 async function newCountries(){
   var el=$('rg-newcc');if(!el||!EV)return;

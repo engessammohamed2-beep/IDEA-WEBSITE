@@ -41,14 +41,33 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
         <select id="rg-select" style="padding:8px;border:1px solid var(--line);border-radius:5px;min-width:220px"></select>
         <button class="mini-btn primary adm-only" onclick="rgNew()">+ New event</button>
-        <button class="mini-btn adm-only" style="color:#C0392B;border-color:#C0392B" onclick="rgDelete()">Delete event</button>
+        <button class="mini-btn sa-only" style="color:#C0392B;border-color:#C0392B" onclick="rgDelete()">Delete event</button>
         <span id="rg-msg" style="font-size:.85rem"></span>
       </div>
       <div id="rg-body"></div>
       <div id="rg-main" style="display:none">
       <div id="rg-tabs" style="display:flex;gap:6px;border-bottom:2px solid var(--line);margin:10px 0 14px;flex-wrap:wrap">
         <button type="button" class="mini-btn adm-only" data-t="setup" onclick="rgTab('setup')">Setup - الإعدادات</button>
+        <button type="button" class="mini-btn adm-only" data-t="contacts" onclick="rgTab('contacts')">Contacts &amp; Invitations - الدكاتره والدعوات</button>
         <button type="button" class="mini-btn" data-t="regs" onclick="rgTab('regs')">Check-in &amp; Registrations - الحضور والمسجلين</button>
+      </div>
+      <div class="adm-only" data-tab="contacts">
+        <h4>Doctors database - قاعدة بيانات الدكاتره <span id="ct-msg" style="font-size:.85rem;font-weight:400;margin-inline-start:10px"></span></h4>
+        <div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:12px"><b>1. Import from Excel / CSV - رفع ملف</b>
+          <div style="font-size:.82rem;color:var(--ink-soft);margin:4px 0">الأعمدة ممكن تكون بأي ترتيب وبأي أسماء (عربي أو إنجليزي). النظام بيتعرف على كل عمود من اسمه، ولو الاسم غريب بيبص على القيم (إيميل، أرقام تليفون). بعد الرفع بيظهر لك جدول الربط، تراجعه وتعدّله قبل الاستيراد. الإيميلات والأرقام المكررة بتتخطى.</div>
+          <input type="file" id="ct-file" accept=".xlsx,.xls,.csv" onchange="ctFile(this)"> <button class="mini-btn" type="button" onclick="ctTemplate()">Download sample file</button>
+          <div id="ct-map"></div></div>
+        <div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:12px"><b>2. Add manually - إضافة يدوية</b>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><input id="ct-n-title" placeholder="Title" style="width:70px;padding:7px;border:1px solid var(--line);border-radius:5px"><input id="ct-n-name" placeholder="Name" style="padding:7px;border:1px solid var(--line);border-radius:5px;flex:1;min-width:150px"><input id="ct-n-email" dir="ltr" placeholder="Email" style="padding:7px;border:1px solid var(--line);border-radius:5px;flex:1;min-width:170px"><input id="ct-n-phone" dir="ltr" placeholder="Phone" style="padding:7px;border:1px solid var(--line);border-radius:5px;width:140px"><input id="ct-n-country" list="ct-cc" placeholder="Country" style="padding:7px;border:1px solid var(--line);border-radius:5px;width:140px"><datalist id="ct-cc"></datalist><input id="ct-n-organization" placeholder="Organization" style="padding:7px;border:1px solid var(--line);border-radius:5px;width:150px"><input id="ct-n-notes" placeholder="Notes" style="padding:7px;border:1px solid var(--line);border-radius:5px;width:130px"><button class="mini-btn primary" type="button" onclick="ctAdd()">Add</button></div></div>
+        <div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:12px"><b>3. Invitation - الدعوة</b>
+          <div style="font-size:.82rem;color:var(--ink-soft);margin:4px 0">اكتب الرسالة واستخدم <code>{name}</code> مكان اسم الدكتور و<code>{link}</code> مكان لينك التسجيل. اللينك بيتعبى تلقائي بلينك المؤتمر المختار، وتقدر تغيّره.</div>
+          <input id="ct-subject" placeholder="Subject" style="padding:7px;border:1px solid var(--line);border-radius:5px;width:100%;margin-bottom:6px">
+          <textarea id="ct-body" rows="7" style="padding:7px;border:1px solid var(--line);border-radius:5px;width:100%;margin-bottom:6px"></textarea>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span>Registration link {link}:</span><input id="ct-link" dir="ltr" style="padding:7px;border:1px solid var(--line);border-radius:5px;flex:1;min-width:260px" oninput="ctRender()"><button class="mini-btn" type="button" onclick="ctSaveInvite()">Save invitation for this event</button><button class="mini-btn" type="button" onclick="ctPreview()">Preview</button></div>
+          <pre id="ct-preview" style="white-space:pre-wrap;background:var(--paper-2);padding:8px;border-radius:6px;margin:8px 0 0;font-family:inherit"></pre></div>
+        <div style="border:1px solid var(--line);border-radius:8px;padding:10px"><b>4. Contacts - جهات الاتصال</b> <span id="ct-count" style="color:var(--ink-soft);margin-inline-start:8px"></span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><input id="ct-f-q" placeholder="Search" oninput="ctRender()" style="padding:7px;border:1px solid var(--line);border-radius:5px"><select id="ct-f-country" onchange="ctRender()" style="padding:7px;border:1px solid var(--line);border-radius:5px"></select><select id="ct-f-mode" onchange="ctRender()" style="padding:7px;border:1px solid var(--line);border-radius:5px"><option value="">Everyone</option><option value="notreg">Not registered in this event</option><option value="reg">Registered in this event</option></select><button class="mini-btn" type="button" onclick="ctCopyEmails()">Copy emails (BCC)</button><button class="mini-btn" type="button" onclick="ctExport()">Export Excel with messages</button></div>
+          <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Title / Name</th><th>Email</th><th>Phone</th><th>Country</th><th>Organization</th><th>Send</th></tr></thead><tbody id="ct-tbody"></tbody></table></div></div>
       </div>
       <div class="adm-only" data-tab="setup">
         <h4>1. Event details</h4>
@@ -194,6 +213,7 @@
 <script src="js/countries.js"></script>
 <script src="js/qr.js"></script>
 <script src="js/admin-events.js"></script>
+<script src="js/admin-contacts.js"></script>
 <script>
 var sb=window.getSupabaseClient(), booted=null;
 function toEmail(v){v=(v||'').trim();if(v.indexOf('@')>-1)return v;var d=v.replace(/\D/g,'');return 'staff-'+d+'@staff.ideaeg.online';}
