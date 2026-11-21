@@ -73,8 +73,8 @@
           <label><input type="checkbox" id="rg-notify_admin"> Email me on each registration</label>
         </div>
         <div style="margin:6px 0 4px;padding:14px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px">
-          <b>👁 Live preview — معاينة صفحة التسجيل</b>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><input id="rg-link" readonly dir="ltr" style="flex:1;min-width:240px;padding:8px;border:1px solid var(--line);border-radius:5px"><button class="mini-btn" onclick="rgCopy()">Copy link</button><button class="mini-btn" onclick="rgPreview()">↻ Refresh</button><button class="mini-btn" onclick="rgPreview('d')">🖥 Desktop</button><button class="mini-btn" onclick="rgPreview('m')">📱 Mobile</button><button class="mini-btn" onclick="rgOpenPreview()">↗ Open</button><button class="mini-btn" onclick="rgPoster()">🖨 Poster QR</button></div>
+          <b>Live preview — معاينة صفحة التسجيل</b>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><input id="rg-link" readonly dir="ltr" style="flex:1;min-width:240px;padding:8px;border:1px solid var(--line);border-radius:5px"><button class="mini-btn" onclick="rgCopy()">Copy link</button><button class="mini-btn" onclick="rgPreview()">Refresh</button><button class="mini-btn" onclick="rgPreview('d')">Desktop</button><button class="mini-btn" onclick="rgPreview('m')">Mobile</button><button class="mini-btn" onclick="rgOpenPreview()">Open</button><button class="mini-btn" onclick="rgPoster()">Poster QR</button></div>
           <iframe id="rg-frame" title="preview" style="width:100%;max-width:100%;height:620px;border:1px solid var(--line);border-radius:8px;background:#fff;display:block;margin:0 auto"></iframe>
           <p style="font-size:.8rem;color:var(--ink-soft);margin:6px 0 0">المعاينة بتتحدّث بعد ما تخلّص كتابة بثانيتين (حتى لو المؤتمر غير منشور).</p>
         </div>
@@ -99,7 +99,8 @@
           <div id="rg-badge-custom" style="display:none;gap:6px"><label>W mm<input id="rg-badge_w_mm" type="number" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label><label>H mm<input id="rg-badge_h_mm" type="number" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label></div>
           <label>Certificate orientation<select id="rg-cert_orientation" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="landscape">A4 landscape</option><option value="portrait">A4 portrait</option></select></label>
           <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="rg-badge_show_qr" onchange="rgBadgePreview()"> Show QR on name tag — إظهار الـ QR على النيم تاج</label>
-          <label>Certificates for<select id="rg-cert_scope" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="attended">Attended only</option><option value="all">All confirmed + attended</option></select></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="rg-cert_scope_all"> Certificates for all registrants (unchecked = attended only)</label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="rg-cert_online"> Open certificates online (registrants can view and download from their link)</label>
         </div>
         <div style="margin:12px 0 0"><b>Name tag background / design</b> — صورة أو PDF <input type="file" accept="image/*,application/pdf" onchange="rgBadgeBgUpload(this)"><input id="rg-badge_bg_url" type="hidden"> <button class="mini-btn" onclick="rgBadgeBgClear()">Remove</button>
           <span style="font-size:.8rem;color:var(--ink-soft)">PDF بيتحوّل لصورة، ومقاس النيم تاج بياخد مقاس الـ PDF تلقائي.</span></div>
@@ -125,11 +126,11 @@
           <label>Font <select id="rg-cert_font" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="Georgia, serif">Georgia</option><option value="'Times New Roman', serif">Times New Roman</option><option value="Arial, sans-serif">Arial</option><option value="'Brush Script MT', cursive">Brush Script</option><option value="'Palatino Linotype', serif">Palatino</option></select></label>
         </div>
         <div id="rg-cert-pv" style="position:relative;width:100%;max-width:640px;border:1px solid var(--line);background:#fff;overflow:hidden"></div>
-        <div style="margin:8px 0"><button class="mini-btn primary" onclick="rgCertAll()">🎓 Print certificates (PDF)</button></div>
+        <div style="margin:8px 0"><button class="mini-btn primary" onclick="rgCertAll()">Print certificates (PDF)</button></div>
 
         </div>
         <div class="pm-checkin"><h4 style="margin-top:26px">4. Check-in</h4>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="rg-ci-code" dir="ltr" placeholder="Code" style="padding:8px;border:1px solid var(--line);border-radius:5px" onkeydown="if(event.key==='Enter')rgCheckin()"><button class="mini-btn primary" onclick="rgCheckin()">Check in</button><button class="mini-btn" onclick="rgScan()">📷 Scan QR</button></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="rg-ci-code" dir="ltr" placeholder="Code" style="padding:8px;border:1px solid var(--line);border-radius:5px" onkeydown="if(event.key==='Enter')rgCheckin()"><button class="mini-btn primary" onclick="rgCheckin()">Check in</button><button class="mini-btn" onclick="rgScan()">Scan QR</button></div>
         <div id="rg-reader" style="display:none;max-width:320px;margin-top:10px"></div>
         <p id="rg-ci-out" style="font-weight:600;min-height:1.4em"></p>
 
@@ -155,12 +156,12 @@
           <select id="rg-f-status" style="padding:7px;border:1px solid var(--line);border-radius:5px"><option value="">All status</option><option>confirmed</option><option>waitlist</option><option>attended</option><option>cancelled</option></select>
           <select id="rg-f-pkg" style="padding:7px;border:1px solid var(--line);border-radius:5px"></select>
           <input id="rg-f-q" placeholder="Search…" style="padding:7px;border:1px solid var(--line);border-radius:5px">
-          <button class="mini-btn pm-export" onclick="rgXlsx()">⬇ Excel</button>
-          <button class="mini-btn pm-export" onclick="rgPdf('list')">⬇ PDF list</button>
-          <button class="mini-btn pm-print" onclick="rgPdf('badges')">⬇ PDF badges</button>
-          <button class="mini-btn pm-print" onclick="rgPdf('both')">⬇ PDF both</button><button class="mini-btn pm-print" onclick="rgCertAll()">🎓 Certificates</button>
+          <button class="mini-btn pm-export" onclick="rgXlsx()">Excel</button>
+          <button class="mini-btn pm-export" onclick="rgPdf('list')">PDF list</button>
+          <button class="mini-btn pm-print" onclick="rgPdf('badges')">PDF badges</button>
+          <button class="mini-btn pm-print" onclick="rgPdf('both')">PDF both</button><button class="mini-btn pm-print" onclick="rgCertAll()">Certificates</button>
         </div>
-        <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Code</th><th>Title / Name</th><th>Contact</th><th>Package</th><th>Status</th><th>Payment</th><th>Source / Date</th><th></th></tr></thead><tbody id="rg-tbody"></tbody></table></div>
+        <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Code</th><th>Title / Name</th><th>Contact</th><th>Package</th><th>Status</th><th>Payment</th><th>Source / Date</th><th>Link to send</th><th></th></tr></thead><tbody id="rg-tbody"></tbody></table></div>
         </div>
       </div>
     </div>

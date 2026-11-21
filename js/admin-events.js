@@ -12,7 +12,7 @@ function toast(t,bad){
   d.style.background=bad?'#C0392B':'#1a8f55';d.textContent=t;d.style.opacity='1';
   clearTimeout(d._t);d._t=setTimeout(function(){d.style.opacity='0';},3200);
 }
-function msg(t,bad){toast(bad?('✕ '+t):(/✓/.test(t)?t.replace('✓','').trim()+' ✓':t),bad);var e=$('rg-msg');e.style.color=bad?'var(--orange-dark)':'#2FBE7A';e.textContent=t;if(!bad)setTimeout(function(){e.textContent='';},3500);}
+function msg(t,bad){toast(t,bad);var e=$('rg-msg');e.style.color=bad?'var(--orange-dark)':'#2FBE7A';e.textContent=t;if(!bad)setTimeout(function(){e.textContent='';},3500);}
 function toLocal(d){if(!d)return '';var x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,16);}
 function fromLocal(v){return v?new Date(v).toISOString():null;}
 
@@ -34,8 +34,8 @@ async function pick(){
   var f=['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar'];
   f.forEach(function(k){$('rg-'+k).value=EV[k]||'';});
   $('rg-start_at').value=toLocal(EV.start_at);$('rg-end_at').value=toLocal(EV.end_at);$('rg-registration_deadline').value=toLocal(EV.registration_deadline);
-  $('rg-form_lang').value=EV.form_lang||'auto';$('rg-badge_show_qr').checked=EV.badge_show_qr!==false;
-  ['badge_size','badge_bg_url','badge_w_mm','badge_h_mm','cert_template_url','cert_orientation','cert_name_x','cert_name_y','cert_font','cert_font_mm','cert_color','cert_scope','badge_name_x','badge_name_y','badge_name_mm','badge_qr_x','badge_qr_y','badge_qr_mm'].forEach(function(k){var el=$('rg-'+k);if(el&&EV[k]!=null)el.value=EV[k];});
+  $('rg-form_lang').value=EV.form_lang||'auto';$('rg-badge_show_qr').checked=EV.badge_show_qr!==false;$('rg-cert_scope_all').checked=EV.cert_scope==='all';$('rg-cert_online').checked=!!EV.cert_online;
+  ['badge_size','badge_bg_url','badge_w_mm','badge_h_mm','cert_template_url','cert_orientation','cert_name_x','cert_name_y','cert_font','cert_font_mm','cert_color','badge_name_x','badge_name_y','badge_name_mm','badge_qr_x','badge_qr_y','badge_qr_mm'].forEach(function(k){var el=$('rg-'+k);if(el&&EV[k]!=null)el.value=EV[k];});
   rgBadgeSizeUI();rgCertPreview();rgBadgePreview();fillReception();
   ['published','registration_open','show_countdown','show_payment','notify_admin'].forEach(function(k){$('rg-'+k).checked=!!EV[k];});
   $('rg-link').value=location.origin+'/event.html?e='+EV.slug;
@@ -63,8 +63,8 @@ window.rgSave=async function(auto){
   if(!EV)return;var o={};
   ['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar'].forEach(function(k){o[k]=$('rg-'+k).value.trim();});
   o.slug=o.slug.toLowerCase().replace(/[^a-z0-9-]/g,'-');
-  o.form_lang=$('rg-form_lang').value;o.badge_show_qr=$('rg-badge_show_qr').checked;
-  ['badge_size','badge_bg_url','cert_template_url','cert_orientation','cert_font','cert_color','cert_scope'].forEach(function(k){o[k]=$('rg-'+k).value;});
+  o.form_lang=$('rg-form_lang').value;o.badge_show_qr=$('rg-badge_show_qr').checked;o.cert_scope=$('rg-cert_scope_all').checked?'all':'attended';o.cert_online=$('rg-cert_online').checked;
+  ['badge_size','badge_bg_url','cert_template_url','cert_orientation','cert_font','cert_color'].forEach(function(k){o[k]=$('rg-'+k).value;});
   ['badge_w_mm','badge_h_mm','cert_name_x','cert_name_y','cert_font_mm','badge_name_x','badge_name_y','badge_name_mm','badge_qr_x','badge_qr_y','badge_qr_mm'].forEach(function(k){o[k]=Number($('rg-'+k).value)||0;});
   var pr=BADGE_PRESETS[o.badge_size];if(pr){o.badge_w_mm=pr[0];o.badge_h_mm=pr[1];$('rg-badge_w_mm').value=pr[0];$('rg-badge_h_mm').value=pr[1];}
   o.start_at=fromLocal($('rg-start_at').value);o.end_at=fromLocal($('rg-end_at').value);o.registration_deadline=fromLocal($('rg-registration_deadline').value);
@@ -72,8 +72,8 @@ window.rgSave=async function(auto){
   o.form_fields=readFields();
   var r=await sb.from('reg_events').update(o).eq('id',EV.id);
   if(r.error)return msg(r.error.message,true);
-  if(auto===true){Object.assign(EV,o);var op=$('rg-select').selectedOptions[0];if(op)op.textContent=label(o);$('rg-link').value=location.origin+'/event.html?e='+o.slug;msg('تم الحفظ تلقائياً ✓');rgPreviewSoon();return;}
-  msg('تم الحفظ — Saved ✓');await loadRegAdmin();
+  if(auto===true){Object.assign(EV,o);var op=$('rg-select').selectedOptions[0];if(op)op.textContent=label(o);$('rg-link').value=location.origin+'/event.html?e='+o.slug;msg('تم الحفظ تلقائياً');rgPreviewSoon();return;}
+  msg('تم الحفظ — Saved');await loadRegAdmin();
 };
 window.rgDelete=async function(){
   if(!confirm('Delete this event with ALL its packages and registrations?'))return;
@@ -87,9 +87,9 @@ window.rgUpload=async function(inp){
   var r=await sb.storage.from('website-media').upload(name,file);
   if(r.error)return msg(r.error.message,true);
   $('rg-cover_image_url').value=sb.storage.from('website-media').getPublicUrl(name).data.publicUrl;
-  msg('Uploaded ✓');rgSave(true);
+  msg('Uploaded');rgSave(true);
 };
-window.rgCopy=function(){$('rg-link').select();document.execCommand('copy');msg('Link copied ✓');};
+window.rgCopy=function(){$('rg-link').select();document.execCommand('copy');msg('Link copied');};
 
 /* ---- form builder ---- */
 var TYPES=['text','email','tel','number','date','textarea','select','checkbox'];
@@ -104,7 +104,7 @@ function renderFields(){
    '<select data-k="opt_lang" title="Dropdown language" style="'+IN+'">'+[['auto','Dropdown: follow page language'],['both','Dropdown: Arabic + English'],['ar','Dropdown: Arabic only'],['en','Dropdown: English only']].map(function(o){return '<option value="'+o[0]+'"'+((x.opt_lang||'auto')===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'+
    '<input data-k="options_en" placeholder="Options EN (a, b, c) — select only" value="'+h(x.options_en)+'" style="flex:1;min-width:140px;'+IN+'">'+
    '<input data-k="options_ar" placeholder="الخيارات (أ، ب، ج) — لقائمة الاختيار" value="'+h(x.options_ar)+'" dir="rtl" style="flex:1;min-width:140px;'+IN+'">'+
-   '<button class="mini-btn" onclick="rgMove('+i+',-1)">↑</button><button class="mini-btn" onclick="rgMove('+i+',1)">↓</button><button class="mini-btn" onclick="rgDelField('+i+')">✕</button></div>';}).join('')||'<p style="color:var(--ink-soft);font-size:.88rem">No extra fields. Name + email are always included.</p>';
+   '<button class="mini-btn" onclick="rgMove('+i+',-1)">Up</button><button class="mini-btn" onclick="rgMove('+i+',1)">Down</button><button class="mini-btn" onclick="rgDelField('+i+')">Delete</button></div>';}).join('')||'<p style="color:var(--ink-soft);font-size:.88rem">No extra fields. Name + email are always included.</p>';
 }
 function readFields(){
   return Array.prototype.map.call(document.querySelectorAll('.rg-ff'),function(row){
@@ -143,7 +143,7 @@ window.rgSavePkg=async function(id,auto){
   row.querySelectorAll('[data-k]').forEach(function(el){o[el.dataset.k]=el.type==='checkbox'?el.checked:el.value;});
   o.price=Number(o.price)||0;o.capacity=o.capacity===''?null:Number(o.capacity);o.sort_order=Number(o.sort_order)||0;
   var r=await sb.from('reg_packages').update(o).eq('id',id);
-  msg(r.error?r.error.message:'تم حفظ الباقة ✓',!!r.error);if(auto)rgPreviewSoon();else rgPreview();
+  msg(r.error?r.error.message:'تم حفظ الباقة',!!r.error);if(auto)rgPreviewSoon();else rgPreview();
 };
 window.rgDelPkg=async function(id){if(!confirm('Delete package?'))return;await sb.from('reg_packages').delete().eq('id',id);await loadPkgs();rgPreview();};
 
@@ -168,11 +168,12 @@ function renderRegs(){
    '<td dir="ltr" style="font-size:.8rem">'+h(x.email)+'<br>'+h(x.phone)+'</td><td>'+h(pname(x.package_id))+'</td>'+
    '<td>'+sel(ST,x.status,'rgSet('+id+',\'status\',this.value)')+'</td>'+
    '<td>'+sel(PY,x.payment_status,'rgSet('+id+',\'payment_status\',this.value)')+'<br>'+sel(PM,x.payment_method||'','rgSet('+id+',\'payment_method\',this.value)')+'</td>'+
-   '<td style="font-size:.78rem">'+(x.source==='walkin'?'🚶 walk-in':'🌐 online')+'<br>'+new Date(x.created_at).toLocaleString()+'</td>'+
-   '<td style="white-space:nowrap"><button class="mini-btn pm-print" title="Name tag" onclick="rgBadgeOne('+id+')">🏷</button><button class="mini-btn pm-print" title="Certificate" onclick="rgCertOne('+id+')">🎓</button><button class="mini-btn pm-edit" onclick="rgDelReg('+id+')">✕</button></td></tr>';}).join('')||'<tr><td colspan="8" style="color:var(--ink-soft)">No registrations</td></tr>';
+   '<td style="font-size:.78rem">'+(x.source==='walkin'?'walk-in':'online')+'<br>'+new Date(x.created_at).toLocaleString()+'</td>'+
+   '<td style="min-width:150px"><input readonly dir="ltr" value="'+h(location.origin+'/event.html?e='+EV.slug+'&ticket='+x.code)+'" onclick="this.select()" style="width:130px;padding:4px;font-size:.72rem;border:1px solid var(--line);border-radius:4px"> <button class="mini-btn" onclick="rgCopyLink(\''+x.code+'\')">Copy</button></td>'+
+   '<td style="white-space:nowrap"><button class="mini-btn pm-print" title="Name tag" onclick="rgBadgeOne('+id+')">Tag</button><button class="mini-btn pm-print" title="Certificate" onclick="rgCertOne('+id+')">Cert</button><button class="mini-btn pm-edit" onclick="rgDelReg('+id+')">Delete</button></td></tr>';}).join('')||'<tr><td colspan="9" style="color:var(--ink-soft)">No registrations</td></tr>';
 }
 window.rgRender=renderRegs;
-window.rgSet=async function(id,k,v){var o={};o[k]=v;if(k==='status')o.attended_at=v==='attended'?new Date().toISOString():null;var r=await sb.from('reg_registrations').update(o).eq('id',id);if(r.error)msg(r.error.message,true);else msg('تم الحفظ ✓');loadRegs();};
+window.rgSet=async function(id,k,v){var o={};o[k]=v;if(k==='status')o.attended_at=v==='attended'?new Date().toISOString():null;var r=await sb.from('reg_registrations').update(o).eq('id',id);if(r.error)msg(r.error.message,true);else msg('تم الحفظ');loadRegs();};
 window.rgDelReg=async function(id){if(!confirm('Delete registration?'))return;await sb.from('reg_registrations').delete().eq('id',id);loadRegs();};
 
 /* ---- export ---- */
@@ -292,7 +293,8 @@ function printCerts(list){
    list.map(function(x){return '<div class="c"><img src="'+h(EV.cert_template_url)+'" alt=""><div>'+h((x.title?x.title+' ':'')+x.name)+'</div></div>';}).join('')+'<script>window.addEventListener("load",function(){setTimeout(function(){print()},900)})<\/script>');
   w.document.close();
 }
-window.rgCertAll=function(){var sc=$('rg-cert_scope').value;printCerts(REGS.filter(function(x){return sc==='all'?(x.status==='confirmed'||x.status==='attended'):x.status==='attended';}));};
+window.rgCertAll=function(){var sc=$('rg-cert_scope_all').checked?'all':'attended';printCerts(REGS.filter(function(x){return sc==='all'?(x.status==='confirmed'||x.status==='attended'):x.status==='attended';}));};
+window.rgCopyLink=function(code){var u=location.origin+'/event.html?e='+EV.slug+'&ticket='+code;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){toast('Link copied');},function(){prompt('Copy the link',u);});};
 window.rgCertOne=function(id){var x=REGS.filter(function(r){return r.id===id;})[0];if(x)printCerts([x]);};
 /* poster */
 window.rgPoster=function(){
@@ -317,7 +319,7 @@ window.rgWalkin=async function(){
     payment_status:paid?(method?'paid':'unpaid'):'free',payment_method:paid?method:''};
   var r=await sb.from('reg_registrations').insert(o).select().single();
   if(r.error)return msg(r.error.message,true);
-  msg('تم تسجيل '+o.name+' ✓');
+  msg('تم تسجيل '+o.name+'');
   ['rg-w-first','rg-w-last','rg-w-email','rg-w-phone'].forEach(function(i){$(i).value='';});
   await loadRegs();
   if($('rg-w-print').checked)printBadges([r.data]);
@@ -330,11 +332,11 @@ async function checkin(code){
   code=(code||'').trim().toUpperCase();if(!code)return;
   var x=REGS.filter(function(r){return r.code===code;})[0];
   var out=$('rg-ci-out');
-  if(!x){out.style.color='#B33';out.textContent='✕ Code not found: '+code;return;}
-  if(x.status==='cancelled'||x.status==='waitlist'){out.style.color='#B33';out.textContent='✕ '+x.name+' — status: '+x.status;return;}
-  if(x.status==='attended'){out.style.color='#B77900';out.textContent='⚠ Already checked in: '+x.name;return;}
+  if(!x){out.style.color='#B33';out.textContent='Code not found: '+code;return;}
+  if(x.status==='cancelled'||x.status==='waitlist'){out.style.color='#B33';out.textContent=''+x.name+' — status: '+x.status;return;}
+  if(x.status==='attended'){out.style.color='#B77900';out.textContent='Already checked in: '+x.name;return;}
   await sb.from('reg_registrations').update({status:'attended',attended_at:new Date().toISOString()}).eq('id',x.id);
-  out.style.color='#1a8f55';out.textContent='✓ '+x.name+' — '+pname(x.package_id)+(x.payment_status==='unpaid'?' (UNPAID)':'');
+  out.style.color='#1a8f55';out.textContent=''+x.name+' — '+pname(x.package_id)+(x.payment_status==='unpaid'?' (UNPAID)':'');
   loadRegs();
 }
 window.rgCheckin=function(){checkin($('rg-ci-code').value);$('rg-ci-code').value='';};

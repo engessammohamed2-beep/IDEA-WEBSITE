@@ -22,7 +22,7 @@
     <h3>Sign in</h3>
     <p class="lead" style="font-size:.88rem">First time here? Use "Create account" once to set up your admin login. After that, always use "Sign in".</p>
     <div id="confirm-banner" style="display:none;background:#E7F8EF;border:1px solid #6FCB9A;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:.88rem;color:#1a6b45">
-      ✅ Email confirmed — signing you in...
+      Email confirmed — signing you in...
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;max-width:360px">
       <input id="email" type="email" placeholder="Email" style="padding:10px;border:1px solid var(--line);border-radius:6px">
@@ -42,16 +42,16 @@
     </div>
 
     <div class="admin-card">
-      <h3 style="margin-top:0">🎟 Events &amp; Registration — المؤتمرات والتسجيل</h3>
+      <h3 style="margin-top:0">Events &amp; Registration — المؤتمرات والتسجيل</h3>
       <p style="color:var(--ink-soft)">اتنقلت لصفحة لوحدها علشان الموظفين يدخلوا عليها بدون ما يشوفوا باقي لوحة الموقع.</p>
-      <a class="btn btn-primary" href="events-admin.html" target="_blank">Open Events &amp; Registration ↗</a>
+      <a class="btn btn-primary" href="events-admin.html" target="_blank">Open Events &amp; Registration</a>
       <div style="margin-top:10px;font-size:.85rem;color:var(--ink-soft)">لينك الموظفين: <b dir="ltr" id="staff-link"></b></div>
     </div>
 
     <div class="admin-card" id="staff-card">
-      <h3 style="margin-top:0">👥 Staff access — صلاحيات الموظفين</h3>
-      <p style="color:var(--ink-soft);font-size:.9rem">كل موظف بصلاحياته: تقدر تديه تحكم كامل في المؤتمرات (⭐) أو صلاحيات معينة بس. الموظف مبيدخلش على لوحة الموقع، والدخول برقم التليفون والباسورد.</p>
-      <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Name / Phone</th><th>Permissions — الصلاحيات</th><th>Status</th><th></th></tr></thead><tbody id="staff-tbody"></tbody></table></div>
+      <h3 style="margin-top:0">Staff access — صلاحيات الموظفين</h3>
+      <p style="color:var(--ink-soft);font-size:.9rem">كل موظف بصلاحياته: تقدر تديه تحكم كامل في المؤتمرات (تحكم كامل في المؤتمرات) أو صلاحيات معينة بس. الموظف مبيدخلش على لوحة الموقع، والدخول برقم التليفون والباسورد.</p>
+      <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th style="width:18%">Name / Phone</th><th style="width:52%">Permissions — الصلاحيات</th><th style="width:8%">Status</th><th></th></tr></thead><tbody id="staff-tbody"></tbody></table></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
         <input id="st-name" placeholder="Name — الاسم" style="padding:8px;border:1px solid var(--line);border-radius:5px;flex:1;min-width:150px">
         <input id="st-phone" placeholder="Phone — رقم التليفون" dir="ltr" style="padding:8px;border:1px solid var(--line);border-radius:5px;flex:1;min-width:150px">
@@ -155,7 +155,7 @@
 
     <div class="admin-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <h3 style="margin:0">🗒️ Page text (every string on the site)</h3>
+        <h3 style="margin:0">Page text (every string on the site)</h3>
         <select id="content-page-filter" onchange="loadContent()" style="padding:6px 10px;border:1px solid var(--line);border-radius:5px">
           <option value="home">Home</option>
           <option value="about">About</option>
@@ -178,7 +178,7 @@
     </div>
 
     <div class="admin-card">
-      <h3 style="margin-top:0">📅 Upcoming event (homepage countdown)</h3>
+      <h3 style="margin-top:0">Upcoming event (homepage countdown)</h3>
       <p style="font-size:.85rem;color:var(--ink-soft);margin-top:-6px">Shows an image + live countdown on the homepage. Turn off "Enabled" to hide it, or it hides itself automatically once the date passes.</p>
       <div style="display:flex;flex-direction:column;gap:10px;max-width:600px">
         <label style="font-size:.85rem"><input type="checkbox" id="ev-enabled"> Enabled — show on homepage</label>
@@ -205,7 +205,7 @@
     </div>
 
     <div class="admin-card">
-      <h3 style="margin-top:0">🖼️ Media library</h3>
+      <h3 style="margin-top:0">Media library</h3>
       <p style="font-size:.85rem;color:var(--ink-soft);margin-top:-6px">Upload any image here first — then copy its link into an article cover, a client logo, or a page image below.</p>
       <input type="file" id="media-file" accept="image/*" style="margin-bottom:10px">
       <button class="mini-btn primary" onclick="uploadMedia()">Upload image</button>
@@ -214,7 +214,7 @@
     </div>
 
     <div class="admin-card">
-      <h3 style="margin-top:0">🏞️ Page images</h3>
+      <h3 style="margin-top:0">Page images</h3>
       <p style="font-size:.85rem;color:var(--ink-soft);margin-top:-6px">Replace the hero photo and other fixed images across the site.</p>
       <table class="admin-table" id="pageimg-table">
         <thead><tr><th>Slot</th><th>Preview</th><th>Image URL</th><th></th></tr></thead>
@@ -223,7 +223,7 @@
     </div>
 
     <div class="admin-card">
-      <h3 style="margin-top:0">💬 Contact messages</h3>
+      <h3 style="margin-top:0">Contact messages</h3>
       <p style="font-size:.85rem;color:var(--ink-soft);margin-top:-6px">Submissions from the contact form on the website.</p>
       <table class="admin-table" id="messages-table">
         <thead><tr><th>Date</th><th>Name</th><th>Phone</th><th>Email</th><th>Message</th><th></th></tr></thead>
@@ -232,7 +232,7 @@
     </div>
 
     <div class="admin-card">
-      <h3 style="margin-top:0">📝 Articles / Blog</h3>
+      <h3 style="margin-top:0">Articles / Blog</h3>
       <table class="admin-table" id="articles-table">
         <thead><tr><th>Cover</th><th>Title (EN)</th><th>Slug</th><th>Published</th><th></th></tr></thead>
         <tbody id="articles-tbody"></tbody>
@@ -518,7 +518,7 @@ async function uploadMedia() {
   var { error } = await sb.storage.from('website-media').upload(path, file, { upsert: true });
   if (error) { statusEl.textContent = 'Error: ' + error.message; return; }
   var { data } = sb.storage.from('website-media').getPublicUrl(path);
-  statusEl.innerHTML = 'Uploaded ✓ — <a href="' + data.publicUrl + '" target="_blank">' + data.publicUrl + '</a>';
+  statusEl.innerHTML = 'Uploaded — <a href="' + data.publicUrl + '" target="_blank">' + data.publicUrl + '</a>';
   fileInput.value = '';
   loadMedia();
 }
@@ -550,7 +550,7 @@ async function loadMedia() {
     return '<div style="cursor:pointer" onclick="navigator.clipboard.writeText(\''+url+'\');this.querySelector(\'.tag\').textContent=\'Copied!\'" title="Click to copy link">' +
       '<img src="'+url+'" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;border:1px solid var(--line)">' +
       '<div class="tag" style="font-size:.65rem;text-align:center;color:var(--ink-soft);margin-top:2px">Copy link</div>' +
-      '<button class="mini-btn" style="width:100%;margin-top:4px;color:#B33" onclick="event.stopPropagation();deleteMedia(\''+f.name.replace(/'/g,"\\'")+'\')">🗑 Delete</button></div>';
+      '<button class="mini-btn" style="width:100%;margin-top:4px;color:#B33" onclick="event.stopPropagation();deleteMedia(\''+f.name.replace(/'/g,"\\'")+'\')">Delete</button></div>';
   }).join('');
 }
 
@@ -565,7 +565,7 @@ async function loadPageImages() {
       '<td>'+p.id+'</td>' +
       '<td><img src="'+p.image_url+'" style="width:70px;height:50px;object-fit:cover;border-radius:4px;border:1px solid var(--line)"></td>' +
       '<td><input value="'+p.image_url+'" onchange="updatePageImage(\''+p.id+'\',this.value)"></td>' +
-      '<td><button class="mini-btn" onclick="location.reload()">↻ Refresh preview</button></td>';
+      '<td><button class="mini-btn" onclick="location.reload()">Refresh preview</button></td>';
     tbody.appendChild(tr);
   });
 }
@@ -586,7 +586,7 @@ async function loadArticles() {
       '<td>'+cover+'</td>' +
       '<td>'+esc(a.title_en)+'</td>' +
       '<td style="font-family:var(--font-mono);font-size:.78rem">'+esc(a.slug)+'</td>' +
-      '<td>'+(a.published ? '✅' : '— draft')+'</td>' +
+      '<td>'+(a.published ? 'Published' : '— draft')+'</td>' +
       '<td><button class="mini-btn" onclick="editArticle(\''+a.id+'\')">Edit</button> <button class="mini-btn danger" onclick="deleteArticle(\''+a.id+'\')">Remove</button></td>';
     tbody.appendChild(tr);
   });

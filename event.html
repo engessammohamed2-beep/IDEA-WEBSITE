@@ -34,7 +34,7 @@
     </nav>
     <div style="display:flex;align-items:center;gap:10px">
       <button class="lang-toggle" onclick="toggleLang()">عربي</button>
-      <button class="nav-toggle" aria-label="Menu">☰</button>
+      <button class="nav-toggle" aria-label="Menu"></button>
     </div>
   </div>
 </header>
@@ -173,8 +173,30 @@ async function init(){
 async function showTicket(){
   var r=await sb.rpc('get_registration',{p_code:ticket});var o=r.data;var box=document.getElementById('reg-area');if(!box)return;
   if(!o){box.innerHTML='<p>'+esc(T('التذكرة غير موجودة','Ticket not found'))+'</p>';return;}
-  box.innerHTML='<div class="ok-box"><h2 style="margin:0 0 6px">'+esc(T('تذكرتك','Your ticket'))+'</h2><p>'+esc(o.name)+'</p><div class="code" dir="ltr">'+esc(o.code)+'</div><div id="qr"></div><p style="color:var(--ink-soft)">'+esc(o.status)+'</p><button class="btn btn-primary" id="qr-btn">'+esc(T('⬇ تحميل الـ QR','⬇ Download QR'))+'</button></div>';
+  box.innerHTML='<div class="ok-box"><h2 style="margin:0 0 6px">'+esc(T('تذكرتك','Your ticket'))+'</h2><p>'+esc(o.name)+'</p><div class="code" dir="ltr">'+esc(o.code)+'</div><div id="qr"></div><p style="color:var(--ink-soft)">'+esc(o.status)+'</p><button class="btn btn-primary" id="qr-btn">'+esc(T('تحميل الـ QR','Download QR'))+'</button></div>';
   showQr(o.code);document.getElementById('qr-btn').onclick=function(){var a=document.createElement('a');a.href=document.querySelector('#qr img').src;a.download='QR-'+o.code+'.png';document.body.appendChild(a);a.click();a.remove();};
+  certBox(o,box);
+}
+function certBox(o,box){
+  var d=document.createElement('div');d.className='ok-box';d.style.marginTop='16px';d.style.maxWidth='760px';
+  if(!o.cert_open){d.innerHTML='<h3 style="margin:0 0 6px">'+esc(T('شهادتك','Your certificate'))+'</h3><p style="color:var(--ink-soft)">'+esc(T('ستتوفر شهادتك على هذا الرابط بعد انتهاء المؤتمر.','Your certificate will be available at this link after the conference.'))+'</p>';box.appendChild(d);return;}
+  if(!o.cert_eligible||!o.cert){d.innerHTML='<h3 style="margin:0 0 6px">'+esc(T('شهادتك','Your certificate'))+'</h3><p style="color:var(--ink-soft)">'+esc(T('الشهادة متاحة للحاضرين فقط. لو حضرت وتعتقد أن هناك خطأ، تواصل مع المنظّمين.','The certificate is available to attendees only. If you attended and believe this is a mistake, please contact the organizers.'))+'</p>';box.appendChild(d);return;}
+  var c=o.cert,land=c.orientation!=='portrait',nm=(o.title?o.title+' ':'')+o.name;
+  d.innerHTML='<h3 style="margin:0 0 10px">'+esc(T('شهادتك','Your certificate'))+'</h3><div id="cert-pv" style="position:relative;width:100%;aspect-ratio:'+(land?'297/210':'210/297')+';background:#fff;border:1px solid #ddd;overflow:hidden"><img src="'+esc(c.url)+'" alt="" style="position:absolute;inset:0;width:100%;height:100%"><div id="cert-nm" style="position:absolute;left:'+c.x+'%;top:'+c.y+'%;transform:translate(-50%,-50%);white-space:nowrap;font-family:'+esc(c.font)+';color:'+esc(c.color)+'">'+esc(nm)+'</div></div><div style="margin-top:12px"><button class="btn btn-primary" id="cert-png">'+esc(T('تحميل الشهادة (صورة)','Download certificate (image)'))+'</button> <button class="btn btn-ghost" id="cert-pdf">'+esc(T('طباعة / حفظ PDF','Print / Save as PDF'))+'</button></div>';
+  box.appendChild(d);
+  var pv=d.querySelector('#cert-pv'),nmEl=d.querySelector('#cert-nm');
+  function fit(){nmEl.style.fontSize=(c.mm*pv.clientWidth/(land?297:210))+'px';}fit();window.addEventListener('resize',fit);
+  d.querySelector('#cert-png').onclick=function(){
+    var im=new Image();im.crossOrigin='anonymous';
+    im.onload=function(){var cv=document.createElement('canvas');cv.width=im.naturalWidth;cv.height=im.naturalHeight;var x=cv.getContext('2d');x.drawImage(im,0,0);
+      x.fillStyle=c.color;x.textAlign='center';x.textBaseline='middle';var px=c.mm*cv.width/(land?297:210);x.font=px+'px '+c.font;x.fillText(nm,cv.width*c.x/100,cv.height*c.y/100);
+      cv.toBlob(function(b){var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Certificate-'+o.code+'.png';document.body.appendChild(a);a.click();a.remove();},'image/png');};
+    im.onerror=function(){alert(T('تعذّر تحميل الصورة، استخدم زر الطباعة','Could not load the image, use the print button'));};
+    im.src=c.url;};
+  d.querySelector('#cert-pdf').onclick=function(){
+    var W=land?297:210,H=land?210:297,w=window.open('','_blank');if(!w)return;
+    w.document.write('<!doctype html><meta charset="utf-8"><title>Certificate</title><style>@page{size:A4 '+(land?'landscape':'portrait')+';margin:0}body{margin:0}.c{position:relative;width:'+W+'mm;height:'+H+'mm;overflow:hidden}.c img{position:absolute;inset:0;width:100%;height:100%}.c div{position:absolute;left:'+c.x+'%;top:'+c.y+'%;transform:translate(-50%,-50%);white-space:nowrap;font-family:'+c.font+';color:'+c.color+';font-size:'+c.mm+'mm}</style><div class="c"><img src="'+c.url+'" alt=""><div>'+esc(nm)+'</div></div><script>window.addEventListener("load",function(){setTimeout(function(){print()},700)})<\/script>');
+    w.document.close();};
 }
 function render(){
   if(!EV)return;
@@ -183,10 +205,10 @@ function render(){
   if(preview)h+='<div style="background:#FFF4CC;border:1px solid #E6C200;border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:.85rem">'+esc(T('وضع المعاينة — التسجيل معطّل، والعرض للأدمن فقط','Preview mode — registration is disabled, admin only'))+(EV.published?'':' · '+esc(T('المؤتمر غير منشور','Not published')))+'</div>';
   if(safeUrl(EV.cover_image_url))h+='<img class="ev-hero-img" src="'+esc(EV.cover_image_url)+'" alt="">';
   h+='<h1 style="margin:22px 0 4px">'+esc(f(EV,'title'))+'</h1><div class="ev-meta">';
-  if(EV.start_at)h+='<span>📅 '+esc(fmt(EV.start_at))+'</span>';
+  if(EV.start_at)h+='<span>'+esc(fmt(EV.start_at))+'</span>';
   var loc=f(EV,'location');
-  if(loc)h+='<span>📍 '+esc(loc)+(safeUrl(EV.map_url)?' — <a href="'+esc(EV.map_url)+'" target="_blank" rel="noopener">'+esc(T('افتح الخريطة','Open map'))+'</a>':'')+'</span>';
-  if(EV.contact_email)h+='<span>✉️ <a href="mailto:'+esc(EV.contact_email)+'">'+esc(EV.contact_email)+'</a></span>';
+  if(loc)h+='<span>'+esc(loc)+(safeUrl(EV.map_url)?' — <a href="'+esc(EV.map_url)+'" target="_blank" rel="noopener">'+esc(T('افتح الخريطة','Open map'))+'</a>':'')+'</span>';
+  if(EV.contact_email)h+='<span><a href="mailto:'+esc(EV.contact_email)+'">'+esc(EV.contact_email)+'</a></span>';
   h+='</div>';
   if(EV.show_countdown&&EV.start_at)h+='<div class="cd" id="cd" dir="ltr"></div>';
   var d=f(EV,'description');
@@ -280,14 +302,16 @@ function ics(){
   var s='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:'+EV.id+'@ideaeg.online\r\nDTSTAMP:'+z(Date.now())+'\r\nDTSTART:'+z(EV.start_at)+'\r\nDTEND:'+z(EV.end_at||EV.start_at)+'\r\nSUMMARY:'+(EV.title_en||EV.title_ar)+'\r\nLOCATION:'+(EV.location_en||EV.location_ar||'')+'\r\nEND:VEVENT\r\nEND:VCALENDAR';
   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([s],{type:'text/calendar'}));a.download='event.ics';a.click();
 }
+function ticketUrl(code){return location.origin+'/event.html?e='+encodeURIComponent(EV.slug)+'&ticket='+encodeURIComponent(code);}
 function success(o,name,email,p,data){
   var wl=o.status==='waitlist';
-  document.getElementById('reg-area').innerHTML='<div class="ok-box"><h2 style="margin:0 0 6px">'+esc(wl?T('تم وضعك في قائمة الانتظار','You are on the waitlist'):T('تم التسجيل بنجاح ✓','Registration confirmed ✓'))+'</h2>'+
+  document.getElementById('reg-area').innerHTML='<div class="ok-box"><h2 style="margin:0 0 6px">'+esc(wl?T('تم وضعك في قائمة الانتظار','You are on the waitlist'):T('تم التسجيل بنجاح','Registration confirmed'))+'</h2>'+
    '<p>'+esc(name)+' — '+esc(f(p,'name'))+'</p><div class="code" dir="ltr">'+esc(o.code)+'</div><div id="qr"></div>'+
    '<p style="font-size:.88rem;color:var(--ink-soft)">'+esc(T('حمّل الـ QR أو خد له سكرين شوت، وأظهره عند الدخول يوم المؤتمر ليتم مسحه. كمان معاك الكود المكتوب فوقه.','Download or screenshot this QR and show it at the entrance on the event day to be scanned. The written code above also works.'))+'</p>'+
-   '<button class="btn btn-primary" id="qr-btn">'+esc(T('⬇ تحميل الـ QR','⬇ Download QR'))+'</button> '+
+   '<button class="btn btn-primary" id="qr-btn">'+esc(T('تحميل الـ QR','Download QR'))+'</button> '+
    (EV.start_at?'<button class="btn btn-ghost" id="ics-btn">'+esc(T('أضف للتقويم','Add to calendar'))+'</button> ':'')+
-   (safeUrl(EV.map_url)?'<a class="btn btn-ghost" target="_blank" rel="noopener" href="'+esc(EV.map_url)+'">'+esc(T('الموقع على الخريطة','Map'))+'</a>':'')+'</div>';
+   (safeUrl(EV.map_url)?'<a class="btn btn-ghost" target="_blank" rel="noopener" href="'+esc(EV.map_url)+'">'+esc(T('الموقع على الخريطة','Map'))+'</a>':'')+
+   '<p style="font-size:.88rem;color:var(--ink-soft);margin-top:14px">'+esc(T('شهادتك ستكون متاحة على رابط التذكرة بعد المؤتمر: ','Your certificate will be available at your ticket link after the conference: '))+'<br><a dir="ltr" href="'+esc(ticketUrl(o.code))+'">'+esc(ticketUrl(o.code))+'</a></p></div>';
   showQr(o.code);
   var ib=document.getElementById('ics-btn');if(ib)ib.onclick=ics;
   document.getElementById('qr-btn').onclick=function(){
@@ -303,7 +327,7 @@ function sendMails(o,name,email,p){
   emailjs.init({publicKey:C.publicKey});
   var base={event_title:f(EV,'title'),package_name:f(p,'name'),code:o.code,status:o.status==='waitlist'?'Waitlist / قائمة انتظار':'Confirmed / مؤكد',
     event_date:EV.start_at?fmt(EV.start_at):'',location:f(EV,'location'),map_url:EV.map_url||'',
-    ticket_url:location.origin+'/event.html?e='+encodeURIComponent(EV.slug)+'&ticket='+encodeURIComponent(o.code),reply_to:EV.contact_email||'info@ideaeg.online',registrant_name:name,registrant_email:email};
+    ticket_url:ticketUrl(o.code),cert_note:'Your certificate will be available at this link after the conference / ستكون شهادتك متاحة على هذا الرابط بعد المؤتمر: '+ticketUrl(o.code),reply_to:EV.contact_email||'info@ideaeg.online',registrant_name:name,registrant_email:email};
   emailjs.send(C.serviceId,C.registerTemplateId,Object.assign({to_email:email,to_name:name,is_admin_copy:''},base)).catch(function(){});
   if(EV.notify_admin&&EV.admin_email)emailjs.send(C.serviceId,C.registerTemplateId,Object.assign({},base,{to_email:EV.admin_email,to_name:'Admin',is_admin_copy:'yes'})).catch(function(){});
 }
