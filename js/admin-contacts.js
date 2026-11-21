@@ -7,7 +7,7 @@ function say(t,bad){var e=$('ct-msg');if(!e)return;e.style.color=bad?'#C0392B':'
 var FIELDS=[['name','Name - الاسم'],['first','First name'],['last','Last name'],['title','Title - اللقب'],['email','Email - الإيميل'],['phone','Phone - التليفون'],['country','Country - الدولة'],['organization','Organization - الجهة'],['notes','Notes - ملاحظات'],['extra','Keep as extra data'],['skip','Ignore this column']];
 var SYN={name:['name','full name','fullname','doctor','doctor name','dr name','الاسم','اسم','الاسم بالكامل','الاسم الكامل','اسم الدكتور'],first:['first name','firstname','first','given name','الاسم الاول','الاسم الأول'],last:['last name','lastname','last','surname','family name','العائلة','اسم العائلة','الاسم الاخير','اللقب العائلي'],title:['title','prefix','degree','لقب','اللقب','الدرجة'],email:['email','e-mail','e mail','mail','email address','الايميل','الإيميل','البريد','البريد الالكتروني','البريد الإلكتروني','ايميل','إيميل'],phone:['phone','mobile','tel','telephone','whatsapp','phone number','mobile number','cell','موبايل','الموبايل','تليفون','التليفون','رقم','هاتف','الهاتف','جوال','رقم الموبايل','رقم الهاتف','رقم التليفون','واتساب'],country:['country','nation','nationality','الدولة','البلد','دولة','بلد'],organization:['organization','organisation','hospital','company','institution','affiliation','workplace','university','الجهة','المستشفى','جهة العمل','الشركة','الجامعة','مكان العمل'],notes:['notes','note','comments','comment','remarks','ملاحظات','ملاحظة']};
 function norm(s){return String(s||'').toLowerCase().replace(/[ً-ٟ_\-\.:]/g,' ').replace(/\s+/g,' ').trim();}
-var ROWS=[],HEAD=[],CT=[],EDITING=null;
+var ROWS=[],HEAD=[],CT=[],EDITING=null,SEL={};
 function detect(head,rows){
   var used={},map=[];
   head.forEach(function(hd,i){var n=norm(hd),f=null;Object.keys(SYN).forEach(function(k){if(!f&&SYN[k].some(function(s){return norm(s)===n;}))f=k;});
@@ -80,12 +80,65 @@ function filt(){
 function msgFor(x){var nm=((x.title?x.title+' ':'')+x.name).trim();return $('ct-body').value.split('{name}').join(nm).split('{link}').join(link());}
 function waNum(p){var d=String(p||'').replace(/\D/g,'');if(!d)return '';if(d.indexOf('00')===0)d=d.slice(2);else if(/^01\d{9}$/.test(d))d='2'+d;return d;}
 window.ctRender=function(){
+  var pk=(window._rg&&window._rg.pks())||[],ps=$('ct-pkg');if(ps&&ps.options.length!==Math.max(1,pk.length)){var cv=ps.value;ps.innerHTML=pk.map(function(p){return '<option value="'+p.id+'">'+h(p.name_en||p.name_ar)+'</option>';}).join('')||'<option value="">No packages</option>';if(cv)ps.value=cv;}
   var L=filt();$('ct-count').textContent=L.length+' of '+CT.length+' contacts';
   $('ct-tbody').innerHTML=L.slice(0,200).map(function(x){var id="'"+x.id+"'";
     function inp(k,w){return '<input value="'+h(x[k])+'" onchange="ctSet('+id+',\''+k+'\',this.value)" style="width:'+w+';padding:4px;border:1px solid var(--line);border-radius:4px;font-size:.8rem">';}
     var wa=waNum(x.phone);
-    return '<tr><td>'+inp('title','50px')+' '+inp('name','150px')+'</td><td dir="ltr">'+inp('email','180px')+'</td><td dir="ltr">'+inp('phone','120px')+'</td><td>'+inp('country','110px')+'</td><td>'+inp('organization','130px')+'</td><td style="white-space:nowrap">'+(wa?'<a class="mini-btn" target="_blank" rel="noopener" href="https://wa.me/'+wa+'?text='+encodeURIComponent(msgFor(x))+'">WhatsApp</a> ':'')+(x.email?'<a class="mini-btn" href="mailto:'+encodeURIComponent(x.email).replace('%40','@')+'?subject='+encodeURIComponent($('ct-subject').value)+'&body='+encodeURIComponent(msgFor(x))+'">Email</a> ':'')+'<button class="mini-btn" onclick="ctDel('+id+')">Delete</button></td></tr>';}).join('')||'<tr><td colspan="6" style="color:var(--ink-soft)">No contacts</td></tr>';
+    return '<tr><td><input type="checkbox" '+(SEL[x.id]?'checked ':'')+'onchange="ctSel(\''+x.id+'\',this.checked)"></td><td>'+inp('title','50px')+' '+inp('name','150px')+'</td><td dir="ltr">'+inp('email','180px')+'</td><td dir="ltr">'+inp('phone','120px')+'</td><td>'+inp('country','110px')+'</td><td>'+inp('organization','130px')+'</td><td style="white-space:nowrap">'+(wa?'<a class="mini-btn" target="_blank" rel="noopener" href="https://wa.me/'+wa+'?text='+encodeURIComponent(msgFor(x))+'">WhatsApp</a> ':'')+(x.email?'<a class="mini-btn" href="mailto:'+encodeURIComponent(x.email).replace('%40','@')+'?subject='+encodeURIComponent($('ct-subject').value)+'&body='+encodeURIComponent(msgFor(x))+'">Email</a> ':'')+'<button class="mini-btn" onclick="ctDel('+id+')">Delete</button></td></tr>';}).join('')||'<tr><td colspan="7" style="color:var(--ink-soft)">No contacts</td></tr>';
   if(L.length>200)$('ct-count').textContent+=' (showing the first 200, use search or filters; Copy/Export use all '+L.length+')';
+};
+function selN(){var n=Object.keys(SEL).filter(function(k){return SEL[k];}).length;var e=$('ct-sel-n');if(e)e.textContent=n;}
+window.ctSel=function(id,on){SEL[id]=on;selN();};
+window.ctSelAll=function(on){filt().forEach(function(x){SEL[x.id]=on;});if($('ct-sel-head'))$('ct-sel-head').checked=on;selN();ctRender();};
+function nk(n){return String(n||'').toLowerCase().replace(/\b(dr|prof|professor|eng|mr|mrs|ms)\b\.?/g,'').replace(/[^a-z\u0600-\u06ff ]/g,'').replace(/\s+/g,' ').trim();}
+function keysOf(x){var k=[];if(x.email)k.push('e:'+x.email.toLowerCase().trim());var p=String(x.phone||'').replace(/\D/g,'');if(p.length>=8)k.push('p:'+p.slice(-10));var n=nk(x.name);if(n.split(' ').length>=2)k.push('n:'+n);return k;}
+function regRow(c,pkg,status){
+  var parts=String(c.name||'').trim().split(/\s+/),first=parts.shift()||'',last=parts.join(' ');
+  var code=Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(4)),function(b){return ('0'+b.toString(16)).slice(-2);}).join('').toUpperCase();
+  var price=Number((window._rg.pks().filter(function(p){return p.id===pkg;})[0]||{}).price||0);
+  var o={event_id:window._rg.ev().id,package_id:pkg,code:code,name:c.name||c.email||c.phone,title:c.title||'',email:c.email||'',phone:c.phone||'',
+    data:{first_name:first,last_name:last,title:c.title||'',phone:c.phone||'',country:c.country||'',organization:c.organization||''},status:status,source:'invited',payment_status:price>0?'unpaid':'free'};
+  if(status==='attended')o.attended_at=new Date().toISOString();return o;}
+async function insertContacts(list,pkg,status){
+  var rows=list.map(function(c){return regRow(c,pkg,status);});
+  for(var i=0;i<rows.length;i+=100){var r=await sb.from('reg_registrations').insert(rows.slice(i,i+100));if(r.error){say(r.error.message,true);return false;}}
+  return true;}
+window.ctAddToReg=async function(){
+  var EV=window._rg&&window._rg.ev();if(!EV)return say('Select an event first',true);
+  var pkg=$('ct-pkg').value,st=$('ct-st').value;if(!pkg)return say('Choose a package first',true);
+  var chosen=CT.filter(function(c){return SEL[c.id];});if(!chosen.length)return say('Select contacts first',true);
+  var regs=window._rg.regs().filter(function(x){return x.status!=='cancelled';});
+  var nodes=chosen.map(function(c){return {t:'c',c:c};}).concat(regs.map(function(r){return {t:'r',c:r};}));
+  var par=nodes.map(function(_,i){return i;});function fd(i){while(par[i]!==i){par[i]=par[par[i]];i=par[i];}return i;}
+  var idx={};nodes.forEach(function(n,i){keysOf(n.c).forEach(function(k){if(idx[k]!==undefined)par[fd(i)]=fd(idx[k]);else idx[k]=i;});});
+  var groups={};nodes.forEach(function(n,i){var g=fd(i);(groups[g]=groups[g]||[]).push(n);});
+  var clean=[],dups=[];Object.keys(groups).forEach(function(g){var m=groups[g],cs=m.filter(function(x){return x.t==='c';});if(!cs.length)return;if(m.length===1)clean.push(cs[0].c);else dups.push(m);});
+  if(clean.length){if(!await insertContacts(clean,pkg,st))return;clean.forEach(function(c){delete SEL[c.id];});}
+  dups.forEach(function(m){m.forEach(function(n){if(n.t==='c')delete SEL[n.c.id];});});
+  window._rg.reload();selN();ctRender();
+  say('Added '+clean.length+' - تمت إضافة '+clean.length+(dups.length?'. '+dups.length+' duplicate group(s) need your decision below':''));
+  DUPS=dups;DUPCFG={pkg:pkg,st:st};renderDups();
+};
+var DUPS=[],DUPCFG={};
+function renderDups(){
+  var el=$('ct-dups');if(!DUPS.length){el.innerHTML='';return;}
+  el.innerHTML='<div style="background:#FFF4CC;border:1px solid #E6C200;border-radius:8px;padding:10px;margin-bottom:10px"><b>Duplicates - متكرر ('+DUPS.length+' groups)</b><div style="font-size:.82rem;margin:4px 0">نفس الاسم أو الرقم أو الإيميل. لكل مجموعة اختار مين يتضاف لقائمة التسجيل (Add) ومين يتمسح من قاعدة الدكاتره (Delete). المسجل بالفعل ظاهر بعلامة Registered ومش بيتأثر.</div>'+
+   DUPS.map(function(m,gi){return '<div style="border:1px solid #E6C200;border-radius:6px;background:#fff;padding:6px;margin-top:8px">'+m.map(function(n,mi){var c=n.c;
+     if(n.t==='r')return '<div style="padding:4px;color:var(--ink-soft)"><b>Registered</b> - '+h(c.name)+' | '+h(c.email)+' | '+h(c.phone)+' ['+h(c.code)+']</div>';
+     var first=mi===0||m[0].t==='r'&&mi===1;var onlyAdd=m.filter(function(z){return z.t==='r';}).length===0&&mi===0;
+     return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:4px"><label><input type="checkbox" data-g="'+gi+'" data-m="'+mi+'" data-a="add" '+(onlyAdd?'checked ':'')+'onchange="ctDupTog(this)"> Add</label><label><input type="checkbox" data-g="'+gi+'" data-m="'+mi+'" data-a="del" onchange="ctDupTog(this)"> Delete</label><span>'+h((c.title?c.title+' ':'')+c.name)+' | '+h(c.email)+' | '+h(c.phone)+' | '+h(c.country)+'</span></div>';}).join('')+'</div>';}).join('')+
+   '<div style="margin-top:8px"><button class="mini-btn primary" type="button" onclick="ctDupApply()">Apply choices</button> <button class="mini-btn" type="button" onclick="DUPS=[];renderDups()">Dismiss</button></div></div>';
+}
+window.renderDups=renderDups;
+window.ctDupTog=function(cb){if(!cb.checked)return;var o=cb.getAttribute('data-a')==='add'?'del':'add';var other=document.querySelector('#ct-dups input[data-g="'+cb.getAttribute('data-g')+'"][data-m="'+cb.getAttribute('data-m')+'"][data-a="'+o+'"]');if(other)other.checked=false;};
+window.ctDupApply=async function(){
+  var add=[],del=[];document.querySelectorAll('#ct-dups input[data-a]').forEach(function(cb){if(!cb.checked)return;var c=DUPS[cb.getAttribute('data-g')][cb.getAttribute('data-m')].c;(cb.getAttribute('data-a')==='add'?add:del).push(c);});
+  if(!add.length&&!del.length)return say('Nothing selected',true);
+  if(del.length&&!confirm('Delete '+del.length+' contact(s) from the database?'))return;
+  if(add.length&&!await insertContacts(add,DUPCFG.pkg,DUPCFG.st))return;
+  if(del.length){var r=await sb.from('reg_contacts').delete().in('id',del.map(function(c){return c.id;}));if(r.error)return say(r.error.message,true);}
+  say('Done: added '+add.length+', deleted '+del.length+' - تم');DUPS=[];renderDups();window._rg.reload();ctLoad();
 };
 window.ctSet=async function(id,k,v){var o={};o[k]=k==='email'?v.trim().toLowerCase():k==='country'?(v?window.countryNormalize(v).value:''):v.trim();var r=await sb.from('reg_contacts').update(o).eq('id',id);if(r.error)say(r.error.message,true);else{var c=CT.filter(function(x){return x.id===id;})[0];if(c)c[k]=o[k];say('Saved');}};
 window.ctDel=async function(id){if(!confirm('Delete this contact?'))return;var r=await sb.from('reg_contacts').delete().eq('id',id);if(r.error)return say(r.error.message,true);ctLoad();};
@@ -99,6 +152,7 @@ window.ctInit=function(){
   $('ct-link').value=location.origin+'/event.html?e='+EV.slug;
   $('ct-subject').value=EV.invite_subject||('Invitation: '+(EV.title_en||EV.title_ar||''));
   $('ct-body').value=EV.invite_body||('Dear {name},\n\nWe would be delighted to invite you to '+(EV.title_en||EV.title_ar||'our conference')+'.\nPlease register using this link:\n{link}\n\nBest regards,\nIDEA-EG');
+  var pk=window._rg.pks();$('ct-pkg').innerHTML=pk.map(function(p){return '<option value="'+p.id+'">'+h(p.name_en||p.name_ar)+'</option>';}).join('')||'<option value="">No packages</option>';
   ctRender();
 };
 var t=setInterval(function(){if($('ct-tbody')&&$('dashboard')&&$('dashboard').style.display!=='none'||($('ct-tbody')&&document.querySelector('#rg-main')&&document.querySelector('#rg-main').style.display!=='none')){clearInterval(t);ctLoad();ctInit();}},700);

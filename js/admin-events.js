@@ -325,7 +325,7 @@ window.rgQuickFind=function(){
   var m=REGS.filter(function(x){var ph=(x.phone||'').replace(/\D/g,'');return (d.length>=4&&ph&&ph.indexOf(d.slice(-10))>-1)||x.code.toLowerCase()===q||(x.name||'').toLowerCase().indexOf(q)>-1||(x.email||'').toLowerCase()===q;}).slice(0,8);
   out.innerHTML=m.map(function(x){var id="'"+x.id+"'",at=x.status==='attended';return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px;border:1px solid var(--line);border-radius:6px;margin-top:6px"><span style="width:10px;height:10px;border-radius:50%;background:'+(at?'#22C55E':'#E5382B')+'"></span><b>'+h((x.title?x.title+' ':'')+x.name)+'</b><span dir="ltr" style="color:var(--ink-soft)">'+h(x.phone||'')+' - '+h(x.code)+'</span><span style="flex:1"></span>'+(at?'':'<button class="mini-btn pm-checkin" onclick="checkin(\''+x.code+'\');setTimeout(rgQuickFind,600)">Check-in</button>')+'<button class="mini-btn pm-print" onclick="rgBadgeOne('+id+')">Name tag</button><button class="mini-btn pm-print" onclick="rgCertOne('+id+')">Certificate</button></div>';}).join('')||'<p style="color:var(--ink-soft);font-size:.85rem">No match</p>';};
 window.checkin=checkin;
-window._rg={ev:function(){return EV;},regs:function(){return REGS;}};
+window._rg={ev:function(){return EV;},regs:function(){return REGS;},pks:function(){return PKS;},reload:function(){return loadRegs();}};
 var CCX=null;
 async function newCountries(){
   var el=$('rg-newcc');if(!el||!EV)return;
