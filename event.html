@@ -124,6 +124,7 @@
 <script src="js/i18n.js"></script>
 <script src="js/main.js"></script>
 <script src="js/countries.js"></script>
+<script src="js/butterflies.js"></script>
 <script src="js/qrcode-lib.js"></script>
 <script src="js/qr.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -175,6 +176,7 @@ async function init(){
   if(kioskKey&&PKS.length===1)sel=PKS[0].id;
   render();
   if(kioskKey&&sel)renderForm();
+  if(EV.butterflies&&!kioskKey)window.startButterflies();
   if(ticket)showTicket();else if(new URLSearchParams(location.search).get('cert'))certFinder();
 }
 function certFinder(){
