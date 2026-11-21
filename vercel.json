@@ -1,0 +1,5 @@
+{
+  "redirects": [
+    { "source": "/ontic", "destination": "/ontic/", "permanent": false }
+  ]
+}
