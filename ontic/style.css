@@ -118,3 +118,9 @@ ol.obj{padding-left:20px;color:#2a3d4f}ol.obj li{margin:8px 0}
 .lung{position:absolute;right:max(2vw,calc((100vw - 1140px)/2));top:0;bottom:0;width:440px;overflow:hidden;z-index:1;-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparent 100%);mask-image:radial-gradient(closest-side,#000 62%,transparent 100%)}
 .lung img{position:absolute;width:1300px;max-width:none;left:-470px;top:-290px}
 @media(max-width:900px){.lung{opacity:.35;right:-120px}}
+.leaders{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px;margin-top:28px}
+.leader{background:#fff;border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 14px 36px rgba(29,63,122,.1)}
+.leader img{display:block;width:100%;aspect-ratio:4/4.4;object-fit:cover;object-position:top}
+.leader div{padding:18px 20px 22px}.leader b{display:block;font-family:"Plus Jakarta Sans";font-size:1.15rem;color:var(--navy)}
+.leader small{display:block;color:var(--blue);font-weight:600;margin:4px 0 6px}.leader span{color:var(--soft);font-size:.9rem}
+.pres{display:flex;gap:18px;align-items:center;margin-bottom:14px}.pres img{width:92px;height:92px;border-radius:50%;object-fit:cover;object-position:top;border:3px solid rgba(255,255,255,.6)}
