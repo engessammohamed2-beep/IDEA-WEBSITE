@@ -140,6 +140,8 @@ var sb;
 })();
 var root=document.getElementById('ev-root');
 var EV=null,PKS=[],sel=null,timer=null;
+var kioskKey=new URLSearchParams(location.search).get('kiosk')||'';
+if(kioskKey){var ks=document.createElement('style');ks.textContent='.site-header,footer,.nav-toggle{display:none !important}body{font-size:1.1rem}input,select,textarea,.btn{font-size:1.1rem !important;min-height:48px}.ev-hero-img{max-height:160px;object-fit:cover}';document.head.appendChild(ks);}
 function L(){if(EV&&(EV.form_lang==='ar'||EV.form_lang==='en'))return EV.form_lang;return localStorage.getItem('idea_lang')==='ar'?'ar':'en';}
 function T(a,b){return L()==='ar'?a:b;}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -167,7 +169,9 @@ async function init(){
   // remaining seats via registrations count is private; use rpc-free approach: capacity shown only
   document.title=f(EV,'title')+' | IDEA-EG';
   if(EV.form_lang==='ar'||EV.form_lang==='en'){document.documentElement.lang=EV.form_lang;document.documentElement.dir=EV.form_lang==='ar'?'rtl':'ltr';}
+  if(kioskKey&&PKS.length===1)sel=PKS[0].id;
   render();
+  if(kioskKey&&sel)renderForm();
   if(ticket)showTicket();else if(new URLSearchParams(location.search).get('cert'))certFinder();
 }
 function certFinder(){
@@ -210,7 +214,7 @@ function certBox(o,box){
 }
 function render(){
   if(!EV)return;
-  var open=EV.registration_open&&!(EV.registration_deadline&&new Date()>new Date(EV.registration_deadline));
+  var open=!!kioskKey||(EV.registration_open&&!(EV.registration_deadline&&new Date()>new Date(EV.registration_deadline)));
   var h='';
   if(preview)h+='<div style="background:#FFF4CC;border:1px solid #E6C200;border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:.85rem">'+esc(T('وضع المعاينة — التسجيل معطّل، والعرض للأدمن فقط','Preview mode — registration is disabled, admin only'))+(EV.published?'':' · '+esc(T('المؤتمر غير منشور','Not published')))+'</div>';
   if(safeUrl(EV.cover_image_url))h+='<img class="ev-hero-img" src="'+esc(EV.cover_image_url)+'" alt="">';
@@ -300,11 +304,17 @@ async function submit(e){
   if(!fm.__first.value.trim()||!fm.__last.value.trim()||!/^\S+@\S+\.\S+$/.test(fm.__email.value.trim()))ok=false;
   if(!ok){err.textContent=T('من فضلك املأ الحقول المطلوبة بشكل صحيح','Please fill the required fields correctly');return;}
   btn.disabled=true;err.textContent='';
-  var res=await sb.rpc('register_for_event',{p_event:EV.id,p_package:sel,p_name:fullName,p_email:fm.__email.value,p_phone:String(data.phone||''),p_data:data});
+  var res=kioskKey?await sb.rpc('register_kiosk',{p_event:EV.id,p_package:sel,p_name:fullName,p_email:fm.__email.value,p_phone:String(data.phone||''),p_data:data,p_key:kioskKey}):await sb.rpc('register_for_event',{p_event:EV.id,p_package:sel,p_name:fullName,p_email:fm.__email.value,p_phone:String(data.phone||''),p_data:data});
   var o=res.data;
   if(res.error||!o||o.error){btn.disabled=false;var m=ERR[o&&o.error];err.textContent=m?T(m[0],m[1]):T('حدث خطأ، حاول مرة أخرى','Something went wrong, please try again');return;}
   var p=PKS.filter(function(x){return x.id===sel;})[0];
+  if(kioskKey){kioskDone(o,fullName,fm.__email.value,p);return;}
   success(o,fullName,fm.__email.value,p,data);
+}
+function kioskDone(o,name,email,p){
+  regDone=true;
+  document.getElementById('reg-area').innerHTML='<div class="ok-box" style="max-width:640px;margin:0 auto"><h2 style="margin:0 0 8px">'+esc(T('شكراً '+name+'، تم تسجيلك','Thank you '+name+', you are registered'))+'</h2><p>'+esc(T('تم إرسال رابط شهادتك إلى بريدك الإلكتروني. للحصول على بطاقة الاسم أو الشهادة المطبوعة، اذكر رقم هاتفك لفريق الاستقبال.','A link to your certificate has been sent to your email. For a printed name tag or certificate, give your phone number to the reception team.'))+'</p><button class="btn btn-primary" onclick="location.reload()">'+esc(T('تسجيل شخص آخر','Register another person'))+'</button></div>';
+  window.scrollTo({top:0});sendMails(o,name,email,p);setTimeout(function(){location.reload();},15000);
 }
 function showQr(code){document.getElementById('qr').innerHTML='<img alt="QR" width="200" height="200" src="'+qrDataUrl(code,400)+'">';}
 function ics(){
@@ -314,6 +324,7 @@ function ics(){
 }
 function ticketUrl(code){return location.origin+'/event.html?e='+encodeURIComponent(EV.slug)+'&ticket='+encodeURIComponent(code);}
 function success(o,name,email,p,data){
+  regDone=true;
   var wl=o.status==='waitlist';
   document.getElementById('reg-area').innerHTML='<div class="ok-box"><h2 style="margin:0 0 6px">'+esc(wl?T('تم وضعك في قائمة الانتظار','You are on the waitlist'):T('تم التسجيل بنجاح','Registration confirmed'))+'</h2>'+
    '<p>'+esc(name)+' — '+esc(f(p,'name'))+'</p><div class="code" dir="ltr">'+esc(o.code)+'</div><div id="qr"></div>'+
@@ -339,9 +350,10 @@ function sendMails(o,name,email,p){
     event_date:EV.start_at?fmt(EV.start_at):'',location:f(EV,'location'),map_url:EV.map_url||'',
     ticket_url:ticketUrl(o.code),cert_note:'Your certificate will be available at this link after the conference / ستكون شهادتك متاحة على هذا الرابط بعد المؤتمر: '+ticketUrl(o.code),reply_to:EV.contact_email||'info@ideaeg.online',registrant_name:name,registrant_email:email};
   emailjs.send(C.serviceId,C.registerTemplateId,Object.assign({to_email:email,to_name:name,is_admin_copy:''},base)).catch(function(){});
-  if(EV.notify_admin&&EV.admin_email)emailjs.send(C.serviceId,C.registerTemplateId,Object.assign({},base,{to_email:EV.admin_email,to_name:'Admin',is_admin_copy:'yes'})).catch(function(){});
+  if(!kioskKey&&EV.notify_admin&&EV.admin_email)emailjs.send(C.serviceId,C.registerTemplateId,Object.assign({},base,{to_email:EV.admin_email,to_name:'Admin',is_admin_copy:'yes'})).catch(function(){});
 }
-document.addEventListener('langchange',function(){var b=document.getElementById('rf');if(!b)render();});
+var regDone=false;
+document.addEventListener('langchange',function(){var b=document.getElementById('rf');if(!b&&!regDone)render();});
 init();
 })();
 </script>

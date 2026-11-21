@@ -139,6 +139,11 @@
         <div style="margin:8px 0"><button class="mini-btn primary" onclick="rgCertAll()">Print certificates (PDF)</button></div>
 
         </div>
+        <div class="adm-only" data-tab="regs" style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:14px"><b>Self-registration kiosk - تسجيل ذاتي على تابلت</b>
+          <div style="font-size:.82rem;color:var(--ink-soft);margin:4px 0">افتح اللينك على التابلت في المكان. الدكتور يسجل بنفسه ويتسجل حاضر فوراً، ويوصله إيميل برابط الشهادة (من غير QR). اللينك سري، ومن يملكه يقدر يسجل حضور.</div>
+          <input id="rg-kiosk-link" readonly dir="ltr" onclick="this.select()" style="width:60%;padding:6px;border:1px solid var(--line);border-radius:5px;font-size:.8rem"> <button class="mini-btn" type="button" onclick="rgKiosk(false)">Show link</button> <button class="mini-btn" type="button" onclick="rgCopyKiosk()">Copy</button> <button class="mini-btn" type="button" onclick="rgOpenKiosk()">Open</button> <button class="mini-btn" type="button" onclick="rgKiosk(true)">Change key</button></div>
+        <div data-tab="regs" style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:14px"><b>Quick find - بحث سريع</b> (phone / code / name)
+          <div style="display:flex;gap:8px;margin:6px 0"><input id="rg-qf" dir="ltr" placeholder="Phone, code or name" oninput="rgQuickFind()" style="padding:8px;border:1px solid var(--line);border-radius:5px;flex:1;max-width:340px"></div><div id="rg-qf-out"></div></div>
         <div class="pm-checkin" data-tab="regs"><h4 style="margin-top:26px">4. Check-in</h4>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="rg-ci-code" dir="ltr" placeholder="Code" style="padding:8px;border:1px solid var(--line);border-radius:5px" onkeydown="if(event.key==='Enter')rgCheckin()"><button class="mini-btn primary" onclick="rgCheckin()">Check in</button><button class="mini-btn" onclick="rgScan()">Scan QR</button></div>
         <div id="rg-reader" style="display:none;max-width:320px;margin-top:10px"></div>

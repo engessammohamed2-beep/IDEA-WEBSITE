@@ -301,6 +301,20 @@ function printCerts(list){
 window.rgCertAll=function(){var sc=$('rg-cert_scope_all').checked?'all':'attended';printCerts(REGS.filter(function(x){return sc==='all'?(x.status==='confirmed'||x.status==='attended'):x.status==='attended';}));};
 window.rgCopyLink=function(code){var u=location.origin+'/event.html?e='+EV.slug+'&ticket='+code;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){toast('Link copied');},function(){prompt('Copy the link',u);});};
 window.rgCopyCertLink=function(){var el=$('rg-cert-link');el.select();document.execCommand('copy');toast('Link copied');};
+function kioskUrl(k){return location.origin+'/event.html?e='+EV.slug+'&kiosk='+k;}
+window.rgKiosk=async function(regen){
+  if(!EV)return;var r=await sb.from('reg_event_secrets').select('kiosk_key').eq('event_id',EV.id).maybeSingle();var k=r.data&&r.data.kiosk_key;
+  if(regen&&k&&!confirm('Change the key? The old kiosk link will stop working.'))return;
+  if(!k||regen){k=Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,8);var w=await sb.from('reg_event_secrets').upsert({event_id:EV.id,kiosk_key:k});if(w.error)return msg(w.error.message,true);}
+  $('rg-kiosk-link').value=kioskUrl(k);};
+window.rgCopyKiosk=function(){var el=$('rg-kiosk-link');if(!el.value)return msg('Press Show link first',true);el.select();document.execCommand('copy');toast('Link copied');};
+window.rgOpenKiosk=function(){var u=$('rg-kiosk-link').value;if(u)window.open(u,'_blank');else msg('Press Show link first',true);};
+window.rgQuickFind=function(){
+  var q=($('rg-qf').value||'').trim().toLowerCase(),d=q.replace(/\D/g,''),out=$('rg-qf-out');
+  if(q.length<3){out.innerHTML='';return;}
+  var m=REGS.filter(function(x){var ph=(x.phone||'').replace(/\D/g,'');return (d.length>=4&&ph&&ph.indexOf(d.slice(-10))>-1)||x.code.toLowerCase()===q||(x.name||'').toLowerCase().indexOf(q)>-1||(x.email||'').toLowerCase()===q;}).slice(0,8);
+  out.innerHTML=m.map(function(x){var id="'"+x.id+"'",at=x.status==='attended';return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px;border:1px solid var(--line);border-radius:6px;margin-top:6px"><span style="width:10px;height:10px;border-radius:50%;background:'+(at?'#22C55E':'#E5382B')+'"></span><b>'+h((x.title?x.title+' ':'')+x.name)+'</b><span dir="ltr" style="color:var(--ink-soft)">'+h(x.phone||'')+' - '+h(x.code)+'</span><span style="flex:1"></span>'+(at?'':'<button class="mini-btn pm-checkin" onclick="checkin(\''+x.code+'\');setTimeout(rgQuickFind,600)">Check-in</button>')+'<button class="mini-btn pm-print" onclick="rgBadgeOne('+id+')">Name tag</button><button class="mini-btn pm-print" onclick="rgCertOne('+id+')">Certificate</button></div>';}).join('')||'<p style="color:var(--ink-soft);font-size:.85rem">No match</p>';};
+window.checkin=checkin;
 window.rgCertOne=function(id){var x=REGS.filter(function(r){return r.id===id;})[0];if(x)printCerts([x]);};
 /* poster */
 window.rgPoster=function(){
