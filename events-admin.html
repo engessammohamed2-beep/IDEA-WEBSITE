@@ -18,6 +18,7 @@
 
 <style>
 .no-manage_events .adm-only,.no-checkin .pm-checkin,.no-walkin .pm-walkin,.no-view .pm-view,.no-export .pm-export,.no-print .pm-print,.no-edit .pm-edit,.not-admin .sa-only{display:none !important}
+[data-tab]{display:none}[data-tab].on{display:block}#rg-tabs .mini-btn.on{background:#E8631E;color:#fff;border-color:#E8631E}
 .no-edit #rg-tbody select,.no-edit #rg-tbody input{pointer-events:none;opacity:.65}
 </style>
 <div class="admin-shell">
@@ -43,7 +44,13 @@
         <span id="rg-msg" style="font-size:.85rem"></span>
       </div>
       <div id="rg-body"></div>
-      <div id="rg-main" style="display:none"><div class="adm-only">
+      <div id="rg-main" style="display:none">
+      <div id="rg-tabs" style="display:flex;gap:6px;border-bottom:2px solid var(--line);margin:10px 0 14px;flex-wrap:wrap">
+        <button type="button" class="mini-btn adm-only" data-t="setup" onclick="rgTab('setup')">Setup - الإعدادات</button>
+        <button type="button" class="mini-btn pm-checkin" data-t="checkin" onclick="rgTab('checkin')">Check-in - تسجيل الحضور</button>
+        <button type="button" class="mini-btn" data-t="regs" onclick="rgTab('regs')">Registrations - المسجلين</button>
+      </div>
+      <div class="adm-only" data-tab="setup">
         <h4>1. Event details</h4>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">
           <label>URL slug<input id="rg-slug" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
@@ -132,13 +139,13 @@
         <div style="margin:8px 0"><button class="mini-btn primary" onclick="rgCertAll()">Print certificates (PDF)</button></div>
 
         </div>
-        <div class="pm-checkin"><h4 style="margin-top:26px">4. Check-in</h4>
+        <div class="pm-checkin" data-tab="checkin"><h4 style="margin-top:26px">4. Check-in</h4>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="rg-ci-code" dir="ltr" placeholder="Code" style="padding:8px;border:1px solid var(--line);border-radius:5px" onkeydown="if(event.key==='Enter')rgCheckin()"><button class="mini-btn primary" onclick="rgCheckin()">Check in</button><button class="mini-btn" onclick="rgScan()">Scan QR</button></div>
         <div id="rg-reader" style="display:none;max-width:320px;margin-top:10px"></div>
         <p id="rg-ci-out" style="font-weight:600;min-height:1.4em"></p>
 
         </div>
-        <div class="pm-walkin"><h4>4b. Reception — walk-in registration · تسجيل في المكان</h4>
+        <div data-tab="regs"><div class="pm-walkin"><h4>4b. Reception — walk-in registration · تسجيل في المكان</h4>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:12px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px">
           <select id="rg-w-pkg" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></select>
           <select id="rg-w-title" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="Dr.">Dr.</option><option value="Prof.">Prof.</option><option value="Mr.">Mr.</option><option value="Ms.">Ms.</option><option value="Mrs.">Mrs.</option><option value="">—</option></select>
@@ -153,7 +160,8 @@
         <p style="font-size:.8rem;color:var(--ink-soft)">التسجيل هنا بيتعلّم "حضر" فوراً، ويتخطى حد الأماكن، والقايمة بتتحدّث كل 20 ثانية لو أكتر من موظف شغال.</p>
 
         </div>
-        <div class="pm-view"><h4>5. Registrations</h4>
+        </div>
+        <div data-tab="regs" class="pm-view"><h4>5. Registrations</h4>
         <p id="rg-stats" style="color:var(--ink-soft);font-size:.88rem"></p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
           <select id="rg-f-status" style="padding:7px;border:1px solid var(--line);border-radius:5px"><option value="">All status</option><option>confirmed</option><option>waitlist</option><option>attended</option><option>cancelled</option></select>
@@ -201,6 +209,16 @@ async function boot(){
   loadRegAdmin();
 }
 boot();sb.auth.onAuthStateChange(function(e){if(e==='SIGNED_IN'||e==='INITIAL_SESSION')boot();});
+</script>
+<script>
+(function(){var cur=null;try{cur=localStorage.getItem('rgtab');}catch(e){}cur=cur||'setup';
+window.rgTab=function(n){cur=n;try{localStorage.setItem('rgtab',n);}catch(e){}
+ document.querySelectorAll('[data-tab]').forEach(function(e){e.classList.toggle('on',e.getAttribute('data-tab')===n);});
+ document.querySelectorAll('#rg-tabs [data-t]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-t')===n);});};
+rgTab(cur);
+var k=0,t=setInterval(function(){var b=document.querySelector('#rg-tabs [data-t="'+cur+'"]');
+ if(b&&b.offsetParent===null){var v=[].slice.call(document.querySelectorAll('#rg-tabs [data-t]')).filter(function(x){return x.offsetParent!==null;})[0];if(v)rgTab(v.getAttribute('data-t'));}
+ if(++k>40)clearInterval(t);},500);})();
 </script>
 </body>
 </html>
