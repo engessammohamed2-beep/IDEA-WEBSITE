@@ -15,9 +15,9 @@ window.startButterflies=function(opts){
     var size=44+Math.random()*30;wrap.style.cssText='position:absolute;left:0;top:0;width:'+size+'px;will-change:transform;opacity:0;transition:opacity 1.2s';
     img.style.cssText='display:block;width:100%;height:auto;will-change:transform;filter:drop-shadow(0 3px 4px rgba(10,40,90,.25))';
     wrap.appendChild(img);box.appendChild(wrap);
-    bs.push({w:wrap,i:img,size:size,x:sx+(Math.random()-.5)*60,y:sy+(Math.random()-.5)*40,ang:Math.random()*Math.PI*2,
+    bs.push({w:wrap,i:img,size:size,x:opts.spread?80+Math.random()*(W-160):sx+(Math.random()-.5)*60,y:opts.spread?80+Math.random()*(H-160):sy+(Math.random()-.5)*40,ang:Math.random()*Math.PI*2,
       sp:26+Math.random()*22,pa:Math.random()*6.28,pb:Math.random()*6.28,fa:.35+Math.random()*.3,fb:.21+Math.random()*.2,
-      fp:Math.random()*6.28,ff:.9+Math.random()*.4,delay:i*700});
+      fp:Math.random()*6.28,ff:.9+Math.random()*.4,delay:opts.spread?i*250:i*700});
   }
   var last=performance.now(),t0=last;
   function tick(now){
