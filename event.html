@@ -168,7 +168,17 @@ async function init(){
   document.title=f(EV,'title')+' | IDEA-EG';
   if(EV.form_lang==='ar'||EV.form_lang==='en'){document.documentElement.lang=EV.form_lang;document.documentElement.dir=EV.form_lang==='ar'?'rtl':'ltr';}
   render();
-  if(ticket)showTicket();
+  if(ticket)showTicket();else if(new URLSearchParams(location.search).get('cert'))certFinder();
+}
+function certFinder(){
+  var box=document.getElementById('reg-area');if(!box)return;
+  var how=[];if(EV.cert_search_phone!==false)how.push(T('رقم الموبايل','mobile number'));if(EV.cert_search_code!==false)how.push(T('الكود المكتوب تحت الـ QR','the code under your QR'));if(EV.cert_search_email)how.push(T('الإيميل','email'));
+  box.innerHTML='<div class="ok-box" style="max-width:560px"><h2 style="margin:0 0 8px">'+esc(T('احصل على شهادتك','Get your certificate'))+'</h2><p style="color:var(--ink-soft)">'+esc(T('اكتب ','Enter your ')+how.join(T(' أو ',' or ')))+'</p><input id="cf-q" dir="ltr" style="width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;font-size:1rem;margin:8px 0"><button class="btn btn-primary" id="cf-go">'+esc(T('بحث','Search'))+'</button><div id="cf-out" style="margin-top:14px"></div></div>';
+  var go=async function(){var q=document.getElementById('cf-q').value,out=document.getElementById('cf-out');out.innerHTML='';
+    var r=await sb.rpc('find_cert_code',{p_slug:EV.slug,p_q:q});
+    if(!r.data||!r.data.code){out.innerHTML='<p style="color:#B33">'+esc(T('لم يتم العثور على تسجيل بهذه البيانات','No registration found with this information'))+'</p>';return;}
+    var g=await sb.rpc('get_registration',{p_code:r.data.code});if(!g.data)return;box.innerHTML='';certBox(g.data,box);};
+  document.getElementById('cf-go').onclick=go;document.getElementById('cf-q').addEventListener('keydown',function(e){if(e.key==='Enter')go();});
 }
 async function showTicket(){
   var r=await sb.rpc('get_registration',{p_code:ticket});var o=r.data;var box=document.getElementById('reg-area');if(!box)return;
