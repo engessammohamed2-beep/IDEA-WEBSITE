@@ -329,7 +329,7 @@ window._rg={ev:function(){return EV;},regs:function(){return REGS;},pks:function
 var CCX=null;
 async function newCountries(){
   var el=$('rg-newcc');if(!el||!EV)return;
-  var keys=(EV.form_fields||[]).filter(function(f){return f.type==='country';}).map(function(f){return f.key;});if(!keys.length){el.innerHTML='';return;}
+  var keys=(EV.form_fields||[]).filter(function(f){return f.type==='country'||(f.type==='select'&&/country|nation|دولة|الدولة|بلد|البلد/i.test((f.key||'')+' '+(f.label_en||'')+' '+(f.label_ar||'')));}).map(function(f){return f.key;});if(!keys.length){el.innerHTML='';return;}
   if(!CCX){var r=await sb.from('reg_countries').select('name_en,name_ar');CCX=(r.data||[]).map(function(x){return [x.name_en,x.name_ar||''];});}
   var cnt={};REGS.forEach(function(x){keys.forEach(function(k){var v=x.data&&x.data[k];if(v&&!countryNormalize(v,CCX).known)cnt[v]=(cnt[v]||0)+1;});});
   var names=Object.keys(cnt);

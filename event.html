@@ -42,6 +42,7 @@
 <div id="ev-root" class="wrap" style="padding:36px 24px 60px"><p id="ev-loading" style="color:var(--ink-soft)">Loading…</p></div>
 </main>
 <style>
+.cc-wrap{position:relative}.cc-list{position:absolute;z-index:50;left:0;right:0;top:100%;margin:2px 0 0;padding:4px 0;list-style:none;background:#fff;border:1px solid var(--line);border-radius:8px;max-height:240px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.12)}.cc-list li{padding:9px 12px;cursor:pointer}.cc-list li.on,.cc-list li:hover{background:#FFF1E8}.cc-list li.cc-add{color:#C4500F;font-weight:600;border-top:1px solid var(--line)}.cc-list li.cc-none{color:#888;cursor:default}
 .ev-hero-img{width:100%;height:auto;border-radius:14px;border:1px solid var(--line);display:block}
 .ev-meta{display:flex;flex-wrap:wrap;gap:10px 22px;margin:14px 0;color:var(--ink-soft);font-size:.95rem}
 .ev-meta a{color:var(--orange-dark);font-weight:600}
@@ -265,6 +266,41 @@ function tick(){
   }
   u();timer=setInterval(u,1000);
 }
+function isCountryField(fl){return fl.type==='country'||(fl.type==='select'&&/country|nation|دولة|الدولة|بلد|البلد/i.test((fl.key||'')+' '+(fl.label_en||'')+' '+(fl.label_ar||'')));}
+function initCombos(root){
+  root.querySelectorAll('.cc-wrap').forEach(function(w){
+    var inp=w.querySelector('input'),ul=w.querySelector('.cc-list'),hi=-1,items=[];
+    function nm(x){return String(x||'').toLowerCase().trim();}
+    function close(){ul.hidden=true;inp.setAttribute('aria-expanded','false');hi=-1;}
+    function pick(label){inp.value=label;close();}
+    function build(){
+      var q=nm(inp.value),all=window.COUNTRIES.concat(CX),m=[];
+      all.forEach(function(c){var en=nm(c[0]),ar=String(c[1]||'');var p=-1;if(!q)p=2;else if(en.indexOf(q)===0||ar.indexOf(q)===0)p=0;else if(en.indexOf(q)>-1||ar.indexOf(q)>-1)p=1;if(p>-1)m.push([p,c]);});
+      m.sort(function(a,b){return a[0]-b[0]||(a[1][0]<b[1][0]?-1:1);});
+      items=m.slice(0,60).map(function(x){return {t:'c',label:x[1][1]?x[1][0]+' — '+x[1][1]:x[1][0]};});
+      var raw=inp.value.trim();
+      var starts=m.some(function(x){return x[0]===0;});
+      if(raw.length>=2&&!starts&&!countryNormalize(raw,CX).known)items.push({t:'add',label:raw});
+      ul.innerHTML=items.map(function(it,k){return it.t==='add'?'<li data-k="'+k+'" class="cc-add">+ '+esc(T('إضافة','Add'))+' «'+esc(it.label)+'»</li>':'<li data-k="'+k+'">'+esc(it.label)+'</li>';}).join('')||'<li class="cc-none">'+esc(T('لا نتائج','No results'))+'</li>';
+      ul.hidden=false;inp.setAttribute('aria-expanded','true');hi=-1;
+    }
+    async function choose(k){var it=items[k];if(!it)return;
+      if(it.t==='c')return pick(it.label);
+      var r=await sb.rpc('add_country',{p_name:it.label});var d=r.data;
+      if(d&&d.name_en){CX.push([d.name_en,d.name_ar||'']);pick(d.name_ar&&d.name_en!==d.name_ar?d.name_en+' — '+d.name_ar:d.name_en);}
+      else pick(it.label);}
+    function mark(){[].forEach.call(ul.children,function(li,k){li.classList.toggle('on',k===hi);if(k===hi)li.scrollIntoView({block:'nearest'});});}
+    inp.addEventListener('input',build);inp.addEventListener('focus',build);
+    inp.addEventListener('keydown',function(e){
+      if(e.key==='ArrowDown'){e.preventDefault();if(ul.hidden)build();hi=Math.min(items.length-1,hi+1);mark();}
+      else if(e.key==='ArrowUp'){e.preventDefault();hi=Math.max(0,hi-1);mark();}
+      else if(e.key==='Enter'){if(!ul.hidden&&hi>-1){e.preventDefault();choose(hi);}else if(!ul.hidden){var ex=items.filter(function(x){return x.t==='c'&&nm(x.label).split(' — ')[0]===nm(inp.value);})[0];close();}}
+      else if(e.key==='Escape')close();});
+    ul.addEventListener('mousedown',function(e){e.preventDefault();var li=e.target.closest('li[data-k]');if(li)choose(Number(li.getAttribute('data-k')));});
+    ul.addEventListener('touchstart',function(e){var li=e.target.closest('li[data-k]');if(li){e.preventDefault();choose(Number(li.getAttribute('data-k')));}},{passive:false});
+    document.addEventListener('click',function(e){if(!w.contains(e.target))close();});
+  });
+}
 function fieldHtml(fl){
   var lab=esc(f(fl,'label'))+(fl.required?' <span class="req">*</span>':'');
   var n='name="'+esc(fl.key)+'" '+(fl.required?'required':'');
@@ -278,8 +314,8 @@ function fieldHtml(fl){
     return {v:e||a,t:t};}).filter(function(o){return o.v;});
   var inp;
   if(fl.type==='textarea')inp='<textarea rows="3" '+n+'></textarea>';
-  else if(fl.type==='select')inp='<select '+n+'><option value="">—</option>'+opts.map(function(o){return '<option value="'+esc(o.v)+'">'+esc(o.t)+'</option>';}).join('')+'</select>';
-  else if(fl.type==='country'){var all=window.COUNTRIES.concat(CX);inp='<input '+n+' list="cc-list" autocomplete="off" placeholder="'+esc(T('ابدأ بكتابة اسم الدولة','Start typing the country'))+'"><datalist id="cc-list">'+all.map(function(c){return '<option value="'+esc(c[1]?c[0]+' — '+c[1]:c[0])+'">';}).join('')+'</datalist>';}
+  else if(fl.type==='select'&&!isCountryField(fl))inp='<select '+n+'><option value="">—</option>'+opts.map(function(o){return '<option value="'+esc(o.v)+'">'+esc(o.t)+'</option>';}).join('')+'</select>';
+  else if(isCountryField(fl)){inp='<div class="cc-wrap"><input '+n+' autocomplete="off" role="combobox" aria-expanded="false" placeholder="'+esc(T('ابدأ بكتابة اسم الدولة','Start typing the country'))+'"><ul class="cc-list" hidden></ul></div>';}
   else if(fl.type==='checkbox')return '<label style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" style="width:auto" '+n+'> '+lab+'</label>';
   else inp='<input type="'+esc(fl.type||'text')+'" '+n+(fl.type==='tel'?' dir="ltr"':'')+'>';
   return '<label>'+lab+'</label>'+inp;
@@ -295,6 +331,7 @@ function renderForm(){
    '<p id="rf-err" style="color:#B33;font-size:.88rem;min-height:1.2em"></p>'+
    '<button class="btn btn-primary" type="submit" id="rf-btn">'+esc(T('تأكيد التسجيل','Confirm registration'))+'</button></form>';
   document.getElementById('form-box').innerHTML=h;
+  initCombos(document.getElementById('form-box'));
   document.getElementById('rf').onsubmit=submit;
 }
 var ERR={duplicate:['هذا البريد أو الرقم مسجل بالفعل','This email or phone is already registered'],closed:['التسجيل مغلق','Registration is closed'],invalid:['راجع البيانات','Please check your details'],not_found:['المؤتمر غير متاح','Event unavailable'],no_package:['الباقة غير متاحة','Package unavailable']};
@@ -304,7 +341,7 @@ async function submit(e){
   if(fm.website.value)return;
   if(preview){err.textContent=T('المعاينة فقط — لا يتم حفظ التسجيل','Preview only — nothing is saved');return;}
   var data={},ok=true;
-  (EV.form_fields||[]).forEach(function(fl){var el=fm.elements[fl.key];if(!el)return;var v=fl.type==='checkbox'?el.checked:el.value.trim();if(fl.type==='country'&&v){var nz=countryNormalize(v,CX);v=nz.value;if(!nz.known)data[fl.key+'_new']=true;}if(fl.required&&(v===''||v===false))ok=false;data[fl.key]=v;});
+  (EV.form_fields||[]).forEach(function(fl){var el=fm.elements[fl.key];if(!el)return;var v=fl.type==='checkbox'?el.checked:el.value.trim();if(isCountryField(fl)&&v){var nz=countryNormalize(v,CX);v=nz.value;if(!nz.known)data[fl.key+'_new']=true;}if(fl.required&&(v===''||v===false))ok=false;data[fl.key]=v;});
   data.first_name=fm.__first.value.trim();data.last_name=fm.__last.value.trim();
   var fullName=data.first_name+' '+data.last_name;
   if(!fm.__first.value.trim()||!fm.__last.value.trim()||!/^\S+@\S+\.\S+$/.test(fm.__email.value.trim()))ok=false;
