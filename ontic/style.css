@@ -139,8 +139,8 @@ ol.obj{padding-left:20px;color:#2a3d4f}ol.obj li{margin:8px 0}
 .org-tag small{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);font-weight:700;line-height:1.15;max-width:72px}
 .org-tag img{height:34px;width:auto;display:block}
 .forg{display:flex;align-items:center;gap:10px}.forg span{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#a7c3d6}
-.forg img{height:34px;background:#fff;border-radius:8px;padding:4px 8px}
+.forg img{height:44px;width:auto}
 @media(max-width:1020px){.logos{justify-content:center}}
 @media(max-width:520px){.org-tag small{display:none}.logos .brand img{height:38px}}
 .org-tag img{background:var(--navy);border-radius:8px;padding:3px 6px;height:36px}
-.forg img{background:var(--navy2);border:1px solid rgba(255,255,255,.25)}
+.forg img{height:44px;width:auto}
