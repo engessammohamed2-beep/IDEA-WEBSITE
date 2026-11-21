@@ -161,6 +161,8 @@ function renderRegs(){
   var list=filtered();
   var c={confirmed:0,waitlist:0,cancelled:0,attended:0,walkin:0,paid:0};REGS.forEach(function(x){c[x.status]++;if(x.source==='walkin')c.walkin++;if(x.payment_status==='paid')c.paid++;});
   $('rg-stats').textContent='Total '+REGS.length+' · Confirmed '+c.confirmed+' · Attended '+c.attended+' · Waitlist '+c.waitlist+' · Cancelled '+c.cancelled+' · Walk-in '+c.walkin+' · Paid '+c.paid;
+  var tot=c.confirmed+c.attended,pc=tot?Math.round(c.attended*100/tot):0;
+  $('rg-counter').innerHTML='<div style="display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline"><b style="font-size:1.15rem">Attended '+c.attended+' of '+tot+' ('+pc+'%) - حضر '+c.attended+' من '+tot+'</b><span style="color:#C0392B">Not yet - لسه ما حضروش: '+c.confirmed+'</span><span>Walk-in - تسجيل في المكان: '+c.walkin+'</span></div><div style="height:8px;background:#eee;border-radius:4px;margin-top:6px;overflow:hidden"><div style="height:100%;width:'+pc+'%;background:#22C55E;transition:width .4s"></div></div>';
   var ST=['confirmed','waitlist','cancelled','attended'],PY=['unpaid','paid','free'],PM=['','cash','card','instapay','other'],TT=['','Dr.','Prof.','Mr.','Ms.','Mrs.'];
   function sel(arr,val,fn){return '<select onchange="'+fn+'">'+arr.map(function(s){return '<option value="'+s+'"'+(s===val?' selected':'')+'>'+(s||'—')+'</option>';}).join('')+'</select>';}
   $('rg-tbody').innerHTML=list.map(function(x){var id="'"+x.id+"'";return '<tr><td dir="ltr"><b>'+h(x.code)+'</b></td>'+
