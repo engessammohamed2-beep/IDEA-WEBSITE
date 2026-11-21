@@ -133,3 +133,14 @@ ol.obj{padding-left:20px;color:#2a3d4f}ol.obj li{margin:8px 0}
 .lb .x{top:18px;right:18px}.lb .pv{left:16px;top:50%}.lb .nx{right:16px;top:50%}
 .strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:26px}.strip img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:16px;display:block}
 .gal .gi img,.strip img{object-position:50% 28%}
+
+.logos{display:flex;align-items:center;gap:16px}.logos .brand img{display:block;height:44px;width:auto}
+.org-tag{display:flex;align-items:center;gap:8px;padding-left:16px;border-left:1px solid var(--line)}
+.org-tag small{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);font-weight:700;line-height:1.15;max-width:72px}
+.org-tag img{height:34px;width:auto;display:block}
+.forg{display:flex;align-items:center;gap:10px}.forg span{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#a7c3d6}
+.forg img{height:34px;background:#fff;border-radius:8px;padding:4px 8px}
+@media(max-width:1020px){.logos{justify-content:center}}
+@media(max-width:520px){.org-tag small{display:none}.logos .brand img{height:38px}}
+.org-tag img{background:var(--navy);border-radius:8px;padding:3px 6px;height:36px}
+.forg img{background:var(--navy2);border:1px solid rgba(255,255,255,.25)}
