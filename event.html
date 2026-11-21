@@ -123,6 +123,7 @@
 <script src="js/supabase-init.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/main.js"></script>
+<script src="js/countries.js"></script>
 <script src="js/qrcode-lib.js"></script>
 <script src="js/qr.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -140,6 +141,7 @@ var sb;
 })();
 var root=document.getElementById('ev-root');
 var EV=null,PKS=[],sel=null,timer=null;
+var CX=[];
 var kioskKey=new URLSearchParams(location.search).get('kiosk')||'';
 if(kioskKey){var ks=document.createElement('style');ks.textContent='.site-header,footer,.nav-toggle{display:none !important}body{font-size:1.1rem}input,select,textarea,.btn{font-size:1.1rem !important;min-height:48px}.ev-hero-img{max-height:160px;object-fit:cover}';document.head.appendChild(ks);}
 function L(){if(EV&&(EV.form_lang==='ar'||EV.form_lang==='en'))return EV.form_lang;return localStorage.getItem('idea_lang')==='ar'?'ar':'en';}
@@ -166,6 +168,7 @@ async function init(){
   var q2=sb.from('reg_packages').select('*').eq('event_id',EV.id);if(!preview)q2=q2.eq('active',true);
   var r2=await q2.order('sort_order');
   PKS=r2.data||[];
+  try{var rc=await sb.from('reg_countries').select('name_en,name_ar');CX=(rc.data||[]).map(function(x){return [x.name_en,x.name_ar||''];});}catch(e){}
   // remaining seats via registrations count is private; use rpc-free approach: capacity shown only
   document.title=f(EV,'title')+' | IDEA-EG';
   if(EV.form_lang==='ar'||EV.form_lang==='en'){document.documentElement.lang=EV.form_lang;document.documentElement.dir=EV.form_lang==='ar'?'rtl':'ltr';}
@@ -274,6 +277,7 @@ function fieldHtml(fl){
   var inp;
   if(fl.type==='textarea')inp='<textarea rows="3" '+n+'></textarea>';
   else if(fl.type==='select')inp='<select '+n+'><option value="">—</option>'+opts.map(function(o){return '<option value="'+esc(o.v)+'">'+esc(o.t)+'</option>';}).join('')+'</select>';
+  else if(fl.type==='country'){var all=window.COUNTRIES.concat(CX);inp='<input '+n+' list="cc-list" autocomplete="off" placeholder="'+esc(T('ابدأ بكتابة اسم الدولة','Start typing the country'))+'"><datalist id="cc-list">'+all.map(function(c){return '<option value="'+esc(c[1]?c[0]+' — '+c[1]:c[0])+'">';}).join('')+'</datalist>';}
   else if(fl.type==='checkbox')return '<label style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" style="width:auto" '+n+'> '+lab+'</label>';
   else inp='<input type="'+esc(fl.type||'text')+'" '+n+(fl.type==='tel'?' dir="ltr"':'')+'>';
   return '<label>'+lab+'</label>'+inp;
@@ -298,7 +302,7 @@ async function submit(e){
   if(fm.website.value)return;
   if(preview){err.textContent=T('المعاينة فقط — لا يتم حفظ التسجيل','Preview only — nothing is saved');return;}
   var data={},ok=true;
-  (EV.form_fields||[]).forEach(function(fl){var el=fm.elements[fl.key];if(!el)return;var v=fl.type==='checkbox'?el.checked:el.value.trim();if(fl.required&&(v===''||v===false))ok=false;data[fl.key]=v;});
+  (EV.form_fields||[]).forEach(function(fl){var el=fm.elements[fl.key];if(!el)return;var v=fl.type==='checkbox'?el.checked:el.value.trim();if(fl.type==='country'&&v){var nz=countryNormalize(v,CX);v=nz.value;if(!nz.known)data[fl.key+'_new']=true;}if(fl.required&&(v===''||v===false))ok=false;data[fl.key]=v;});
   data.first_name=fm.__first.value.trim();data.last_name=fm.__last.value.trim();
   var fullName=data.first_name+' '+data.last_name;
   if(!fm.__first.value.trim()||!fm.__last.value.trim()||!/^\S+@\S+\.\S+$/.test(fm.__email.value.trim()))ok=false;

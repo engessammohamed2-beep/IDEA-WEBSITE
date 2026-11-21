@@ -95,7 +95,7 @@ window.rgUpload=async function(inp){
 window.rgCopy=function(){$('rg-link').select();document.execCommand('copy');msg('Link copied');};
 
 /* ---- form builder ---- */
-var TYPES=['text','email','tel','number','date','textarea','select','checkbox'];
+var TYPES=['text','email','tel','number','date','textarea','select','country','checkbox'];
 function renderFields(){
   var ff=EV.form_fields||[];
   $('rg-fields').innerHTML=ff.map(function(x,i){return '<div class="rg-ff" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px">'+
@@ -164,6 +164,7 @@ function renderRegs(){
   var list=filtered();
   var c={confirmed:0,waitlist:0,cancelled:0,attended:0,walkin:0,paid:0};REGS.forEach(function(x){c[x.status]++;if(x.source==='walkin')c.walkin++;if(x.payment_status==='paid')c.paid++;});
   $('rg-stats').textContent='Total '+REGS.length+' · Confirmed '+c.confirmed+' · Attended '+c.attended+' · Waitlist '+c.waitlist+' · Cancelled '+c.cancelled+' · Walk-in '+c.walkin+' · Paid '+c.paid;
+  newCountries();
   var tot=c.confirmed+c.attended,pc=tot?Math.round(c.attended*100/tot):0;
   $('rg-counter').innerHTML='<div style="display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline"><b style="font-size:1.15rem">Attended '+c.attended+' of '+tot+' ('+pc+'%) - حضر '+c.attended+' من '+tot+'</b><span style="color:#C0392B">Not yet - لسه ما حضروش: '+c.confirmed+'</span><span>Walk-in - تسجيل في المكان: '+c.walkin+'</span></div><div style="height:8px;background:#eee;border-radius:4px;margin-top:6px;overflow:hidden"><div style="height:100%;width:'+pc+'%;background:#22C55E;transition:width .4s"></div></div>';
   var ST=['confirmed','waitlist','cancelled','attended'],PY=['unpaid','paid','free'],PM=['','cash','card','instapay','other'],TT=['','Dr.','Prof.','Mr.','Ms.','Mrs.'];
@@ -315,6 +316,20 @@ window.rgQuickFind=function(){
   var m=REGS.filter(function(x){var ph=(x.phone||'').replace(/\D/g,'');return (d.length>=4&&ph&&ph.indexOf(d.slice(-10))>-1)||x.code.toLowerCase()===q||(x.name||'').toLowerCase().indexOf(q)>-1||(x.email||'').toLowerCase()===q;}).slice(0,8);
   out.innerHTML=m.map(function(x){var id="'"+x.id+"'",at=x.status==='attended';return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px;border:1px solid var(--line);border-radius:6px;margin-top:6px"><span style="width:10px;height:10px;border-radius:50%;background:'+(at?'#22C55E':'#E5382B')+'"></span><b>'+h((x.title?x.title+' ':'')+x.name)+'</b><span dir="ltr" style="color:var(--ink-soft)">'+h(x.phone||'')+' - '+h(x.code)+'</span><span style="flex:1"></span>'+(at?'':'<button class="mini-btn pm-checkin" onclick="checkin(\''+x.code+'\');setTimeout(rgQuickFind,600)">Check-in</button>')+'<button class="mini-btn pm-print" onclick="rgBadgeOne('+id+')">Name tag</button><button class="mini-btn pm-print" onclick="rgCertOne('+id+')">Certificate</button></div>';}).join('')||'<p style="color:var(--ink-soft);font-size:.85rem">No match</p>';};
 window.checkin=checkin;
+var CCX=null;
+async function newCountries(){
+  var el=$('rg-newcc');if(!el||!EV)return;
+  var keys=(EV.form_fields||[]).filter(function(f){return f.type==='country';}).map(function(f){return f.key;});if(!keys.length){el.innerHTML='';return;}
+  if(!CCX){var r=await sb.from('reg_countries').select('name_en,name_ar');CCX=(r.data||[]).map(function(x){return [x.name_en,x.name_ar||''];});}
+  var cnt={};REGS.forEach(function(x){keys.forEach(function(k){var v=x.data&&x.data[k];if(v&&!countryNormalize(v,CCX).known)cnt[v]=(cnt[v]||0)+1;});});
+  var names=Object.keys(cnt);
+  el.innerHTML=names.length?'<div style="background:#FFF4CC;border:1px solid #E6C200;border-radius:8px;padding:10px;margin:8px 0"><b>Countries typed by registrants that are not in the list - دول مكتوبة مش في القائمة</b>'+names.map(function(n){return '<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><span>'+h(n)+' ('+cnt[n]+')</span><input data-cc="'+h(n)+'" placeholder="Arabic name (optional)" style="padding:4px;border:1px solid var(--line);border-radius:4px"><button class="mini-btn" onclick="rgSaveCountry(this)">Save to list?</button></div>';}).join('')+'</div>':'';
+}
+window.rgSaveCountry=async function(btn){
+  var inp=btn.previousElementSibling,n=inp.getAttribute('data-cc');
+  var r=await sb.from('reg_countries').insert({name_en:n,name_ar:inp.value.trim()});
+  if(r.error)return msg(r.error.message,true);
+  CCX=null;msg('Country saved to the list');newCountries();};
 window.rgCertOne=function(id){var x=REGS.filter(function(r){return r.id===id;})[0];if(x)printCerts([x]);};
 /* poster */
 window.rgPoster=function(){
