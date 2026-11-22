@@ -215,7 +215,7 @@ function renderRegs(){
    '<td style="font-size:.8rem">'+h(pname(x.package_id))+'<div style="color:var(--ink-soft);font-size:.72rem;margin-top:3px">'+(x.source==='walkin'?'walk-in':'online')+'<br>'+new Date(x.created_at).toLocaleString()+'</div></td>'+
    '<td><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:.78rem;font-weight:600;color:'+(x.status==='attended'?'#1a8f55':(x.arrived_at&&x.status==='confirmed'?'#B77900':'#C0392B'))+'"><span style="width:11px;height:11px;border-radius:50%;flex:none;background:'+(x.status==='attended'?'#22C55E;box-shadow:0 0 6px 2px rgba(34,197,94,.7)':(x.arrived_at&&x.status==='confirmed'?'#F59E0B;box-shadow:0 0 6px 2px rgba(245,158,11,.7)':'#E5382B;box-shadow:0 0 5px 1px rgba(229,56,43,.5)'))+'"></span>'+(x.status==='attended'?'Attended - حضر':(x.arrived_at&&x.status==='confirmed'?'Arrived - وصل (مستني النيم تاج)':'Not attended - لم يحضر'))+'</div>'+sel(ST,x.status,'rgSet('+id+',\'status\',this.value)')+'</td>'+
    '<td>'+sel(PY,x.payment_status,'rgSet('+id+',\'payment_status\',this.value)')+'<div style="margin-top:4px">'+sel(PM,x.payment_method||'','rgSet('+id+',\'payment_method\',this.value)')+'</div></td>'+
-   '<td class="act"><button class="mini-btn" title="Copy ticket link" onclick="rgCopyLink(\''+x.code+'\')">Copy link</button><button class="mini-btn pm-print" title="Name tag" onclick="rgBadgeOne('+id+')">Tag</button><button class="mini-btn pm-print" title="Certificate" onclick="rgCertOne('+id+')">Cert</button><button class="mini-btn pm-edit" onclick="rgDelReg('+id+')">Delete</button></td></tr>';}).join('')||'<tr><td colspan="7" style="color:var(--ink-soft)">No registrations</td></tr>';
+   '<td class="act"><button class="mini-btn" title="Copy ticket link" onclick="rgCopyLink(\''+x.code+'\')">Copy link</button>'+tagBtn(x)+'<button class="mini-btn pm-print" title="Certificate" onclick="rgCertOne('+id+')">Cert</button><button class="mini-btn pm-edit" onclick="rgDelReg('+id+')">Delete</button></td></tr>';}).join('')||'<tr><td colspan="7" style="color:var(--ink-soft)">No registrations</td></tr>';
 }
 window.rgRender=renderRegs;
 window.rgSet=async function(id,k,v){var o={};o[k]=v;if(k==='status')o.attended_at=v==='attended'?new Date().toISOString():null;var r=await sb.from('reg_registrations').update(o).eq('id',id);if(r.error)msg(r.error.message,true);else msg('تم الحفظ');loadRegs();};
@@ -264,6 +264,17 @@ function printBadges(list){
   w.document.close();
 }
 window.rgBadgeOne=function(id){var x=REGS.filter(function(r){return r.id===id;})[0];if(x)printBadges([x]);};
+function tagBtn(x){var on=!!x.tag_printed_at;
+  return '<button class="mini-btn pm-print" title="'+(on?'Printed '+h(new Date(x.tag_printed_at).toLocaleString())+' — click to print again':'Not printed yet — click to print')+'" onclick="rgTag(\''+x.id+'\')" style="background:'+(on?'#16A34A':'#DC2626')+';color:#fff;border-color:'+(on?'#16A34A':'#DC2626')+';font-weight:700">'+(on?'✓ Tag':'Tag')+'</button>';}
+async function markPrinted(x,toAttended){
+  var now=new Date().toISOString(),p={tag_printed_at:now};
+  if(toAttended&&x.arrived_at&&x.status==='confirmed'){p.status='attended';p.attended_at=now;}
+  var u=await sb.from('reg_registrations').update(p).eq('id',x.id);
+  if(u.error){msg(u.error.message,true);return false;}
+  Object.assign(x,p);return true;}
+window.rgTag=async function(id){
+  var x=REGS.filter(function(r){return r.id===id;})[0];if(!x)return;
+  printBadges([x]);await markPrinted(x,true);renderRegs();renderArrivals();};
 /* drag helper: moves el inside box with the mouse/finger, writes % into inputs */
 function makeDrag(el,box,xi,yi,cb){
   el.style.cursor='move';el.style.touchAction='none';el.style.userSelect='none';
@@ -420,7 +431,7 @@ window.rgWalkin=async function(){
   msg('تم تسجيل '+o.name+'');
   ['rg-w-first','rg-w-last','rg-w-email','rg-w-phone'].forEach(function(i){$(i).value='';});
   await loadRegs();
-  if($('rg-w-print').checked)printBadges([r.data]);
+  if($('rg-w-print').checked){printBadges([r.data]);await sb.from('reg_registrations').update({tag_printed_at:new Date().toISOString()}).eq('id',r.data.id);loadRegs();}
   $('rg-w-first').focus();
 };
 setInterval(function(){if(EV&&!document.hidden&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#rg-card')))loadRegs();},20000);
@@ -472,7 +483,7 @@ async function arrFinish(id,print){
   var u=await sb.from('reg_registrations').update({category:cat,title:ttl,status:'attended',attended_at:new Date().toISOString()}).eq('id',id);
   if(u.error)return msg(u.error.message,true);
   x.category=cat;x.title=ttl;x.status='attended';delete ARRC[id];delete ARRT[id];
-  if(print)printBadges([x]);
+  if(print){printBadges([x]);await sb.from('reg_registrations').update({tag_printed_at:new Date().toISOString()}).eq('id',id);}
   msg('تم: '+x.name+' — '+cat);await loadRegs();
 }
 window.arrPrint=function(id){return arrFinish(id,true);};
