@@ -55,6 +55,7 @@
       <div id="rg-tabs" style="display:flex;gap:6px;border-bottom:2px solid var(--line);margin:10px 0 14px;flex-wrap:wrap">
         <button type="button" class="mini-btn adm-only" data-t="setup" onclick="rgTab('setup')">Setup - الإعدادات</button>
         <button type="button" class="mini-btn adm-only" data-t="contacts" onclick="rgTab('contacts')">Contacts &amp; Invitations - الدكاتره والدعوات</button>
+        <button type="button" class="mini-btn adm-only" data-t="pay" onclick="rgTab('pay')">Payment accounts - حسابات الدفع</button>
         <button type="button" class="mini-btn" data-t="regs" onclick="rgTab('regs')">Check-in &amp; Registrations - الحضور والمسجلين</button>
       </div>
       <div class="adm-only" data-tab="contacts">
@@ -146,11 +147,6 @@
             <div id="rg-items"></div>
             <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap"><input id="rg-item-ar" placeholder="الاسم بالعربي (مثلاً كارت الغدا)" style="padding:6px;border:1px solid var(--line);border-radius:5px;width:210px"><input id="rg-item-en" dir="ltr" placeholder="English name (e.g. Lunch card)" style="padding:6px;border:1px solid var(--line);border-radius:5px;width:210px" onkeydown="if(event.key==='Enter'){event.preventDefault();itemAddNew()}"><button class="mini-btn" type="button" onclick="itemAddNew()">Add</button></div>
             <div style="margin-top:8px;font-size:.82rem;color:var(--ink-soft)">Suggested - اقتراحات: <span id="rg-item-sugg"></span></div></div>
-          <div style="grid-column:1/-1;border:1px solid var(--line);border-radius:8px;padding:10px"><b>Payment accounts - حسابات الدفع</b> <span style="font-size:.8rem;color:var(--ink-soft)">(مشتركة بين كل المؤتمرات — اربط كل حساب بالمؤتمرات اللي تظهر فيها)</span>
-            <p style="font-size:.82rem;color:var(--ink-soft);margin:6px 0">الشيك بوكس جنب كل حساب يفعّله أو يوقفه. الحساب بيظهر في المؤتمرات المعلَّمة تحته بس، للمسجل بعد اختيار الباقة (لو سعرها أكبر من صفر) وبعد التسجيل جنب الـ QR وفي الإيميل. فعّل <b>Show prices / payment</b> فوق في المؤتمر.</p>
-            <label style="display:block;margin:6px 0">WhatsApp number for receipts - رقم الواتساب لإرسال الإيصال<input id="rg-payment_whatsapp" dir="ltr" placeholder="01061888636" style="width:100%;max-width:260px;padding:8px;border:1px solid var(--line);border-radius:5px;display:block"></label>
-            <div id="rg-paym"></div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="mini-btn" type="button" onclick="payAdd('bank')">+ Bank account - حساب بنكي</button><button class="mini-btn" type="button" onclick="payAdd('wallet')">+ E-wallet - محفظة إلكترونية</button><button class="mini-btn" type="button" onclick="payAdd('instapay')">+ InstaPay - إنستا باي</button><button class="mini-btn" type="button" onclick="payAdd('cash')">+ Cash - نقداً</button></div></div>
           <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="rg-cert_scope_all"> Certificates for all registrants (unchecked = attended only)</label>
           <div style="grid-column:1/-1;border:1px solid var(--line);border-radius:8px;padding:8px"><b>Certificate search</b> (one public link for everyone) — search by:
             <label style="display:inline-flex;gap:5px;margin:0 8px"><input type="checkbox" id="rg-cert_search_phone"> Phone</label><label style="display:inline-flex;gap:5px;margin-right:8px"><input type="checkbox" id="rg-cert_search_code"> Code</label><label style="display:inline-flex;gap:5px"><input type="checkbox" id="rg-cert_search_email"> Email</label>
@@ -194,6 +190,12 @@
         <div style="margin:8px 0"><button class="mini-btn primary" onclick="rgCertAll()">Print certificates (PDF)</button></div>
 
         </div>
+        <div class="adm-only" data-tab="pay"><div style="border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px;background:#fff"><b>Payment accounts - حسابات الدفع</b> <span style="font-size:.8rem;color:var(--ink-soft)">(مشتركة بين كل المؤتمرات — اربط كل حساب بالمؤتمرات اللي تظهر فيها)</span>
+            <p style="font-size:.82rem;color:var(--ink-soft);margin:6px 0">الشيك بوكس جنب كل حساب يفعّله أو يوقفه. الحساب بيظهر في المؤتمرات المعلَّمة تحته بس، للمسجل بعد اختيار الباقة (لو سعرها أكبر من صفر) وبعد التسجيل جنب الـ QR وفي الإيميل. فعّل <b>Show prices / payment</b> فوق في المؤتمر.</p>
+            <label style="display:block;margin:6px 0">WhatsApp number for receipts - رقم الواتساب لإرسال الإيصال<input id="rg-payment_whatsapp" dir="ltr" placeholder="01061888636" style="width:100%;max-width:260px;padding:8px;border:1px solid var(--line);border-radius:5px;display:block"></label>
+            <div id="rg-paym"></div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="mini-btn" type="button" onclick="payAdd('bank')">+ Bank account - حساب بنكي</button><button class="mini-btn" type="button" onclick="payAdd('wallet')">+ E-wallet - محفظة إلكترونية</button><button class="mini-btn" type="button" onclick="payAdd('instapay')">+ InstaPay - إنستا باي</button><button class="mini-btn" type="button" onclick="payAdd('cash')">+ Cash - نقداً</button></div></div>
+          </div>
         <div class="adm-only" data-tab="regs" style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:14px"><b>Self-registration kiosk - تسجيل ذاتي على تابلت</b>
           <div style="font-size:.82rem;color:var(--ink-soft);margin:4px 0">افتح اللينك على التابلت في المكان. الدكتور يسجل بنفسه ويتسجل حاضر فوراً، ويوصله إيميل برابط الشهادة (من غير QR). اللينك سري، ومن يملكه يقدر يسجل حضور.</div>
           <input id="rg-kiosk-link" readonly dir="ltr" onclick="this.select()" style="width:60%;padding:6px;border:1px solid var(--line);border-radius:5px;font-size:.8rem"> <button class="mini-btn" type="button" onclick="rgKiosk(false)">Show link</button> <button class="mini-btn" type="button" onclick="rgCopyKiosk()">Copy</button> <button class="mini-btn" type="button" onclick="rgOpenKiosk()">Open</button> <button class="mini-btn" type="button" onclick="rgKiosk(true)">Change key</button></div>
