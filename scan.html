@@ -19,51 +19,64 @@ h1{font-size:1.1rem;margin:6px 0 10px}
 input,select,button{font:inherit}
 .in{width:100%;padding:12px;border-radius:10px;border:0;margin:6px 0;color:#111}
 .btn{background:#E8631E;color:#fff;border:0;border-radius:10px;padding:12px 18px;font-weight:700;width:100%}
-.btn.ghost{background:#1d3f7a}
 .row{display:flex;gap:8px}
 #reader{display:none;width:100%;border-radius:14px;overflow:hidden;background:#000;min-height:40px}
 #res{margin:12px 0;border-radius:14px;padding:16px;text-align:center;font-size:1.05rem;background:#1d3f7a;min-height:92px;display:flex;flex-direction:column;justify-content:center;gap:6px}
 #res b{font-size:1.35rem}
 #res.ok{background:#16803c}#res.warn{background:#b77900}#res.bad{background:#b3261e}
 .chip{display:inline-block;color:#fff;border-radius:99px;padding:2px 12px;font-size:.8rem;font-weight:700}
-.log{font-size:.9rem;border-top:1px solid #ffffff22;padding:7px 0;display:flex;justify-content:space-between;gap:8px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.cb{border:2px solid #ffffff55;background:transparent;color:#fff;border-radius:99px;padding:10px 16px;font-weight:700;font-size:.95rem}.cb.on{border-color:#fff;color:#fff}
-.tabs{display:flex;gap:6px;margin:6px 0}.tabs button{flex:1;padding:11px;border:0;border-radius:10px;background:#1d3f7a;color:#fff;font-weight:700}.tabs button.on{background:#E8631E}
+.tabs{display:flex;gap:6px;margin:6px 0}.tabs button{flex:1;padding:11px 4px;border:0;border-radius:10px;background:#1d3f7a;color:#fff;font-weight:700;font-size:.9rem}.tabs button.on{background:#E8631E}
 .sr{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #ffffff22;font-size:.95rem}.sr b.ok{color:#7be0a0}.sr b.no{color:#ffb4ab}
 .it{width:100%;margin-top:8px;padding:13px;border-radius:12px;border:2px solid #ffffff66;background:transparent;color:#fff;font-weight:700;font-size:1rem;text-align:start}.it.got{background:#16803c;border-color:#16803c}.it.warn{border-color:#f59e0b}
 .muted{opacity:.7;font-size:.85rem}
-.top{display:flex;justify-content:space-between;align-items:center}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .top a,.top button{color:#9fc4ff;background:none;border:0;font-size:.85rem}
+.lang{border:1px solid #9fc4ff !important;border-radius:8px;padding:4px 10px}
+.er{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #ffffff22;padding:10px 0;cursor:pointer}
+.er .nm{flex:1;min-width:0}.er small{display:block;opacity:.7}
+.cnt{background:none;border:0;color:#9fc4ff;text-decoration:underline;padding:6px 0;font-size:.9rem;width:100%;text-align:start}
+.go{display:flex;gap:8px;align-items:center}.go .in{flex:1;margin:6px 0}.go .btn{width:auto;white-space:nowrap}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div id="login" style="display:none">
-    <h1>Scanner Station — تسجيل الدخول</h1>
-    <input class="in" id="email" placeholder="Phone or email — رقم التليفون أو الإيميل" dir="ltr" autocomplete="username">
-    <input class="in" id="password" type="password" placeholder="Password — الباسورد" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()">
-    <button class="btn" onclick="signIn()">Sign in</button>
+    <div class="top"><h1 data-ar="Scanner Station — تسجيل الدخول" data-en="Scanner Station — Sign in"></h1><button class="lang" onclick="toggleLang()" data-ar="EN" data-en="عربي"></button></div>
+    <input class="in" id="email" data-ph-ar="رقم التليفون أو الإيميل" data-ph-en="Phone or email" dir="ltr" autocomplete="username">
+    <input class="in" id="password" type="password" data-ph-ar="الباسورد" data-ph-en="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()">
+    <button class="btn" onclick="signIn()" data-ar="دخول" data-en="Sign in"></button>
     <div id="amsg" class="muted" style="margin-top:8px;color:#ffb4ab"></div>
   </div>
 
   <div id="app" style="display:none">
-    <div class="top"><h1>Scanner Station</h1><div><span id="who" class="muted"></span> <button onclick="signOut()">Sign out</button></div></div>
+    <div class="top"><h1>Scanner Station</h1><div><span id="who" class="muted"></span> <button class="lang" onclick="toggleLang()" data-ar="EN" data-en="عربي"></button> <button onclick="signOut()" data-ar="خروج" data-en="Sign out"></button></div></div>
     <select class="in" id="ev"></select>
-    <div class="tabs"><button id="tabScan" class="on" onclick="setMode('scan')">مسح — Scan</button><button id="tabStat" onclick="setMode('status')">حالة الضيف — Guest status</button></div>
-    <div id="reader"></div>
-    <div class="row" style="margin-top:8px">
-      <button class="btn" id="camBtn" onclick="toggleCam()">Camera ON / OFF — الكاميرا</button>
+    <div class="tabs"><button id="tabScan" class="on" onclick="setMode('scan')" data-ar="مسح" data-en="Scan"></button><button id="tabEdit" onclick="setMode('edit')" data-ar="تعديل" data-en="Edit"></button><button id="tabStat" onclick="setMode('status')" data-ar="حالة الضيف" data-en="Guest status"></button></div>
+
+    <div id="secCam">
+      <div id="reader"></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="camBtn" onclick="toggleCam()" data-ar="الكاميرا (تشغيل / إيقاف)" data-en="Camera ON / OFF"></button></div>
+      <form class="go" onsubmit="return submitCode(event)">
+        <input class="in" id="code" dir="ltr" data-ph-ar="قارئ QR أو اكتب الكود هنا" data-ph-en="QR reader or type the code" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go">
+        <button class="btn" type="submit" data-ar="بحث" data-en="Go"></button>
+      </form>
     </div>
-    <input class="in" id="code" dir="ltr" placeholder="Reader / type code — قارئ QR أو اكتب الكود" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter'){scan(this.value);this.value='';}">
-    <div id="res">Ready — جاهز للمسح</div>
-    <div id="opt" style="display:none;background:#1d3f7a;border-radius:14px;padding:12px;margin-bottom:10px">
-      <div class="muted" style="margin-bottom:6px">اختياري — Optional: <b id="optName"></b><br>لو ما اخترتش، كمّل مسح عادي</div>
-      <div class="muted">التصنيف — Category</div><div id="optCats" class="chips"></div>
-      <div class="muted" style="margin-top:8px">اللقب — Title</div><div id="optTitles" class="chips"></div>
+
+    <div id="res"></div>
+
+    <div id="editBox" style="display:none">
+      <input class="in" id="q" data-ph-ar="ابحث بالاسم أو الكود" data-ph-en="Search by name or code" oninput="renderEdit()" autocomplete="off">
+      <div id="editList"></div>
+    </div>
+
+    <div id="opt" style="display:none;background:#1d3f7a;border-radius:14px;padding:12px;margin:10px 0">
+      <div class="muted" style="margin-bottom:6px"><span data-ar="اختياري:" data-en="Optional:"></span> <b id="optName"></b><br><span id="optNote" data-ar="لو ما اخترتش، كمّل مسح عادي" data-en="If you choose nothing, just keep scanning"></span></div>
+      <div class="muted" data-ar="التصنيف" data-en="Category"></div><div id="optCats" class="chips"></div>
+      <div class="muted" style="margin-top:8px" data-ar="اللقب" data-en="Title"></div><div id="optTitles" class="chips"></div>
     </div>
     <div id="stat" style="display:none;background:#1d3f7a;border-radius:14px;padding:14px;margin-bottom:10px"></div>
-    <div id="count" class="muted"></div>
-    <div id="log"></div>
+    <button id="count" class="cnt" onclick="setMode('edit')"></button>
   </div>
 </div>
 
@@ -71,12 +84,23 @@ input,select,button{font:inherit}
 <script src="js/supabase-init.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-var MODE='scan',PKN={},CURG=null,CUR=null,TT=['Dr.','Prof.','Mr.','Ms.','Mrs.'];
-var sb=window.getSupabaseClient(),ME=null,EV=null,EVS=[],cam=null,last='',lastT=0,booted=null,busy=false;
+var LANG='ar';try{LANG=localStorage.getItem('scan_lang')==='en'?'en':'ar';}catch(e){}
+function T(ar,en){return LANG==='en'?en:ar;}
+var MODE='scan',PKN={},CURG=null,CUR=null,EDITS=[],TT=['Dr.','Prof.','Mr.','Ms.','Mrs.'];
+var sb=window.getSupabaseClient(),ME=null,EV=null,EVS=[],cam=null,last='',lastT=0,booted=null,busy=false,CNT=0;
 var $=function(i){return document.getElementById(i);};
 function h(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function applyLang(){
+  document.documentElement.lang=LANG;document.documentElement.dir=LANG==='en'?'ltr':'rtl';
+  document.querySelectorAll('[data-ar]').forEach(function(e){e.textContent=LANG==='en'?e.getAttribute('data-en'):e.getAttribute('data-ar');});
+  document.querySelectorAll('[data-ph-ar]').forEach(function(e){e.placeholder=LANG==='en'?e.getAttribute('data-ph-en'):e.getAttribute('data-ph-ar');});
+  if(EV){drawCount();if(CUR)drawOpt();if(CURG)drawGuest();renderEdit();}
+  if(MODE==='scan'&&!busy&&$('res')&&!$('res').getAttribute('data-keep'))idleRes();
+}
+function idleRes(){var r=$('res');r.className='';r.removeAttribute('data-keep');r.innerHTML=MODE==='status'?T('امسح QR الضيف لعرض حالته','Scan a guest QR to see their status'):MODE==='edit'?'':T('جاهز للمسح','Ready to scan');}
+window.toggleLang=function(){LANG=LANG==='en'?'ar':'en';try{localStorage.setItem('scan_lang',LANG);}catch(e){}applyLang();};
 function toEmail(v){v=(v||'').trim();if(v.indexOf('@')>-1)return v;var d=v.replace(/\D/g,'');return 'staff-'+d+'@staff.ideaeg.online';}
-async function signIn(){$('amsg').textContent='';var r=await sb.auth.signInWithPassword({email:toEmail($('email').value),password:$('password').value});if(r.error)$('amsg').textContent='بيانات الدخول غلط — Wrong login';}
+async function signIn(){$('amsg').textContent='';var r=await sb.auth.signInWithPassword({email:toEmail($('email').value),password:$('password').value});if(r.error)$('amsg').textContent=T('بيانات الدخول غلط','Wrong login');}
 async function signOut(){await sb.auth.signOut();location.reload();}
 function cats(){var c=EV&&EV.categories;return Array.isArray(c)&&c.length?c:[];}
 function catColor(l){var c=cats().filter(function(x){return x.label===l;})[0];return c?c.color:'#64748B';}
@@ -85,86 +109,106 @@ var AC=null;
 function unlock(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}}
 ['pointerdown','touchstart','keydown','click'].forEach(function(ev){document.addEventListener(ev,unlock,{passive:true});});
 function tone(f,d,at,type,vol){try{unlock();var o=AC.createOscillator(),g=AC.createGain();o.type=type||'square';o.frequency.value=f;g.gain.value=vol||.25;o.connect(g);g.connect(AC.destination);var t=AC.currentTime+(at||0);o.start(t);o.stop(t+d);}catch(e){}}
-function tick(){tone(1800,.11,0,'square',.3);try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}}   /* classic barcode-scanner beep, played the moment a code is read */
+function tick(){tone(1800,.11,0,'square',.3);try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}}   /* classic barcode-scanner beep */
 function beep(kind){if(kind==='warn'){tone(1100,.09,0);tone(1100,.09,.16);}else if(kind==='bad'){tone(260,.4,0,'sawtooth',.3);try{if(navigator.vibrate)navigator.vibrate([120,60,120]);}catch(e){}}}
-function show(cls,html,ok){var r=$('res');r.className=cls;r.innerHTML=html;if(cls!=='ok')beep(cls);}
-var LOG=[];
-function track(x){var t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});var e=LOG.filter(function(l){return l.id===x.id;})[0];if(!e){e={id:x.id,time:t};LOG.unshift(e);if(LOG.length>15)LOG.pop();}e.name=x.name;e.cat=x.category||'Delegate';e.title=x.title||'';e.door_set=!!x.door_set;renderLog();return e;}
-function renderLog(){$('log').innerHTML=LOG.length?'<div class="muted" style="margin:6px 0">آخر اللي اتمسحوا — دوس على أي اسم لتعديل تصنيفه ولقبه</div>'+LOG.map(function(l,i){return '<div class="log" style="cursor:pointer" onclick="reopen('+i+')"><span>'+h((l.title?l.title+' ':'')+l.name)+' '+chip(l.cat)+'</span><span class="muted">'+h(l.time)+' ✎</span></div>';}).join(''):'';}
-window.reopen=function(i){var l=LOG[i];if(!l)return;openOpt({id:l.id,name:l.name,category:l.cat,title:l.title,door_set:l.door_set});$('opt').scrollIntoView({behavior:'smooth',block:'center'});};
+function show(cls,html){var r=$('res');r.className=cls;r.setAttribute('data-keep','1');r.innerHTML=html;if(cls!=='ok')beep(cls);}
+function fmtT(t){return new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
 async function boot(){
   var s=(await sb.auth.getSession()).data.session;
-  if(!s){$('login').style.display='block';return;}
+  if(!s){$('login').style.display='block';applyLang();return;}
   if(booted===s.user.id)return;booted=s.user.id;
   var me=(await sb.from('staff_members').select('name,role,active,perms').eq('user_id',s.user.id).maybeSingle()).data;
-  if(!me||!me.active){await sb.auth.signOut();booted=null;$('login').style.display='block';$('amsg').textContent='الحساب ده مش مصرّح له — No access';return;}
+  if(!me||!me.active){await sb.auth.signOut();booted=null;$('login').style.display='block';$('amsg').textContent=T('الحساب ده مش مصرّح له','No access');applyLang();return;}
   var p=me.perms||{};
-  if(!(me.role==='admin'||p.checkin)){$('login').style.display='none';$('app').style.display='block';$('app').innerHTML='<h1>مفيش صلاحية check-in للحساب ده</h1><p class="muted">You need the check-in permission.</p>';return;}
+  if(!(me.role==='admin'||p.checkin)){$('login').style.display='none';$('app').style.display='block';$('app').innerHTML='<h1>'+T('مفيش صلاحية check-in للحساب ده','This account has no check-in permission')+'</h1>';return;}
   ME=me;$('who').textContent=me.name;$('login').style.display='none';$('app').style.display='block';
   var r=await sb.from('reg_events').select('id,slug,title_en,title_ar,categories,items,items_enabled').order('created_at',{ascending:false});
   EVS=r.data||[];
   var keep=null;try{keep=localStorage.getItem('scan_event');}catch(e){}
   $('ev').innerHTML=EVS.map(function(e){return '<option value="'+e.id+'">'+h(e.title_en||e.title_ar||e.slug)+'</option>';}).join('');
   if(EVS.some(function(e){return e.id===keep;}))$('ev').value=keep;
-  $('ev').onchange=function(){pickEv();};pickEv();
+  $('ev').onchange=function(){pickEv();};pickEv();applyLang();
   $('code').focus();
 }
-function pickEv(){EV=EVS.filter(function(e){return e.id===$('ev').value;})[0]||null;try{localStorage.setItem('scan_event',$('ev').value);}catch(e){}count();
-  PKN={};if(EV)sb.from('reg_packages').select('id,name_en,name_ar').eq('event_id',EV.id).then(function(r){(r.data||[]).forEach(function(p){PKN[p.id]=p.name_en||p.name_ar;});});}
-function setMode(m){MODE=m;$('tabScan').className=m==='scan'?'on':'';$('tabStat').className=m==='status'?'on':'';
-  $('stat').style.display=m==='status'?'block':'none';if(m==='status'){$('opt').style.display='none';$('log').style.display='none';$('res').className='';$('res').innerHTML='امسح QR الضيف لعرض حالته — Scan a guest QR to see status';}
-  else{$('log').style.display='block';if(CUR)$('opt').style.display='block';$('res').className='';$('res').innerHTML='Ready — جاهز للمسح';}
-  $('code').focus();}
+function pickEv(){EV=EVS.filter(function(e){return e.id===$('ev').value;})[0]||null;try{localStorage.setItem('scan_event',$('ev').value);}catch(e){}CUR=null;CURG=null;$('opt').style.display='none';count();
+  PKN={};if(EV)sb.from('reg_packages').select('id,name_en,name_ar').eq('event_id',EV.id).then(function(r){(r.data||[]).forEach(function(p){PKN[p.id]=p.name_en||p.name_ar;});});
+  if(MODE==='edit')loadEdit();}
+function setMode(m){MODE=m;
+  $('tabScan').className=m==='scan'?'on':'';$('tabEdit').className=m==='edit'?'on':'';$('tabStat').className=m==='status'?'on':'';
+  $('secCam').style.display=m==='edit'?'none':'block';$('editBox').style.display=m==='edit'?'block':'none';
+  $('res').style.display=m==='edit'?'none':'flex';$('stat').style.display=m==='status'?'block':'none';
+  $('count').style.display=m==='edit'?'none':'block';
+  $('opt').style.display=(m!=='status'&&CUR)?'block':'none';
+  $('optNote').style.display=m==='edit'?'none':'inline';
+  idleRes();
+  if(m==='edit'){loadEdit();}else{$('code').focus();}}
 function itemsOn(){return !!(EV&&EV.items_enabled&&Array.isArray(EV.items)&&EV.items.length);}
 function inc(g,it){return !it.pkgs||it.pkgs.indexOf(g.package_id)>-1;}
 function ts(t,by){return new Date(t).toLocaleString([], {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})+(by?' — '+h(by):'');}
-function yn(ok,txt){return '<b class="'+(ok?'ok':'no')+'">'+(ok?'✓ '+txt:'✗ لا')+'</b>';}
+function yn(ok,txt){return '<b class="'+(ok?'ok':'no')+'">'+(ok?'✓ '+txt:T('✗ لا','✗ No'))+'</b>';}
 function drawGuest(){var g=CURG;if(!g){return;}
   var rec=g.items_received||{};
   var html='<div style="font-size:1.25rem;font-weight:800">'+h((g.title?g.title+' ':'')+g.name)+'</div><div style="margin:4px 0 8px">'+chip(g.category||'Delegate')+' <span class="muted">'+h(PKN[g.package_id]||'')+' · <span dir="ltr">'+h(g.code)+'</span></span></div>'+
-    (g.status==='cancelled'||g.status==='waitlist'?'<div style="background:#b3261e;border-radius:8px;padding:8px;margin-bottom:6px;font-weight:700">الحالة: '+h(g.status)+'</div>':'')+
-    (g.payment_status==='unpaid'?'<div style="background:#b77900;border-radius:8px;padding:8px;margin-bottom:6px;font-weight:700">⚠ لم يدفع — UNPAID</div>':'')+
-    '<div class="sr"><span>وصل — Arrived</span>'+yn(!!g.arrived_at,ts(g.arrived_at,g.arrived_by))+'</div>'+
-    '<div class="sr"><span>طبع النيم تاج — Name tag printed</span>'+yn(!!g.tag_printed_at,g.tag_printed_at?ts(g.tag_printed_at,g.tag_printed_by):'')+'</div>'+
-    '<div class="sr"><span>طبع الشهادة — Certificate printed</span>'+yn(!!g.cert_printed_at,g.cert_printed_at?ts(g.cert_printed_at,g.cert_printed_by):'')+'</div>';
-  if(itemsOn())html+=EV.items.map(function(it){var got=rec[it.key],ok=inc(g,it);return '<button class="it'+(got?' got':'')+(ok?'':' warn')+'" onclick="togItem(\''+it.key+'\')">'+(got?'✓ ':'')+(ok?'':'⚠ ')+'استلم '+h(it.ar||it.en||it.key)+(got?'<br><span style="font-weight:400;font-size:.8rem">'+ts(got.at,got.by)+'</span>':'')+(ok?'':'<br><span style="font-weight:400;font-size:.8rem">الباقة دي مفيهاش البند ده</span>')+'</button>';}).join('');
+    (g.status==='cancelled'||g.status==='waitlist'?'<div style="background:#b3261e;border-radius:8px;padding:8px;margin-bottom:6px;font-weight:700">'+T('الحالة: ','Status: ')+h(g.status)+'</div>':'')+
+    (g.payment_status==='unpaid'?'<div style="background:#b77900;border-radius:8px;padding:8px;margin-bottom:6px;font-weight:700">'+T('⚠ لم يدفع','⚠ UNPAID')+'</div>':'')+
+    '<div class="sr"><span>'+T('وصل','Arrived')+'</span>'+yn(!!g.arrived_at,g.arrived_at?ts(g.arrived_at,g.arrived_by):'')+'</div>'+
+    '<div class="sr"><span>'+T('طبع النيم تاج','Name tag printed')+'</span>'+yn(!!g.tag_printed_at,g.tag_printed_at?ts(g.tag_printed_at,g.tag_printed_by):'')+'</div>'+
+    '<div class="sr"><span>'+T('طبع الشهادة','Certificate printed')+'</span>'+yn(!!g.cert_printed_at,g.cert_printed_at?ts(g.cert_printed_at,g.cert_printed_by):'')+'</div>';
+  if(itemsOn())html+=EV.items.map(function(it){var got=rec[it.key],ok=inc(g,it),nm=LANG==='en'?(it.en||it.ar||it.key):(it.ar||it.en||it.key);return '<button class="it'+(got?' got':'')+(ok?'':' warn')+'" onclick="togItem(\''+it.key+'\')">'+(got?'✓ ':'')+(ok?'':'⚠ ')+T('استلم ','Received ')+h(nm)+(got?'<br><span style="font-weight:400;font-size:.8rem">'+ts(got.at,got.by)+'</span>':'')+(ok?'':'<br><span style="font-weight:400;font-size:.8rem">'+T('الباقة دي مفيهاش البند ده','This package does not include it')+'</span>')+'</button>';}).join('');
   $('stat').innerHTML=html;}
 async function lookup(code){
   var r=await sb.from('reg_registrations').select('id,name,title,code,status,category,package_id,payment_status,arrived_at,arrived_by,tag_printed_at,tag_printed_by,cert_printed_at,cert_printed_by,items_received').eq('event_id',EV.id).eq('code',code).maybeSingle();
-  if(r.error){show('bad','<b>Error</b>'+h(r.error.message),false);return;}
-  if(!r.data){CURG=null;$('stat').innerHTML='';show('bad','<b>Code not found — الكود مش موجود</b><span dir="ltr">'+h(code)+'</span>',false);return;}
-  CURG=r.data;$('res').className='ok';$('res').innerHTML='<b>'+h(CURG.name)+'</b>';drawGuest();}
+  if(r.error){show('bad','<b>Error</b>'+h(r.error.message));return;}
+  if(!r.data){CURG=null;$('stat').innerHTML='';show('bad','<b>'+T('الكود مش موجود','Code not found')+'</b><span dir="ltr">'+h(code)+'</span>');return;}
+  CURG=r.data;show('ok','<b>'+h(CURG.name)+'</b>');drawGuest();}
 async function togItem(key){
   if(!CURG)return;var it=EV.items.filter(function(i){return i.key===key;})[0];if(!it)return;var got=!!(CURG.items_received&&CURG.items_received[key]);
-  if(!got&&!inc(CURG,it)&&!confirm('⚠ تحذير!\nالباقة دي مفيهاش "'+(it.ar||it.en)+'".\nتسلّمه برضه؟'))return;
+  var nm=LANG==='en'?(it.en||it.ar):(it.ar||it.en);
+  if(!got&&!inc(CURG,it)&&!confirm(T('⚠ تحذير!\nالباقة دي مفيهاش "'+nm+'".\nتسلّمه برضه؟','⚠ Warning!\nThis package does not include "'+nm+'".\nHand it over anyway?')))return;
   var r=await sb.rpc('toggle_reg_item',{p_reg:CURG.id,p_key:key,p_on:!got,p_by:ME.name});
-  if(r.error){show('bad','<b>Error</b>'+h(r.error.message),false);return;}
+  if(r.error){show('bad','<b>Error</b>'+h(r.error.message));return;}
   CURG.items_received=r.data||{};drawGuest();tick();}
+function drawCount(){$('count').textContent=T('اتمسح لحد دلوقتي: ','Scanned so far: ')+CNT+T(' — دوس للعرض والتعديل',' — tap to view / edit');}
 async function count(){
   if(!EV)return;
   var a=await sb.from('reg_registrations').select('id',{count:'exact',head:true}).eq('event_id',EV.id).not('arrived_at','is',null);
-  $('count').textContent='Scanned so far: '+(a.count||0)+' — اتمسح لحد دلوقتي';
+  CNT=a.count||0;drawCount();
 }
+window.submitCode=function(e){if(e)e.preventDefault();var el=$('code'),v=el.value;el.value='';if(v.trim())scan(v);el.focus();return false;};
 async function scan(txt){
   var code=String(txt||'').trim().toUpperCase();if(!code||!EV||busy)return;
   busy=true;tick();
   try{
     if(MODE==='status'){await lookup(code);return;}
     var r=await sb.from('reg_registrations').select('id,name,title,status,category,door_set,arrived_at,arrived_by,payment_status').eq('event_id',EV.id).eq('code',code).maybeSingle();
-    if(r.error){show('bad','<b>Error</b>'+h(r.error.message),false);return;}
+    if(r.error){show('bad','<b>Error</b>'+h(r.error.message));return;}
     var x=r.data;
-    if(!x){show('bad','<b>Code not found — الكود مش موجود</b><span dir="ltr">'+h(code)+'</span>',false);return;}
-    if(x.status==='cancelled'||x.status==='waitlist'){show('bad','<b>'+h(x.name)+'</b>الحالة: '+h(x.status),false);return;}
-    if(x.status==='attended'){show('warn','<b>'+h(x.name)+'</b>متسجل بالفعل — Already checked in',false);return;}
-    if(x.arrived_at){var t=new Date(x.arrived_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});track(x);openOpt(x);show('warn','<b>'+h(x.name)+'</b>متسجل بالفعل — Already scanned at '+t+(x.arrived_by?' ('+h(x.arrived_by)+')':''),false);return;}
+    if(!x){show('bad','<b>'+T('الكود مش موجود','Code not found')+'</b><span dir="ltr">'+h(code)+'</span>');return;}
+    if(x.status==='cancelled'||x.status==='waitlist'){show('bad','<b>'+h(x.name)+'</b>'+T('الحالة: ','Status: ')+h(x.status));return;}
+    if(x.status==='attended'){show('warn','<b>'+h(x.name)+'</b>'+T('متسجل بالفعل — اتسلّم النيم تاج','Already checked in'));return;}
+    if(x.arrived_at){openOpt(x);show('warn','<b>'+h(x.name)+'</b>'+T('متسجل بالفعل — اتمسح الساعة ','Already scanned at ')+fmtT(x.arrived_at)+(x.arrived_by?' ('+h(x.arrived_by)+')':''));return;}
     var u=await sb.from('reg_registrations').update({arrived_at:new Date().toISOString(),arrived_by:ME.name}).eq('id',x.id).is('arrived_at',null).select('id');
-    if(u.error){show('bad','<b>Error</b>'+h(u.error.message),false);return;}
-    if(!u.data||!u.data.length){show('warn','<b>'+h(x.name)+'</b>متسجل بالفعل — Already scanned',false);return;}
+    if(u.error){show('bad','<b>Error</b>'+h(u.error.message));return;}
+    if(!u.data||!u.data.length){show('warn','<b>'+h(x.name)+'</b>'+T('متسجل بالفعل','Already scanned'));return;}
     openOpt(x);
-    show('ok','<b>'+h(x.name)+'</b>'+(x.payment_status==='unpaid'?'<span>⚠ UNPAID — لم يدفع</span>':'')+'<span>وصل ✓ — الاستقبال هيطبع</span>',true);
-    track(x);count();
+    show('ok','<b>'+h(x.name)+'</b>'+(x.payment_status==='unpaid'?'<span>'+T('⚠ لم يدفع','⚠ UNPAID')+'</span>':'')+'<span>'+T('وصل ✓ — الاستقبال هيطبع','Arrived ✓ — reception will print')+'</span>');
+    CNT++;drawCount();
   }finally{busy=false;}
 }
+/* ---- Edit tab: everyone scanned so far ---- */
+async function loadEdit(){
+  if(!EV)return;
+  var r=await sb.from('reg_registrations').select('id,name,title,code,status,category,door_set,arrived_at,tag_printed_at').eq('event_id',EV.id).not('arrived_at','is',null).order('arrived_at',{ascending:false}).limit(500);
+  if(r.error){$('editList').innerHTML='<div class="muted">'+h(r.error.message)+'</div>';return;}
+  EDITS=r.data||[];CNT=EDITS.length>=500?CNT:EDITS.length;drawCount();renderEdit();
+}
+function renderEdit(){
+  var box=$('editList');if(!box)return;var q=($('q').value||'').trim().toLowerCase();
+  var L=EDITS.filter(function(x){return !q||((x.name||'')+' '+(x.code||'')).toLowerCase().indexOf(q)>-1;});
+  box.innerHTML=(L.length?'<div class="muted" style="margin:4px 0">'+T('دوس على أي اسم لتعديل تصنيفه ولقبه','Tap a name to change their category and title')+' ('+L.length+')</div>':'<div class="muted" style="padding:12px 0">'+T('مفيش حد اتمسح لسه','Nobody scanned yet')+'</div>')+
+    L.map(function(x){return '<div class="er" onclick="editOpen(\''+x.id+'\')"><div class="nm"><b>'+h((x.title?x.title+' ':'')+x.name)+'</b> '+chip(x.category||'Delegate')+'<small>'+fmtT(x.arrived_at)+' · <span dir="ltr">'+h(x.code)+'</span>'+(x.tag_printed_at?' · '+T('✓ اتطبع','✓ printed'):'')+'</small></div><span>✎</span></div>';}).join('');
+}
+window.editOpen=function(id){var x=EDITS.filter(function(e){return e.id===id;})[0];if(!x)return;openOpt(x);$('opt').scrollIntoView({behavior:'smooth',block:'start'});};
 function openOpt(x){var c=x.category||'Delegate',t=x.title||'';CUR={id:x.id,name:x.name,origCat:c,origTitle:t,cat:c,title:t,catOn:!!x.door_set||c!=='Delegate',door:!!x.door_set};$('optName').textContent=x.name;$('opt').style.display='block';drawOpt();}
 function drawOpt(){
   var cl=cats();if(!cl.length)cl=[{label:'Delegate',color:'#2563EB'},{label:'Faculty',color:'#7C3AED'},{label:'Speaker',color:'#E8631E'},{label:'Organizer',color:'#16A34A'},{label:'Sponsor',color:'#CA8A04'},{label:'Press',color:'#DB2777'}];
@@ -177,10 +221,11 @@ async function pickOpt(k,v){
   else{CUR.title=(CUR.title===v)?'':v;}
   CUR.door=true;drawOpt();
   var r=await sb.from('reg_registrations').update({category:CUR.cat,title:CUR.title,door_set:true}).eq('id',CUR.id);
-  if(r.error){Object.assign(CUR,old);drawOpt();show('bad','<b>Error</b>'+h(r.error.message),false);return;}
-  track({id:CUR.id,name:CUR.name,category:CUR.cat,title:CUR.title,door_set:true});
+  if(r.error){Object.assign(CUR,old);drawOpt();show('bad','<b>Error</b>'+h(r.error.message));return;}
+  var e=EDITS.filter(function(x){return x.id===CUR.id;})[0];if(e){e.category=CUR.cat;e.title=CUR.title;e.door_set=true;renderEdit();}
   var bits=[CUR.title,CUR.catOn?CUR.cat:''].filter(Boolean).join(' · ');
-  show('ok','<b>'+h(CUR.name)+'</b><span>'+(bits?'✓ '+h(bits):'وصل ✓')+'</span><span>الاستقبال هيطبع</span>',true);tick();
+  if(MODE!=='edit')show('ok','<b>'+h(CUR.name)+'</b><span>'+(bits?'✓ '+h(bits):T('وصل ✓','Arrived ✓'))+'</span><span>'+T('الاستقبال هيطبع','Reception will print')+'</span>');
+  tick();
 }
 function toggleCam(){
   if(!window.Html5Qrcode)return alert('Scanner library not loaded');
@@ -188,8 +233,7 @@ function toggleCam(){
   $('reader').style.display='block';cam=new Html5Qrcode('reader');
   cam.start({facingMode:'environment'},{fps:10,qrbox:240},function(t){if(t===last&&Date.now()-lastT<4000)return;last=t;lastT=Date.now();scan(t);}).catch(function(e){alert(e);cam=null;});
 }
-boot();sb.auth.onAuthStateChange(function(e){if(e==='SIGNED_IN'||e==='INITIAL_SESSION')boot();});
-document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#app')&&!/SELECT|BUTTON|INPUT/.test(e.target.tagName)&&$('code'))$('code').focus();});
+applyLang();boot();sb.auth.onAuthStateChange(function(e){if(e==='SIGNED_IN'||e==='INITIAL_SESSION')boot();});
 </script>
 </body>
 </html>
