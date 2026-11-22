@@ -105,7 +105,8 @@
           <label><input type="checkbox" id="rg-registration_open"> Registration open</label>
           <label><input type="checkbox" id="rg-show_countdown"> Show countdown</label>
           <label><input type="checkbox" id="rg-butterflies"> Flying butterflies effect</label>
-          <label><input type="checkbox" id="rg-show_payment"> Show prices / payment</label>
+          <label><input type="checkbox" id="rg-show_prices"> Show prices - إظهار الأسعار</label>
+          <label><input type="checkbox" id="rg-show_payment"> Show payment methods - إظهار طرق الدفع</label>
           <label><input type="checkbox" id="rg-notify_admin"> Email me on each registration</label>
         </div>
         <div style="margin:6px 0 4px;padding:14px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px">
@@ -191,7 +192,7 @@
 
         </div>
         <div class="adm-only" data-tab="pay"><div style="border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px;background:#fff"><b>Payment accounts - حسابات الدفع</b> <span style="font-size:.8rem;color:var(--ink-soft)">(مشتركة بين كل المؤتمرات — اربط كل حساب بالمؤتمرات اللي تظهر فيها)</span>
-            <p style="font-size:.82rem;color:var(--ink-soft);margin:6px 0">الشيك بوكس جنب كل حساب يفعّله أو يوقفه. الحساب بيظهر في المؤتمرات المعلَّمة تحته بس، للمسجل بعد اختيار الباقة (لو سعرها أكبر من صفر) وبعد التسجيل جنب الـ QR وفي الإيميل. فعّل <b>Show prices / payment</b> فوق في المؤتمر.</p>
+            <p style="font-size:.82rem;color:var(--ink-soft);margin:6px 0">الشيك بوكس جنب كل حساب يفعّله أو يوقفه. الحساب بيظهر في المؤتمرات المعلَّمة تحته بس، للمسجل بعد اختيار الباقة (لو سعرها أكبر من صفر) وبعد التسجيل جنب الـ QR وفي الإيميل. فعّل <b>Show payment methods</b> فوق في المؤتمر.</p>
             <label style="display:block;margin:6px 0">WhatsApp number for receipts - رقم الواتساب لإرسال الإيصال<input id="rg-payment_whatsapp" dir="ltr" placeholder="01061888636" style="width:100%;max-width:260px;padding:8px;border:1px solid var(--line);border-radius:5px;display:block"></label>
             <div id="rg-paym"></div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="mini-btn" type="button" onclick="payAdd('bank')">+ Bank account - حساب بنكي</button><button class="mini-btn" type="button" onclick="payAdd('wallet')">+ E-wallet - محفظة إلكترونية</button><button class="mini-btn" type="button" onclick="payAdd('instapay')">+ InstaPay - إنستا باي</button><button class="mini-btn" type="button" onclick="payAdd('cash')">+ Cash - نقداً</button></div></div>
