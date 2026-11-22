@@ -31,12 +31,12 @@ async function pick(){
   if(!EV)return;
   try{localStorage.setItem('rg_last_event',EV.id);}catch(e){}
   $('rg-main').style.display='block';
-  var f=['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar'];
+  var f=['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar','payment_whatsapp'];
   f.forEach(function(k){$('rg-'+k).value=EV[k]||'';});
   $('rg-start_at').value=toLocal(EV.start_at);$('rg-end_at').value=toLocal(EV.end_at);$('rg-registration_deadline').value=toLocal(EV.registration_deadline);
   $('rg-form_lang').value=EV.form_lang||'auto';$('rg-badge_show_qr').checked=EV.badge_show_qr!==false;$('rg-cert_scope_all').checked=EV.cert_scope==='all';$('rg-cert_online').checked=!!EV.cert_online;$('rg-cert_search_phone').checked=EV.cert_search_phone!==false;$('rg-cert_search_code').checked=EV.cert_search_code!==false;$('rg-cert_search_email').checked=!!EV.cert_search_email;$('rg-cert-link').value=location.origin+'/event.html?e='+EV.slug+'&cert=1';
   ['badge_size','badge_bg_url','badge_w_mm','badge_h_mm','cert_template_url','cert_orientation','cert_name_x','cert_name_y','cert_font','cert_font_mm','cert_color','badge_name_x','badge_name_y','badge_name_mm','badge_qr_x','badge_qr_y','badge_qr_mm','badge_cat_x','badge_cat_y','badge_cat_mm'].forEach(function(k){var el=$('rg-'+k);if(el&&EV[k]!=null)el.value=EV[k];});
-  CATS=(EV.categories&&EV.categories.length?EV.categories:DEFCATS).map(function(c){return {label:c.label,color:c.color};});$('rg-badge_cat_print').checked=!!EV.badge_cat_print;ITEMS=(EV.items||[]).map(function(i){return {key:i.key,ar:i.ar||'',en:i.en||'',pkgs:Array.isArray(i.pkgs)?i.pkgs.slice():null};});$('rg-items_enabled').checked=!!EV.items_enabled;itemsUI();catUI();rgBadgeSizeUI();rgCertPreview();rgBadgePreview();fillReception();
+  CATS=(EV.categories&&EV.categories.length?EV.categories:DEFCATS).map(function(c){return {label:c.label,color:c.color};});$('rg-badge_cat_print').checked=!!EV.badge_cat_print;PAYM=Array.isArray(EV.payment_methods)?EV.payment_methods.map(function(m){return Object.assign({},m);}):[];payUI();ITEMS=(EV.items||[]).map(function(i){return {key:i.key,ar:i.ar||'',en:i.en||'',pkgs:Array.isArray(i.pkgs)?i.pkgs.slice():null};});$('rg-items_enabled').checked=!!EV.items_enabled;itemsUI();catUI();rgBadgeSizeUI();rgCertPreview();rgBadgePreview();fillReception();
   ['published','registration_open','show_countdown','show_payment','notify_admin','butterflies'].forEach(function(k){$('rg-'+k).checked=!!EV[k];});
   $('rg-link').value=location.origin+'/event.html?e='+EV.slug;
   renderFields();await loadPkgs();fillReception();await loadRegs();
@@ -61,7 +61,7 @@ window.rgNew=async function(){
 window.rgPick=pick;
 window.rgSave=async function(auto){
   if(!EV)return;var o={};
-  ['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar'].forEach(function(k){o[k]=$('rg-'+k).value.trim();});
+  ['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar','payment_whatsapp'].forEach(function(k){o[k]=$('rg-'+k).value.trim();});o.payment_methods=PAYM;
   o.slug=o.slug.toLowerCase().replace(/[^a-z0-9-]/g,'-');
   o.form_lang=$('rg-form_lang').value;o.badge_show_qr=$('rg-badge_show_qr').checked;o.cert_scope=$('rg-cert_scope_all').checked?'all':'attended';o.cert_online=$('rg-cert_online').checked;o.cert_search_phone=$('rg-cert_search_phone').checked;o.cert_search_code=$('rg-cert_search_code').checked;o.cert_search_email=$('rg-cert_search_email').checked;
   ['badge_size','badge_bg_url','cert_template_url','cert_orientation','cert_font','cert_color'].forEach(function(k){o[k]=$('rg-'+k).value;});
@@ -464,6 +464,27 @@ window.rgScan=function(){
   $('rg-reader').style.display='block';scanner=new Html5Qrcode('rg-reader');var last='',t=0;
   scanner.start({facingMode:'environment'},{fps:10,qrbox:220},function(txt){if(txt===last&&Date.now()-t<4000)return;last=txt;t=Date.now();checkin(txt);}).catch(function(e){alert(e);});
 };
+/* ---- payment methods ---- */
+var PAYM=[];
+var PTYPE={bank:['Bank account - حساب بنكي','Bank transfer','تحويل بنكي'],wallet:['E-wallet - محفظة','E-Wallet','محفظة إلكترونية'],instapay:['InstaPay - إنستا باي','InstaPay','إنستا باي'],cash:['Cash - نقداً','Cash','نقداً']};
+var PFIELDS={bank:[['holder','Account holder - اسم صاحب الحساب'],['bank','Bank name - اسم البنك'],['branch','Branch - الفرع'],['currency','Currency - العملة (EGP / USD ...)'],['account','Account no. - رقم الحساب'],['iban','IBAN'],['swift','SWIFT']],
+ wallet:[['holder','Name - الاسم'],['number','Wallet number - رقم المحفظة']],
+ instapay:[['holder','Name - الاسم'],['number','InstaPay address / number - العنوان أو الرقم'],['link','Payment link (optional) - رابط الدفع']],
+ cash:[['note_en','Instructions (EN)'],['note_ar','التعليمات (عربي)']]};
+var pyTm=null;function paySave(){clearTimeout(pyTm);pyTm=setTimeout(function(){rgSave(true);},600);}
+function payUI(){
+  var box=$('rg-paym');if(!box)return;
+  box.innerHTML=PAYM.map(function(m,i){var fl=PFIELDS[m.type]||[];
+    return '<div style="border:1px solid var(--line);border-radius:8px;padding:8px;margin:6px 0;background:#fff"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><b style="flex:1">'+h((PTYPE[m.type]||[m.type])[0])+'</b><button class="mini-btn" type="button" onclick="payMove('+i+',-1)">▲</button><button class="mini-btn" type="button" onclick="payMove('+i+',1)">▼</button><button class="mini-btn" type="button" onclick="payDel('+i+')">Remove</button></div>'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px">'+
+      '<input value="'+h(m.title_en||'')+'" dir="ltr" placeholder="Title EN (default: '+h((PTYPE[m.type]||[])[1]||'')+')" onchange="payEdit('+i+',\'title_en\',this.value)" style="padding:6px;border:1px solid var(--line);border-radius:5px">'+
+      '<input value="'+h(m.title_ar||'')+'" placeholder="العنوان بالعربي (الافتراضي: '+h((PTYPE[m.type]||[])[2]||'')+')" onchange="payEdit('+i+',\'title_ar\',this.value)" style="padding:6px;border:1px solid var(--line);border-radius:5px">'+
+      fl.map(function(x){return '<input value="'+h(m[x[0]]||'')+'" placeholder="'+h(x[1])+'" '+(/^(account|iban|swift|number|link|currency)$/.test(x[0])?'dir="ltr" ':'')+'onchange="payEdit('+i+',\''+x[0]+'\',this.value)" style="padding:6px;border:1px solid var(--line);border-radius:5px">';}).join('')+'</div></div>';}).join('')||'<div style="color:var(--ink-soft);font-size:.85rem">No payment methods yet - لسه مفيش وسائل دفع</div>';
+}
+window.payAdd=function(t){PAYM.push({type:t});payUI();paySave();};
+window.payEdit=function(i,k,v){PAYM[i][k]=String(v).trim();paySave();};
+window.payDel=function(i){if(!confirm('Remove this payment method?'))return;PAYM.splice(i,1);payUI();paySave();};
+window.payMove=function(i,d){var j=i+d;if(j<0||j>=PAYM.length)return;var t=PAYM[i];PAYM[i]=PAYM[j];PAYM[j]=t;payUI();paySave();};
 /* ---- giveaways & meals (items) ---- */
 var ITEMS=[];
 var ISUGG=[['شنطة الهدايا','Gift bag'],['كوفي بريك','Coffee break'],['كارت الفطار','Breakfast card'],['كارت الغدا','Lunch card'],['كارت العشا','Dinner card'],['شهادة ورقية','Printed certificate']];
