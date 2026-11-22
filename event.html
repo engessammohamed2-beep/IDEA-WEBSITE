@@ -181,6 +181,7 @@ async function init(){
   var q2=sb.from('reg_packages').select('*').eq('event_id',EV.id);if(!preview)q2=q2.eq('active',true);
   var r2=await q2.order('sort_order');
   PKS=r2.data||[];
+  try{var rpm=await sb.rpc('get_event_payment_methods',{p_event:EV.id});EV.payment_methods=Array.isArray(rpm.data)?rpm.data:[];}catch(e){EV.payment_methods=[];}
   try{var rc=await sb.from('reg_countries').select('name_en,name_ar');CX=(rc.data||[]).map(function(x){return [x.name_en,x.name_ar||''];});}catch(e){}
   // remaining seats via registrations count is private; use rpc-free approach: capacity shown only
   document.title=f(EV,'title')+' | IDEA-EG';
