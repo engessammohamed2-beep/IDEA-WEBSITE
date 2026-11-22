@@ -36,7 +36,7 @@ async function pick(){
   $('rg-start_at').value=toLocal(EV.start_at);$('rg-end_at').value=toLocal(EV.end_at);$('rg-registration_deadline').value=toLocal(EV.registration_deadline);
   $('rg-form_lang').value=EV.form_lang||'auto';$('rg-badge_show_qr').checked=EV.badge_show_qr!==false;$('rg-cert_scope_all').checked=EV.cert_scope==='all';$('rg-cert_online').checked=!!EV.cert_online;$('rg-cert_search_phone').checked=EV.cert_search_phone!==false;$('rg-cert_search_code').checked=EV.cert_search_code!==false;$('rg-cert_search_email').checked=!!EV.cert_search_email;$('rg-cert-link').value=location.origin+'/event.html?e='+EV.slug+'&cert=1';
   ['badge_size','badge_bg_url','badge_w_mm','badge_h_mm','cert_template_url','cert_orientation','cert_name_x','cert_name_y','cert_font','cert_font_mm','cert_color','badge_name_x','badge_name_y','badge_name_mm','badge_qr_x','badge_qr_y','badge_qr_mm','badge_cat_x','badge_cat_y','badge_cat_mm'].forEach(function(k){var el=$('rg-'+k);if(el&&EV[k]!=null)el.value=EV[k];});
-  CATS=(EV.categories&&EV.categories.length?EV.categories:DEFCATS).map(function(c){return {label:c.label,color:c.color};});$('rg-badge_cat_print').checked=!!EV.badge_cat_print;catUI();rgBadgeSizeUI();rgCertPreview();rgBadgePreview();fillReception();
+  CATS=(EV.categories&&EV.categories.length?EV.categories:DEFCATS).map(function(c){return {label:c.label,color:c.color};});$('rg-badge_cat_print').checked=!!EV.badge_cat_print;ITEMS=(EV.items||[]).map(function(i){return {key:i.key,ar:i.ar||'',en:i.en||'',pkgs:Array.isArray(i.pkgs)?i.pkgs.slice():null};});$('rg-items_enabled').checked=!!EV.items_enabled;itemsUI();catUI();rgBadgeSizeUI();rgCertPreview();rgBadgePreview();fillReception();
   ['published','registration_open','show_countdown','show_payment','notify_admin','butterflies'].forEach(function(k){$('rg-'+k).checked=!!EV[k];});
   $('rg-link').value=location.origin+'/event.html?e='+EV.slug;
   renderFields();await loadPkgs();fillReception();await loadRegs();
@@ -69,7 +69,7 @@ window.rgSave=async function(auto){
   var pr=BADGE_PRESETS[o.badge_size];if(pr){o.badge_w_mm=pr[0];o.badge_h_mm=pr[1];$('rg-badge_w_mm').value=pr[0];$('rg-badge_h_mm').value=pr[1];}
   o.start_at=fromLocal($('rg-start_at').value);o.end_at=fromLocal($('rg-end_at').value);o.registration_deadline=fromLocal($('rg-registration_deadline').value);
   ['published','registration_open','show_countdown','show_payment','notify_admin','butterflies'].forEach(function(k){o[k]=$('rg-'+k).checked;});
-  o.categories=CATS;o.badge_cat_print=$('rg-badge_cat_print').checked;
+  o.items=ITEMS;o.items_enabled=$('rg-items_enabled').checked;o.categories=CATS;o.badge_cat_print=$('rg-badge_cat_print').checked;
   o.form_fields=readFields();
   var r=await sb.from('reg_events').update(o).eq('id',EV.id);
   if(r.error)return msg(r.error.message,true);
@@ -210,7 +210,7 @@ function renderRegs(){
   var ST=['confirmed','waitlist','cancelled','attended'],PY=['unpaid','paid','free'],PM=['','cash','card','instapay','other'],TT=['','Dr.','Prof.','Mr.','Ms.','Mrs.'];
   function sel(arr,val,fn){return '<select onchange="'+fn+'">'+arr.map(function(s){return '<option value="'+s+'"'+(s===val?' selected':'')+'>'+(s||'—')+'</option>';}).join('')+'</select>';}
   $('rg-tbody').innerHTML=list.map(function(x){var id="'"+x.id+"'";return '<tr><td dir="ltr" style="font-size:.82rem;word-break:keep-all"><b>'+h(x.code)+'</b></td>'+
-   '<td><div style="display:flex;gap:4px"><span style="flex:0 0 auto">'+sel(TT,x.title||'','rgSet('+id+',\'title\',this.value)')+'</span><input value="'+h(x.name)+'" dir="ltr" onchange="rgSet('+id+',\'name\',this.value)" style="padding:5px;border:1px solid var(--line);border-radius:5px;flex:1;min-width:0"></div><div style="margin-top:5px">'+catSel(x.category||'Delegate','rgSet('+id+',\'category\',this.value)')+'</div></td>'+
+   '<td><div style="display:flex;gap:4px"><span style="flex:0 0 auto">'+sel(TT,x.title||'','rgSet('+id+',\'title\',this.value)')+'</span><input value="'+h(x.name)+'" dir="ltr" onchange="rgSet('+id+',\'name\',this.value)" style="padding:5px;border:1px solid var(--line);border-radius:5px;flex:1;min-width:0"></div><div style="margin-top:5px">'+catSel(x.category||'Delegate','rgSet('+id+',\'category\',this.value)')+'</div>'+(itemsOn()?'<div style="margin-top:4px">'+itemChips(x)+'</div>':'')+'</td>'+
    '<td dir="ltr" style="font-size:.8rem">'+h(x.email)+'<br>'+h(x.phone)+'</td>'+
    '<td style="font-size:.8rem">'+h(pname(x.package_id))+'<div style="color:var(--ink-soft);font-size:.72rem;margin-top:3px">'+(x.source==='walkin'?'walk-in':'online')+'<br>'+new Date(x.created_at).toLocaleString()+'</div></td>'+
    '<td><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:.78rem;font-weight:600;color:'+(x.status==='attended'?'#1a8f55':(x.arrived_at&&x.status==='confirmed'?'#B77900':'#C0392B'))+'"><span style="width:11px;height:11px;border-radius:50%;flex:none;background:'+(x.status==='attended'?'#22C55E;box-shadow:0 0 6px 2px rgba(34,197,94,.7)':(x.arrived_at&&x.status==='confirmed'?'#F59E0B;box-shadow:0 0 6px 2px rgba(245,158,11,.7)':'#E5382B;box-shadow:0 0 5px 1px rgba(229,56,43,.5)'))+'"></span>'+(x.status==='attended'?'Attended - حضر':(x.arrived_at&&x.status==='confirmed'?'Arrived - وصل (مستني النيم تاج)':'Not attended - لم يحضر'))+'</div>'+sel(ST,x.status,'rgSet('+id+',\'status\',this.value)')+'</td>'+
@@ -225,6 +225,7 @@ window.rgDelReg=async function(id){if(!confirm('Delete registration?'))return;aw
 function rows(){
   var ff=EV.form_fields||[];
   return filtered().map(function(x){var o={Code:x.code,Title:x.title||'',Name:x.name,Category:x.category||'',Email:x.email,Package:pname(x.package_id),Status:x.status,Payment:x.payment_status,Method:x.payment_method||'',Source:x.source||'online',Registered:new Date(x.created_at).toLocaleString()};
+    o['Name tag printed']=x.tag_printed_at?new Date(x.tag_printed_at).toLocaleString()+(x.tag_printed_by?' - '+x.tag_printed_by:''):'';o['Certificate printed']=x.cert_printed_at?new Date(x.cert_printed_at).toLocaleString()+(x.cert_printed_by?' - '+x.cert_printed_by:''):'';ITEMS.forEach(function(it){var g=(x.items_received||{})[it.key];o['Received: '+itemName(it)]=g?new Date(g.at).toLocaleString()+(g.by?' - '+g.by:''):'';});
     ff.forEach(function(f){var v=(x.data||{})[f.key];o[f.label_en||f.label_ar||f.key]=v===true?'Yes':(v===false?'':(v==null?'':v));if(f.type==='specialty')o[(f.label_en||f.key)+' - Subspecialty']=(x.data||{})[f.key+'_sub']||'';});return o;});
 }
 window.rgXlsx=function(){
@@ -420,6 +421,7 @@ window.rgPoster=function(){
 };
 /* reception (walk-in) */
 function fillReception(){
+  itemsUI();
   if($('rg-w-cat'))$('rg-w-cat').innerHTML=catOpts('Delegate');
   $('rg-w-pkg').innerHTML=PKS.map(function(p){return '<option value="'+p.id+'">'+h(p.name_en||p.name_ar)+(Number(p.price)>0?' — '+p.price+' '+h(EV.currency||''):'')+'</option>';}).join('');
 }
@@ -462,6 +464,39 @@ window.rgScan=function(){
   $('rg-reader').style.display='block';scanner=new Html5Qrcode('rg-reader');var last='',t=0;
   scanner.start({facingMode:'environment'},{fps:10,qrbox:220},function(txt){if(txt===last&&Date.now()-t<4000)return;last=txt;t=Date.now();checkin(txt);}).catch(function(e){alert(e);});
 };
+/* ---- giveaways & meals (items) ---- */
+var ITEMS=[];
+var ISUGG=[['شنطة الهدايا','Gift bag'],['كوفي بريك','Coffee break'],['كارت الفطار','Breakfast card'],['كارت الغدا','Lunch card'],['كارت العشا','Dinner card'],['شهادة ورقية','Printed certificate']];
+function itemsOn(){return !!(EV&&EV.items_enabled&&ITEMS.length);}
+function itemName(i){return i.ar||i.en||i.key;}
+function itemIncluded(x,it){return !it.pkgs||it.pkgs.indexOf(x.package_id)>-1;}
+var itTm=null;function itemSave(){clearTimeout(itTm);itTm=setTimeout(function(){rgSave(true);},500);}
+function itemsUI(){
+  var box=$('rg-items');if(!box)return;
+  box.innerHTML=ITEMS.map(function(it,i){return '<div style="border:1px solid var(--line);border-radius:8px;padding:8px;margin:6px 0"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><input value="'+h(it.ar)+'" placeholder="عربي" onchange="itemEdit('+i+',\'ar\',this.value)" style="padding:6px;border:1px solid var(--line);border-radius:5px;width:190px"><input dir="ltr" value="'+h(it.en)+'" placeholder="English" onchange="itemEdit('+i+',\'en\',this.value)" style="padding:6px;border:1px solid var(--line);border-radius:5px;width:190px"><button class="mini-btn" type="button" onclick="itemDel('+i+')">Remove</button></div>'+
+    '<div style="margin-top:6px;font-size:.82rem">الباقات اللي فيها البند ده — Included in: '+(PKS.length?PKS.map(function(p){return '<label style="display:inline-flex;gap:4px;align-items:center;margin:0 10px 0 0"><input type="checkbox" '+((!it.pkgs||it.pkgs.indexOf(p.id)>-1)?'checked ':'')+'onchange="itemPkg('+i+',\''+p.id+'\',this.checked)">'+h(p.name_en||p.name_ar)+'</label>';}).join(''):'<i>(no packages yet)</i>')+'</div></div>';}).join('');
+  var have=ITEMS.map(function(i){return (i.en||'').toLowerCase()+'|'+(i.ar||'');});
+  $('rg-item-sugg').innerHTML=ISUGG.filter(function(s){return have.indexOf(s[1].toLowerCase()+'|'+s[0])<0&&!ITEMS.some(function(i){return i.ar===s[0];});}).map(function(s){return '<button class="mini-btn" type="button" onclick="itemAdd(\''+s[0]+'\',\''+s[1]+'\')">+ '+s[0]+'</button>';}).join(' ');
+}
+window.itemsToggle=function(){EV.items_enabled=$('rg-items_enabled').checked;itemSave();renderRegs();renderArrivals();};
+window.itemAdd=function(ar,en){ar=String(ar||'').trim();en=String(en||'').trim();if(!ar&&!en)return;ITEMS.push({key:'i'+Date.now().toString(36)+Math.floor(Math.random()*99),ar:ar,en:en,pkgs:null});itemsUI();itemSave();};
+window.itemAddNew=function(){itemAdd($('rg-item-ar').value,$('rg-item-en').value);$('rg-item-ar').value='';$('rg-item-en').value='';};
+window.itemEdit=function(i,k,v){ITEMS[i][k]=String(v).trim();itemsUI();itemSave();};
+window.itemDel=function(i){if(!confirm('Remove "'+itemName(ITEMS[i])+'"? Already-recorded handovers stay in the data.'))return;ITEMS.splice(i,1);itemsUI();itemSave();};
+window.itemPkg=function(i,pid,on){var it=ITEMS[i],all=PKS.map(function(p){return p.id;});var cur=it.pkgs?it.pkgs.slice():all.slice();var ix=cur.indexOf(pid);if(on&&ix<0)cur.push(pid);if(!on&&ix>-1)cur.splice(ix,1);it.pkgs=(cur.length===all.length)?null:cur;itemSave();};
+function itemChips(x){
+  if(!itemsOn())return '';
+  var rec=x.items_received||{};
+  return ITEMS.map(function(it){var got=rec[it.key],inc=itemIncluded(x,it);
+    var tip=(got?'استلم: '+new Date(got.at).toLocaleString()+(got.by?' — '+got.by:''):'لم يستلم بعد')+(inc?'':' — ⚠ الباقة دي مفيهاش البند ده');
+    return '<button type="button" class="itm'+(got?' got':'')+(inc?'':' warn')+'" title="'+h(tip)+'" onclick="itemToggle(\''+x.id+'\',\''+it.key+'\')">'+(got?'✓ ':'')+(inc?'':'⚠ ')+'استلم '+h(itemName(it))+'</button>';}).join('');}
+window.itemToggle=async function(id,key){
+  var x=REGS.filter(function(r){return r.id===id;})[0],it=ITEMS.filter(function(i){return i.key===key;})[0];if(!x||!it)return;
+  var got=!!(x.items_received&&x.items_received[key]);
+  if(!got&&!itemIncluded(x,it)&&!confirm('⚠ تحذير!\nالباقة ('+pname(x.package_id)+') مفيهاش "'+itemName(it)+'".\nتسلّمه برضه؟\n\nThis package does not include it. Hand over anyway?'))return;
+  var r=await sb.rpc('toggle_reg_item',{p_reg:id,p_key:key,p_on:!got,p_by:window.STAFF_NAME||''});
+  if(r.error)return msg(r.error.message,true);
+  x.items_received=r.data||{};msg((got?'اتلغى: ':'تم: ')+x.name+' — '+itemName(it));renderRegs();renderArrivals();};
 /* ---- arrivals (scanned at the door) ---- */
 var ARRC={},ARRT={};
 function waiting(){return REGS.filter(function(x){return x.arrived_at&&x.status!=='attended'&&x.status!=='cancelled';}).sort(function(a,b){return new Date(a.arrived_at)-new Date(b.arrived_at);});}
@@ -474,7 +509,7 @@ function renderArrivals(){
     var ch=ARRC[x.id]!==undefined?ARRC[x.id]:((x.door_set||(x.category&&x.category!=='Delegate'))?x.category:'');var tt=ARRT[x.id]!==undefined?ARRT[x.id]:(x.title||'');
     var opts='<option value="">— اختر التصنيف / Choose —</option>'+catList().map(function(c){return '<option value="'+h(c.label)+'"'+(c.label===ch?' selected':'')+'>'+h(c.label)+'</option>';}).join('');
     return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff">'+
-      '<div style="flex:1;min-width:160px"><b>'+h((x.title?x.title+' ':'')+x.name)+'</b>'+(x.payment_status==='unpaid'?' <span style="color:#C0392B;font-weight:700">UNPAID</span>':'')+'<div style="font-size:.75rem;color:var(--ink-soft)">'+h(pname(x.package_id))+' · '+arrAgo(x.arrived_at)+(x.arrived_by?' · '+h(x.arrived_by):'')+'</div>'+(x.door_set?'<div style="font-size:.78rem;color:#16803c;font-weight:700">✔ اختاره موظف الباب: '+h([x.title,x.category].filter(Boolean).join(' · '))+'</div>':'')+'</div>'+
+      '<div style="flex:1;min-width:160px"><b>'+h((x.title?x.title+' ':'')+x.name)+'</b>'+(x.payment_status==='unpaid'?' <span style="color:#C0392B;font-weight:700">UNPAID</span>':'')+'<div style="font-size:.75rem;color:var(--ink-soft)">'+h(pname(x.package_id))+' · '+arrAgo(x.arrived_at)+(x.arrived_by?' · '+h(x.arrived_by):'')+'</div>'+(x.door_set?'<div style="font-size:.78rem;color:#16803c;font-weight:700">✔ اختاره موظف الباب: '+h([x.title,x.category].filter(Boolean).join(' · '))+'</div>':'')+(itemsOn()?'<div style="margin-top:4px">'+itemChips(x)+'</div>':'')+'</div>'+
       '<select id="arr-t-'+x.id+'" onchange="ARRT[\''+x.id+'\']=this.value" style="padding:6px;border-radius:6px;border:1px solid var(--line)">'+['','Dr.','Prof.','Mr.','Ms.','Mrs.'].map(function(t){return '<option value="'+t+'"'+(t===tt?' selected':'')+'>'+(t||'— لقب —')+'</option>';}).join('')+'</select>'+
       '<select id="arr-c-'+x.id+'" onchange="arrChoose(\''+x.id+'\',this)" style="padding:6px;border-radius:6px;border:1px solid var(--line);'+(ch?'background:'+catColor(ch)+';color:#fff;font-weight:700':'')+'">'+opts+'</select>'+
       '<button class="mini-btn primary" onclick="arrPrint(\''+x.id+'\')">اطبع Print</button>'+

@@ -28,6 +28,9 @@ input,select,button{font:inherit}
 .chip{display:inline-block;color:#fff;border-radius:99px;padding:2px 12px;font-size:.8rem;font-weight:700}
 .log{font-size:.9rem;border-top:1px solid #ffffff22;padding:7px 0;display:flex;justify-content:space-between;gap:8px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.cb{border:2px solid #ffffff55;background:transparent;color:#fff;border-radius:99px;padding:10px 16px;font-weight:700;font-size:.95rem}.cb.on{border-color:#fff;color:#fff}
+.tabs{display:flex;gap:6px;margin:6px 0}.tabs button{flex:1;padding:11px;border:0;border-radius:10px;background:#1d3f7a;color:#fff;font-weight:700}.tabs button.on{background:#E8631E}
+.sr{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #ffffff22;font-size:.95rem}.sr b.ok{color:#7be0a0}.sr b.no{color:#ffb4ab}
+.it{width:100%;margin-top:8px;padding:13px;border-radius:12px;border:2px solid #ffffff66;background:transparent;color:#fff;font-weight:700;font-size:1rem;text-align:start}.it.got{background:#16803c;border-color:#16803c}.it.warn{border-color:#f59e0b}
 .muted{opacity:.7;font-size:.85rem}
 .top{display:flex;justify-content:space-between;align-items:center}
 .top a,.top button{color:#9fc4ff;background:none;border:0;font-size:.85rem}
@@ -46,6 +49,7 @@ input,select,button{font:inherit}
   <div id="app" style="display:none">
     <div class="top"><h1>Scanner Station</h1><div><span id="who" class="muted"></span> <button onclick="signOut()">Sign out</button></div></div>
     <select class="in" id="ev"></select>
+    <div class="tabs"><button id="tabScan" class="on" onclick="setMode('scan')">مسح — Scan</button><button id="tabStat" onclick="setMode('status')">حالة الضيف — Guest status</button></div>
     <div id="reader"></div>
     <div class="row" style="margin-top:8px">
       <button class="btn" id="camBtn" onclick="toggleCam()">Camera ON / OFF — الكاميرا</button>
@@ -57,6 +61,7 @@ input,select,button{font:inherit}
       <div class="muted">التصنيف — Category</div><div id="optCats" class="chips"></div>
       <div class="muted" style="margin-top:8px">اللقب — Title</div><div id="optTitles" class="chips"></div>
     </div>
+    <div id="stat" style="display:none;background:#1d3f7a;border-radius:14px;padding:14px;margin-bottom:10px"></div>
     <div id="count" class="muted"></div>
     <div id="log"></div>
   </div>
@@ -66,7 +71,7 @@ input,select,button{font:inherit}
 <script src="js/supabase-init.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-var CUR=null,TT=['Dr.','Prof.','Mr.','Ms.','Mrs.'];
+var MODE='scan',PKN={},CURG=null,CUR=null,TT=['Dr.','Prof.','Mr.','Ms.','Mrs.'];
 var sb=window.getSupabaseClient(),ME=null,EV=null,EVS=[],cam=null,last='',lastT=0,booted=null,busy=false;
 var $=function(i){return document.getElementById(i);};
 function h(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -96,7 +101,7 @@ async function boot(){
   var p=me.perms||{};
   if(!(me.role==='admin'||p.checkin)){$('login').style.display='none';$('app').style.display='block';$('app').innerHTML='<h1>مفيش صلاحية check-in للحساب ده</h1><p class="muted">You need the check-in permission.</p>';return;}
   ME=me;$('who').textContent=me.name;$('login').style.display='none';$('app').style.display='block';
-  var r=await sb.from('reg_events').select('id,slug,title_en,title_ar,categories').order('created_at',{ascending:false});
+  var r=await sb.from('reg_events').select('id,slug,title_en,title_ar,categories,items,items_enabled').order('created_at',{ascending:false});
   EVS=r.data||[];
   var keep=null;try{keep=localStorage.getItem('scan_event');}catch(e){}
   $('ev').innerHTML=EVS.map(function(e){return '<option value="'+e.id+'">'+h(e.title_en||e.title_ar||e.slug)+'</option>';}).join('');
@@ -104,7 +109,37 @@ async function boot(){
   $('ev').onchange=function(){pickEv();};pickEv();
   $('code').focus();
 }
-function pickEv(){EV=EVS.filter(function(e){return e.id===$('ev').value;})[0]||null;try{localStorage.setItem('scan_event',$('ev').value);}catch(e){}count();}
+function pickEv(){EV=EVS.filter(function(e){return e.id===$('ev').value;})[0]||null;try{localStorage.setItem('scan_event',$('ev').value);}catch(e){}count();
+  PKN={};if(EV)sb.from('reg_packages').select('id,name_en,name_ar').eq('event_id',EV.id).then(function(r){(r.data||[]).forEach(function(p){PKN[p.id]=p.name_en||p.name_ar;});});}
+function setMode(m){MODE=m;$('tabScan').className=m==='scan'?'on':'';$('tabStat').className=m==='status'?'on':'';
+  $('stat').style.display=m==='status'?'block':'none';if(m==='status'){$('opt').style.display='none';$('log').style.display='none';$('res').className='';$('res').innerHTML='امسح QR الضيف لعرض حالته — Scan a guest QR to see status';}
+  else{$('log').style.display='block';if(CUR)$('opt').style.display='block';$('res').className='';$('res').innerHTML='Ready — جاهز للمسح';}
+  $('code').focus();}
+function itemsOn(){return !!(EV&&EV.items_enabled&&Array.isArray(EV.items)&&EV.items.length);}
+function inc(g,it){return !it.pkgs||it.pkgs.indexOf(g.package_id)>-1;}
+function ts(t,by){return new Date(t).toLocaleString([], {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})+(by?' — '+h(by):'');}
+function yn(ok,txt){return '<b class="'+(ok?'ok':'no')+'">'+(ok?'✓ '+txt:'✗ لا')+'</b>';}
+function drawGuest(){var g=CURG;if(!g){return;}
+  var rec=g.items_received||{};
+  var html='<div style="font-size:1.25rem;font-weight:800">'+h((g.title?g.title+' ':'')+g.name)+'</div><div style="margin:4px 0 8px">'+chip(g.category||'Delegate')+' <span class="muted">'+h(PKN[g.package_id]||'')+' · <span dir="ltr">'+h(g.code)+'</span></span></div>'+
+    (g.status==='cancelled'||g.status==='waitlist'?'<div style="background:#b3261e;border-radius:8px;padding:8px;margin-bottom:6px;font-weight:700">الحالة: '+h(g.status)+'</div>':'')+
+    (g.payment_status==='unpaid'?'<div style="background:#b77900;border-radius:8px;padding:8px;margin-bottom:6px;font-weight:700">⚠ لم يدفع — UNPAID</div>':'')+
+    '<div class="sr"><span>وصل — Arrived</span>'+yn(!!g.arrived_at,ts(g.arrived_at,g.arrived_by))+'</div>'+
+    '<div class="sr"><span>طبع النيم تاج — Name tag printed</span>'+yn(!!g.tag_printed_at,g.tag_printed_at?ts(g.tag_printed_at,g.tag_printed_by):'')+'</div>'+
+    '<div class="sr"><span>طبع الشهادة — Certificate printed</span>'+yn(!!g.cert_printed_at,g.cert_printed_at?ts(g.cert_printed_at,g.cert_printed_by):'')+'</div>';
+  if(itemsOn())html+=EV.items.map(function(it){var got=rec[it.key],ok=inc(g,it);return '<button class="it'+(got?' got':'')+(ok?'':' warn')+'" onclick="togItem(\''+it.key+'\')">'+(got?'✓ ':'')+(ok?'':'⚠ ')+'استلم '+h(it.ar||it.en||it.key)+(got?'<br><span style="font-weight:400;font-size:.8rem">'+ts(got.at,got.by)+'</span>':'')+(ok?'':'<br><span style="font-weight:400;font-size:.8rem">الباقة دي مفيهاش البند ده</span>')+'</button>';}).join('');
+  $('stat').innerHTML=html;}
+async function lookup(code){
+  var r=await sb.from('reg_registrations').select('id,name,title,code,status,category,package_id,payment_status,arrived_at,arrived_by,tag_printed_at,tag_printed_by,cert_printed_at,cert_printed_by,items_received').eq('event_id',EV.id).eq('code',code).maybeSingle();
+  if(r.error){show('bad','<b>Error</b>'+h(r.error.message),false);return;}
+  if(!r.data){CURG=null;$('stat').innerHTML='';show('bad','<b>Code not found — الكود مش موجود</b><span dir="ltr">'+h(code)+'</span>',false);return;}
+  CURG=r.data;$('res').className='ok';$('res').innerHTML='<b>'+h(CURG.name)+'</b>';drawGuest();}
+async function togItem(key){
+  if(!CURG)return;var it=EV.items.filter(function(i){return i.key===key;})[0];if(!it)return;var got=!!(CURG.items_received&&CURG.items_received[key]);
+  if(!got&&!inc(CURG,it)&&!confirm('⚠ تحذير!\nالباقة دي مفيهاش "'+(it.ar||it.en)+'".\nتسلّمه برضه؟'))return;
+  var r=await sb.rpc('toggle_reg_item',{p_reg:CURG.id,p_key:key,p_on:!got,p_by:ME.name});
+  if(r.error){show('bad','<b>Error</b>'+h(r.error.message),false);return;}
+  CURG.items_received=r.data||{};drawGuest();tick();}
 async function count(){
   if(!EV)return;
   var a=await sb.from('reg_registrations').select('id',{count:'exact',head:true}).eq('event_id',EV.id).not('arrived_at','is',null);
@@ -114,6 +149,7 @@ async function scan(txt){
   var code=String(txt||'').trim().toUpperCase();if(!code||!EV||busy)return;
   busy=true;tick();
   try{
+    if(MODE==='status'){await lookup(code);return;}
     var r=await sb.from('reg_registrations').select('id,name,title,status,category,door_set,arrived_at,arrived_by,payment_status').eq('event_id',EV.id).eq('code',code).maybeSingle();
     if(r.error){show('bad','<b>Error</b>'+h(r.error.message),false);return;}
     var x=r.data;
