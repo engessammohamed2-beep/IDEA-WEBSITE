@@ -489,8 +489,9 @@ function itemChips(x){
   var rec=x.items_received||{};
   return ITEMS.map(function(it){var got=rec[it.key],inc=itemIncluded(x,it);
     var tip=(got?'استلم: '+new Date(got.at).toLocaleString()+(got.by?' — '+got.by:''):'لم يستلم بعد')+(inc?'':' — ⚠ الباقة دي مفيهاش البند ده');
-    return '<button type="button" class="itm'+(got?' got':'')+(inc?'':' warn')+'" title="'+h(tip)+'" onclick="itemToggle(\''+x.id+'\',\''+it.key+'\')">'+(got?'✓ ':'')+(inc?'':'⚠ ')+'استلم '+h(itemName(it))+'</button>';}).join('');}
+    return '<button type="button" class="itm'+(got?' got':'')+(inc?'':' warn')+'" title="'+h(tip)+'" '+(window.CAN_HANDOUT?'':' disabled')+' onclick="itemToggle(\''+x.id+'\',\''+it.key+'\')">'+(got?'✓ ':'✗ ')+(inc?'':'⚠ ')+'استلم '+h(itemName(it))+'</button>';}).join('');}
 window.itemToggle=async function(id,key){
+  if(!window.CAN_HANDOUT)return msg('مفيش عندك صلاحية تسليم الهدايا — No handout permission',true);
   var x=REGS.filter(function(r){return r.id===id;})[0],it=ITEMS.filter(function(i){return i.key===key;})[0];if(!x||!it)return;
   var got=!!(x.items_received&&x.items_received[key]);
   if(!got&&!itemIncluded(x,it)&&!confirm('⚠ تحذير!\nالباقة ('+pname(x.package_id)+') مفيهاش "'+itemName(it)+'".\nتسلّمه برضه؟\n\nThis package does not include it. Hand over anyway?'))return;

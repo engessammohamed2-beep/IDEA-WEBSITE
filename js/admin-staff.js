@@ -4,8 +4,8 @@ var sb=window.getSupabaseClient();
 function $(i){return document.getElementById(i);}
 function h(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function say(t,bad){var e=$('staff-msg');e.style.color=bad?'var(--orange-dark)':'#1a8f55';e.textContent=t;}
-var PERMS=[['view','عرض','View'],['edit','تعديل / حذف','Edit'],['walkin','تسجيل بالمكان','Walk-in'],['checkin','Check-in','Check-in'],['print','طباعة','Print'],['export','تصدير','Export'],['manage_events','تحكم كامل في المؤتمرات','Full event control']];
-var PRESETS={full:['view','edit','walkin','checkin','print','export','manage_events'],reception:['view','walkin','checkin','print'],viewer:['view','export']};
+var PERMS=[['view','عرض','View'],['edit','تعديل / حذف','Edit'],['walkin','تسجيل بالمكان','Walk-in'],['checkin','Check-in','Check-in'],['print','طباعة','Print'],['export','تصدير','Export'],['handout','تسليم الهدايا والوجبات','Handouts'],['manage_events','تحكم كامل في المؤتمرات','Full event control']];
+var PRESETS={full:['view','edit','walkin','checkin','print','export','handout','manage_events'],reception:['view','walkin','checkin','print','handout'],viewer:['view','export']};
 function obj(list){var o={};PERMS.forEach(function(p){o[p[0]]=list.indexOf(p[0])>-1;});return o;}
 async function call(body){
   var r=await sb.functions.invoke('staff-admin',{body:body});

@@ -28,7 +28,7 @@ input,select,button{font:inherit}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.cb{border:2px solid #ffffff55;background:transparent;color:#fff;border-radius:99px;padding:10px 16px;font-weight:700;font-size:.95rem}.cb.on{border-color:#fff;color:#fff}
 .tabs{display:flex;gap:6px;margin:6px 0}.tabs button{flex:1;padding:11px 4px;border:0;border-radius:10px;background:#1d3f7a;color:#fff;font-weight:700;font-size:.9rem}.tabs button.on{background:#E8631E}
 .sr{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #ffffff22;font-size:.95rem}.sr b.ok{color:#7be0a0}.sr b.no{color:#ffb4ab}
-.it{width:100%;margin-top:8px;padding:13px;border-radius:12px;border:2px solid #ffffff66;background:transparent;color:#fff;font-weight:700;font-size:1rem;text-align:start}.it.got{background:#16803c;border-color:#16803c}.it.warn{border-color:#f59e0b}
+.it{display:block;width:100%;margin-top:8px;padding:13px;border-radius:12px;border:2px solid #ef4444;background:#ef444422;color:#fff;font-weight:700;font-size:1rem;text-align:start}.it.got{background:#16803c;border-color:#16803c}.it.warn:not(.got){border-color:#f59e0b;background:#f59e0b22}div.it{cursor:default}
 .muted{opacity:.7;font-size:.85rem}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .top a,.top button{color:#9fc4ff;background:none;border:0;font-size:.85rem}
@@ -154,15 +154,16 @@ function drawGuest(){var g=CURG;if(!g){return;}
     '<div class="sr"><span>'+T('وصل','Arrived')+'</span>'+yn(!!g.arrived_at,g.arrived_at?ts(g.arrived_at,g.arrived_by):'')+'</div>'+
     '<div class="sr"><span>'+T('طبع النيم تاج','Name tag printed')+'</span>'+yn(!!g.tag_printed_at,g.tag_printed_at?ts(g.tag_printed_at,g.tag_printed_by):'')+'</div>'+
     '<div class="sr"><span>'+T('طبع الشهادة','Certificate printed')+'</span>'+yn(!!g.cert_printed_at,g.cert_printed_at?ts(g.cert_printed_at,g.cert_printed_by):'')+'</div>';
-  if(itemsOn())html+=EV.items.map(function(it){var got=rec[it.key],ok=inc(g,it),nm=LANG==='en'?(it.en||it.ar||it.key):(it.ar||it.en||it.key);return '<button class="it'+(got?' got':'')+(ok?'':' warn')+'" onclick="togItem(\''+it.key+'\')">'+(got?'✓ ':'')+(ok?'':'⚠ ')+T('استلم ','Received ')+h(nm)+(got?'<br><span style="font-weight:400;font-size:.8rem">'+ts(got.at,got.by)+'</span>':'')+(ok?'':'<br><span style="font-weight:400;font-size:.8rem">'+T('الباقة دي مفيهاش البند ده','This package does not include it')+'</span>')+'</button>';}).join('');
+  if(itemsOn())html+=EV.items.map(function(it){var got=rec[it.key],ok=inc(g,it),nm=LANG==='en'?(it.en||it.ar||it.key):(it.ar||it.en||it.key);return '<'+(canHand()?'button':'div')+' class="it'+(got?' got':'')+(ok?'':' warn')+'"'+(canHand()?' onclick="togItem(\''+it.key+'\')"':'')+'>'+(got?'✓ ':'✗ ')+(ok?'':'⚠ ')+T('استلم ','Received ')+h(nm)+(got?'<br><span style="font-weight:400;font-size:.8rem">'+ts(got.at,got.by)+'</span>':'')+(ok?'':'<br><span style="font-weight:400;font-size:.8rem">'+T('الباقة دي مفيهاش البند ده','This package does not include it')+'</span>')+'</'+(canHand()?'button':'div')+'>';}).join('')+(canHand()?'':'<div class="muted" style="margin-top:8px">'+T('عرض فقط — التسليم لموظف عنده صلاحية التسليم','View only — handing over needs the handout permission')+'</div>');
   $('stat').innerHTML=html;}
 async function lookup(code){
   var r=await sb.from('reg_registrations').select('id,name,title,code,status,category,package_id,payment_status,arrived_at,arrived_by,tag_printed_at,tag_printed_by,cert_printed_at,cert_printed_by,items_received').eq('event_id',EV.id).eq('code',code).maybeSingle();
   if(r.error){show('bad','<b>Error</b>'+h(r.error.message));return;}
   if(!r.data){CURG=null;$('stat').innerHTML='';show('bad','<b>'+T('الكود مش موجود','Code not found')+'</b><span dir="ltr">'+h(code)+'</span>');return;}
   CURG=r.data;show('ok','<b>'+h(CURG.name)+'</b>');drawGuest();}
+function canHand(){return !!(ME&&(ME.role==='admin'||(ME.perms&&ME.perms.handout)));}
 async function togItem(key){
-  if(!CURG)return;var it=EV.items.filter(function(i){return i.key===key;})[0];if(!it)return;var got=!!(CURG.items_received&&CURG.items_received[key]);
+  if(!CURG||!canHand())return;var it=EV.items.filter(function(i){return i.key===key;})[0];if(!it)return;var got=!!(CURG.items_received&&CURG.items_received[key]);
   var nm=LANG==='en'?(it.en||it.ar):(it.ar||it.en);
   if(!got&&!inc(CURG,it)&&!confirm(T('⚠ تحذير!\nالباقة دي مفيهاش "'+nm+'".\nتسلّمه برضه؟','⚠ Warning!\nThis package does not include "'+nm+'".\nHand it over anyway?')))return;
   var r=await sb.rpc('toggle_reg_item',{p_reg:CURG.id,p_key:key,p_on:!got,p_by:ME.name});

@@ -24,7 +24,7 @@
 .bp-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}.bp-line>span:first-child{min-width:100px;font-size:.85rem}#bp-panel input[type=number]{width:74px;padding:7px;border:1px solid var(--line);border-radius:6px}#bp-panel .mini-btn{min-width:34px;padding:6px}
 .ct-table{table-layout:fixed;width:100%}.ct-table th,.ct-table td{padding:6px 4px;vertical-align:middle}.ct-table input[type=text],.ct-table input:not([type]){width:100%;min-width:0;box-sizing:border-box}.ct-table select{max-width:100%}.ct-table td{word-break:break-word}.ct-table td.act{display:flex;flex-wrap:wrap;gap:4px}
 @media(max-width:900px){.ct-table,.ct-table tbody,.ct-table tr,.ct-table td{display:block;width:100%}.ct-table thead,.ct-table colgroup{display:none}.ct-table tr{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px}.ct-table td{border:0;padding:3px 0}}
-.itm{border:1px solid #cbd5e1;background:#fff;border-radius:99px;padding:3px 10px;font-size:.74rem;font-weight:600;cursor:pointer;margin:2px 3px 0 0;font-family:inherit}.itm.got{background:#16A34A;border-color:#16A34A;color:#fff}.itm.warn{border:1px dashed #D97706;color:#B45309;background:#FFFBEB}.itm.got.warn{background:#D97706;color:#fff;border-style:solid}
+.itm{border:1px solid #DC2626;color:#DC2626;background:#fff;border-radius:99px;padding:3px 10px;font-size:.74rem;font-weight:600;cursor:pointer;margin:2px 3px 0 0;font-family:inherit}.itm.got{background:#16A34A;border-color:#16A34A;color:#fff}.itm[disabled]{cursor:default}.itm.warn{border:1px dashed #D97706;color:#B45309;background:#FFFBEB}.itm.got.warn{background:#D97706;color:#fff;border-style:solid}
 .no-edit #rg-tbody select,.no-edit #rg-tbody input{pointer-events:none;opacity:.65}
 </style>
 <div class="admin-shell">
@@ -264,7 +264,7 @@ async function boot(){
   var me=(await sb.from('staff_members').select('name,role,active,perms').eq('user_id',s.user.id).maybeSingle()).data;
   if(!me||!me.active){await sb.auth.signOut();booted=null;document.getElementById('auth-msg').textContent='الحساب ده مش مصرّح له بالدخول — This account has no access';return;}
   var perms=me.perms||{},isA=me.role==='admin';
-  ['view','edit','walkin','checkin','print','export','manage_events'].forEach(function(k){document.body.classList.toggle('no-'+k,!(isA||perms[k]));});
+  ['view','edit','walkin','checkin','print','export','handout','manage_events'].forEach(function(k){document.body.classList.toggle('no-'+k,!(isA||perms[k]));});window.CAN_HANDOUT=!!(isA||perms.handout);
   document.body.classList.toggle('not-admin',!isA);
   document.getElementById('login-card').style.display='none';document.getElementById('dashboard').style.display='block';
   window.STAFF_NAME=me.name;document.getElementById('auth-status').textContent=me.name+(me.role==='admin'?' (admin)':'');
