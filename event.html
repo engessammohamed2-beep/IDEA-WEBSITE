@@ -259,10 +259,11 @@ function render(){
     h+='</div>';
     if(!sel)h+='<p style="color:var(--orange-dark);font-weight:600">'+esc(T('اضغط «سجّل الآن» على الباقة المناسبة لإظهار نموذج التسجيل','Press “Register now” on a package to show the registration form'))+'</p>';
     if(EV.show_payment&&f(EV,'payment_note'))h+='<p style="color:var(--ink-soft);font-size:.9rem">'+esc(f(EV,'payment_note'))+'</p>';
+    if(payAny())h+=payHtml('','');
     h+='<div id="form-box"></div>';
   }
   h+='</div>';
-  root.innerHTML=h;
+  root.innerHTML=h;bindCopy(root);
   root.querySelectorAll('.pk').forEach(function(el){el.onclick=function(){sel=el.dataset.id;render();setTimeout(function(){var b=document.getElementById('form-box');if(b)b.scrollIntoView({behavior:'smooth',block:'center'});},50);};});
   if(sel&&open)renderForm();
   tick();
@@ -354,51 +355,56 @@ var PMI={bank:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" strok
 var PMT={bank:['تحويل بنكي','Bank transfer'],wallet:['محفظة إلكترونية','E-Wallet'],instapay:['إنستا باي','InstaPay'],cash:['نقداً','Cash']};
 function waNum(){var n=String(EV.payment_whatsapp||'').replace(/\D/g,'');if(!n)return '';if(n.charAt(0)==='0')n='20'+n.slice(1);return n;}
 function waShow(){var n=String(EV.payment_whatsapp||'').trim();return n;}
-function waLink(name,code){var n=waNum();if(!n)return '';var t=T('إيصال دفع — ','Payment receipt — ')+f(EV,'title')+(name?' — '+name:'')+(code?' — '+code:'');return 'https://wa.me/'+n+'?text='+encodeURIComponent(t);}
+function waLink(name,code){var n=waNum();if(!n)return '';var t=TP('إيصال دفع — ','Payment receipt — ')+f(EV,'title')+(name?' — '+name:'')+(code?' — '+code:'');return 'https://wa.me/'+n+'?text='+encodeURIComponent(t);}
+function payAny(){return !!(EV&&EV.show_payment&&Array.isArray(EV.payment_methods)&&EV.payment_methods.length&&PKS.some(function(x){return Number(x.price)>0;}));}
 function payOn(p){return !!(EV&&EV.show_payment&&Array.isArray(EV.payment_methods)&&EV.payment_methods.length&&p&&Number(p.price)>0);}
-function pmTitle(m){return f(m,'title')||T(PMT[m.type][0],PMT[m.type][1]);}
-function pmRow(l,v,copy){if(!v)return '';return '<div class="pm-r"><span>'+esc(l)+'</span><b dir="ltr" style="'+(copy?'':'direction:inherit')+'">'+esc(v)+'</b>'+(copy?'<button type="button" class="pm-cp" data-copy="'+esc(v)+'">'+esc(T('نسخ','Copy'))+'</button>':'')+'</div>';}
+function PL(){var v=EV&&EV.payment_lang;return (v==='ar'||v==='en'||v==='both')?v:L();}
+function TP(a,b){var l=PL();return l==='both'?a+' / '+b:l==='ar'?a:b;}
+function pick2(ar,en){var l=PL();if(l==='both')return [ar,en].filter(Boolean).join(' / ');return l==='ar'?(ar||en||''):(en||ar||'');}
+function pmTitle(m){return pick2(m.title_ar||PMT[m.type][0],m.title_en||PMT[m.type][1]);}
+function pmNote(m){return pick2(m.note_ar,m.note_en);}
+function pmRow(l,v,copy){if(!v)return '';return '<div class="pm-r"><span>'+esc(l)+'</span><b dir="ltr" style="'+(copy?'':'direction:inherit')+'">'+esc(v)+'</b>'+(copy?'<button type="button" class="pm-cp" data-copy="'+esc(v)+'">'+esc(TP('نسخ','Copy'))+'</button>':'')+'</div>';}
 function payHtml(name,code){
-  var h='<div class="pay"><h3>'+esc(T('طرق الدفع','How to pay'))+'</h3><p>'+esc(T('الدفع للمنظّم (إيديا). لا يوجد دفع إلكتروني على الموقع. اختر إحدى الطرق التالية:','Payments are made to the congress organizer, IDEA. No online payment is required. Choose one of the following methods:'))+'</p>';
+  var h='<div class="pay"><h3>'+esc(TP('طرق الدفع','How to pay'))+'</h3><p>'+esc(TP('الدفع للمنظّم (إيديا). لا يوجد دفع إلكتروني على الموقع. اختر إحدى الطرق التالية:','Payments are made to the congress organizer, IDEA. No online payment is required. Choose one of the following methods:'))+'</p>';
   EV.payment_methods.forEach(function(m){
-    if(m.type==='cash'){h+='<div class="pm pm-cash"><div class="pm-h"><div class="pm-ic">'+PMI.cash+'</div><div><b>'+esc(pmTitle(m))+'</b></div></div>'+(f(m,'note')?'<p>'+esc(f(m,'note'))+'</p>':'')+'</div>';return;}
+    if(m.type==='cash'){h+='<div class="pm pm-cash"><div class="pm-h"><div class="pm-ic">'+PMI.cash+'</div><div><b>'+esc(pmTitle(m))+'</b></div></div>'+(pmNote(m)?'<p>'+esc(pmNote(m))+'</p>':'')+'</div>';return;}
     var sub=m.type==='bank'?[m.bank,m.branch].filter(Boolean).join(' · '):(m.holder||'');
     h+='<div class="pm"><div class="pm-h"><div class="pm-ic">'+(PMI[m.type]||PMI.bank)+'</div><div><b>'+esc(pmTitle(m))+(m.type==='bank'&&m.currency?' ('+esc(m.currency)+')':'')+'</b>'+(sub?'<span>'+esc(sub)+'</span>':'')+'</div></div>';
-    if(m.type==='bank')h+=pmRow(T('اسم صاحب الحساب','Account holder'),m.holder)+pmRow(T('العملة','Currency'),m.currency)+pmRow(T('رقم الحساب','Account no.'),m.account,1)+pmRow('IBAN',m.iban,1)+pmRow('SWIFT',m.swift,1);
-    else h+=(m.type==='instapay'?pmRow(T('الاسم','Name'),m.holder):'')+pmRow(m.type==='instapay'?T('العنوان / الرقم','Address / Number'):T('الرقم','Number'),m.number,1);
-    if(m.type==='instapay'&&safeUrl(m.link))h+='<a class="pm-bt" target="_blank" rel="noopener" href="'+esc(m.link)+'">'+esc(T('ادفع عبر إنستا باي','Pay with InstaPay'))+'</a>';
+    if(m.type==='bank')h+=pmRow(TP('اسم صاحب الحساب','Account holder'),m.holder)+pmRow(TP('العملة','Currency'),m.currency)+pmRow(TP('رقم الحساب','Account no.'),m.account,1)+pmRow('IBAN',m.iban,1)+pmRow('SWIFT',m.swift,1);
+    else h+=(m.type==='instapay'?pmRow(TP('الاسم','Name'),m.holder):'')+pmRow(m.type==='instapay'?TP('العنوان / الرقم','Address / Number'):TP('الرقم','Number'),m.number,1);
+    if(m.type==='instapay'&&safeUrl(m.link))h+='<a class="pm-bt" target="_blank" rel="noopener" href="'+esc(m.link)+'">'+esc(TP('ادفع عبر إنستا باي','Pay with InstaPay'))+'</a>';
     h+='</div>';
   });
   var wl=waLink(name,code);
-  if(wl)h+='<div class="pm-wa"><p>'+esc(T('بعد التحويل، ابعت صورة الإيصال مع اسمك بالكامل على واتساب ','After transferring, send the receipt with your full name on WhatsApp '))+'<b dir="ltr">'+esc(waShow())+'</b></p><a class="pm-bt wa" target="_blank" rel="noopener" href="'+esc(wl)+'">'+esc(T('ابعت على واتساب','Send on WhatsApp'))+'</a></div>';
+  if(wl)h+='<div class="pm-wa"><p>'+esc(TP('بعد التحويل، ابعت صورة الإيصال مع اسمك بالكامل على واتساب ','After transferring, send the receipt with your full name on WhatsApp '))+'<b dir="ltr">'+esc(waShow())+'</b></p><a class="pm-bt wa" target="_blank" rel="noopener" href="'+esc(wl)+'">'+esc(TP('ابعت على واتساب','Send on WhatsApp'))+'</a></div>';
   return h+'</div>';
 }
 function payPlain(name,code){
   if(!(EV.payment_methods||[]).length)return '';
   var L2=[];EV.payment_methods.forEach(function(m){
     var l=[pmTitle(m)+(m.type==='bank'&&m.currency?' ('+m.currency+')':'')];
-    if(m.type==='cash'){if(f(m,'note'))l.push(f(m,'note'));}
-    else{if(m.holder)l.push(T('الاسم: ','Holder: ')+m.holder);if(m.type==='bank'){if(m.bank)l.push(T('البنك: ','Bank: ')+[m.bank,m.branch].filter(Boolean).join(' · '));if(m.account)l.push(T('رقم الحساب: ','Account no.: ')+m.account);if(m.iban)l.push('IBAN: '+m.iban);if(m.swift)l.push('SWIFT: '+m.swift);}else{if(m.number)l.push(T('الرقم: ','Number: ')+m.number);if(m.link)l.push(m.link);}}
+    if(m.type==='cash'){if(pmNote(m))l.push(pmNote(m));}
+    else{if(m.holder)l.push(TP('الاسم: ','Holder: ')+m.holder);if(m.type==='bank'){if(m.bank)l.push(TP('البنك: ','Bank: ')+[m.bank,m.branch].filter(Boolean).join(' · '));if(m.account)l.push(TP('رقم الحساب: ','Account no.: ')+m.account);if(m.iban)l.push('IBAN: '+m.iban);if(m.swift)l.push('SWIFT: '+m.swift);}else{if(m.number)l.push(TP('الرقم: ','Number: ')+m.number);if(m.link)l.push(m.link);}}
     L2.push(l.join('\n'));});
-  var n=waShow();return L2.join('\n\n')+(n?'\n\n'+T('بعد الدفع ابعت صورة الإيصال مع اسمك بالكامل على واتساب ','After payment, send the receipt with your full name on WhatsApp ')+n:'');
+  var n=waShow();return L2.join('\n\n')+(n?'\n\n'+TP('بعد الدفع ابعت صورة الإيصال مع اسمك بالكامل على واتساب ','After payment, send the receipt with your full name on WhatsApp ')+n:'');
 }
 function payMail(name,code){
   if(!(EV.payment_methods||[]).length)return '';
   var st='style="border:1px solid #CFE0EE;border-radius:12px;padding:12px;margin:10px 0;background:#F7FAFD;font-family:Arial,sans-serif"';
-  var h='<div style="font-family:Arial,sans-serif"><h3 style="margin:16px 0 6px;color:#14305f">'+esc(T('طرق الدفع','How to pay'))+'</h3>';
+  var h='<div style="font-family:Arial,sans-serif"><h3 style="margin:16px 0 6px;color:#14305f">'+esc(TP('طرق الدفع','How to pay'))+'</h3>';
   EV.payment_methods.forEach(function(m){
-    var rows=[];if(m.type==='cash'){if(f(m,'note'))rows.push([f(m,'note'),'']);}
-    else{if(m.holder)rows.push([T('الاسم','Holder'),m.holder]);if(m.type==='bank'){if(m.bank)rows.push([T('البنك','Bank'),[m.bank,m.branch].filter(Boolean).join(' · ')]);if(m.currency)rows.push([T('العملة','Currency'),m.currency]);if(m.account)rows.push([T('رقم الحساب','Account no.'),m.account]);if(m.iban)rows.push(['IBAN',m.iban]);if(m.swift)rows.push(['SWIFT',m.swift]);}else{if(m.number)rows.push([T('الرقم','Number'),m.number]);if(m.link)rows.push([T('رابط','Link'),m.link]);}}
+    var rows=[];if(m.type==='cash'){if(pmNote(m))rows.push([pmNote(m),'']);}
+    else{if(m.holder)rows.push([TP('الاسم','Holder'),m.holder]);if(m.type==='bank'){if(m.bank)rows.push([TP('البنك','Bank'),[m.bank,m.branch].filter(Boolean).join(' · ')]);if(m.currency)rows.push([TP('العملة','Currency'),m.currency]);if(m.account)rows.push([TP('رقم الحساب','Account no.'),m.account]);if(m.iban)rows.push(['IBAN',m.iban]);if(m.swift)rows.push(['SWIFT',m.swift]);}else{if(m.number)rows.push([TP('الرقم','Number'),m.number]);if(m.link)rows.push([TP('رابط','Link'),m.link]);}}
     h+='<div '+st+'><b style="color:#14305f">'+esc(pmTitle(m))+'</b>'+rows.map(function(r){return '<div style="margin-top:6px;font-size:14px;color:#334">'+(r[1]?esc(r[0])+': <b dir="ltr">'+esc(r[1])+'</b>':esc(r[0]))+'</div>';}).join('')+'</div>';});
   var wl=waLink(name,code),n=waShow();
-  if(wl)h+='<div '+st+'>'+esc(T('بعد الدفع ابعت صورة الإيصال مع اسمك بالكامل على واتساب ','After payment, send the receipt with your full name on WhatsApp '))+'<b dir="ltr">'+esc(n)+'</b><br><a href="'+esc(wl)+'" style="display:inline-block;margin-top:8px;background:#25A244;color:#fff;padding:9px 18px;border-radius:99px;text-decoration:none;font-weight:bold">'+esc(T('ابعت على واتساب','Send on WhatsApp'))+'</a></div>';
+  if(wl)h+='<div '+st+'>'+esc(TP('بعد الدفع ابعت صورة الإيصال مع اسمك بالكامل على واتساب ','After payment, send the receipt with your full name on WhatsApp '))+'<b dir="ltr">'+esc(n)+'</b><br><a href="'+esc(wl)+'" style="display:inline-block;margin-top:8px;background:#25A244;color:#fff;padding:9px 18px;border-radius:99px;text-decoration:none;font-weight:bold">'+esc(TP('ابعت على واتساب','Send on WhatsApp'))+'</a></div>';
   return h+'</div>';
 }
 function bindCopy(root){root.querySelectorAll('.pm-cp').forEach(function(b){b.onclick=function(){var v=b.getAttribute('data-copy'),done=function(){var o=b.textContent;b.textContent=T('تم ✓','Copied ✓');setTimeout(function(){b.textContent=o;},1500);};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,function(){});else{var t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(e){}t.remove();}};});}
 function renderForm(){
   var p=PKS.filter(function(x){return x.id===sel;})[0];if(!p)return;
-  var h=(payOn(p)?payHtml('',''):'')+'<form class="rf" id="rf" novalidate><h3 style="margin:0">'+esc(T('بياناتك — ','Your details — '))+esc(f(p,'name'))+'</h3>'+
+  var h='<form class="rf" id="rf" novalidate><h3 style="margin:0">'+esc(T('بياناتك — ','Your details — '))+esc(f(p,'name'))+'</h3>'+
    '<label>'+esc(T('الاسم الأول (بالإنجليزية)','First name (English)'))+' <span class="req">*</span></label><input name="__first" dir="ltr" required>'+
    '<label>'+esc(T('اسم العائلة (بالإنجليزية)','Last name (English)'))+' <span class="req">*</span></label><input name="__last" dir="ltr" required>'+
    '<label>'+esc(T('البريد الإلكتروني','Email'))+' <span class="req">*</span></label><input name="__email" type="email" dir="ltr" required>'+
