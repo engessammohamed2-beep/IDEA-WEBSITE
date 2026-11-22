@@ -76,9 +76,17 @@ async function signOut(){await sb.auth.signOut();location.reload();}
 function cats(){var c=EV&&EV.categories;return Array.isArray(c)&&c.length?c:[];}
 function catColor(l){var c=cats().filter(function(x){return x.label===l;})[0];return c?c.color:'#64748B';}
 function chip(l){return '<span class="chip" style="background:'+catColor(l)+'">'+h(l||'-')+'</span>';}
-function beep(ok){try{if(navigator.vibrate)navigator.vibrate(ok?60:[120,60,120]);var a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=ok?880:220;g.gain.value=.08;o.start();setTimeout(function(){o.stop();a.close();},ok?120:260);}catch(e){}}
-function show(cls,html,ok){var r=$('res');r.className=cls;r.innerHTML=html;beep(ok);}
-function addLog(t,name){var d=document.createElement('div');d.className='log';d.innerHTML='<span>'+h(name)+'</span><span class="muted">'+h(t)+'</span>';$('log').insertBefore(d,$('log').firstChild);while($('log').children.length>12)$('log').removeChild($('log').lastChild);}
+var AC=null;
+function unlock(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}}
+['pointerdown','touchstart','keydown','click'].forEach(function(ev){document.addEventListener(ev,unlock,{passive:true});});
+function tone(f,d,at,type,vol){try{unlock();var o=AC.createOscillator(),g=AC.createGain();o.type=type||'square';o.frequency.value=f;g.gain.value=vol||.25;o.connect(g);g.connect(AC.destination);var t=AC.currentTime+(at||0);o.start(t);o.stop(t+d);}catch(e){}}
+function tick(){tone(1800,.11,0,'square',.3);try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}}   /* classic barcode-scanner beep, played the moment a code is read */
+function beep(kind){if(kind==='warn'){tone(1100,.09,0);tone(1100,.09,.16);}else if(kind==='bad'){tone(260,.4,0,'sawtooth',.3);try{if(navigator.vibrate)navigator.vibrate([120,60,120]);}catch(e){}}}
+function show(cls,html,ok){var r=$('res');r.className=cls;r.innerHTML=html;if(cls!=='ok')beep(cls);}
+var LOG=[];
+function track(x){var t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});var e=LOG.filter(function(l){return l.id===x.id;})[0];if(!e){e={id:x.id,time:t};LOG.unshift(e);if(LOG.length>15)LOG.pop();}e.name=x.name;e.cat=x.category||'Delegate';e.title=x.title||'';e.door_set=!!x.door_set;renderLog();return e;}
+function renderLog(){$('log').innerHTML=LOG.length?'<div class="muted" style="margin:6px 0">آخر اللي اتمسحوا — دوس على أي اسم لتعديل تصنيفه ولقبه</div>'+LOG.map(function(l,i){return '<div class="log" style="cursor:pointer" onclick="reopen('+i+')"><span>'+h((l.title?l.title+' ':'')+l.name)+' '+chip(l.cat)+'</span><span class="muted">'+h(l.time)+' ✎</span></div>';}).join(''):'';}
+window.reopen=function(i){var l=LOG[i];if(!l)return;openOpt({id:l.id,name:l.name,category:l.cat,title:l.title,door_set:l.door_set});$('opt').scrollIntoView({behavior:'smooth',block:'center'});};
 async function boot(){
   var s=(await sb.auth.getSession()).data.session;
   if(!s){$('login').style.display='block';return;}
@@ -104,37 +112,39 @@ async function count(){
 }
 async function scan(txt){
   var code=String(txt||'').trim().toUpperCase();if(!code||!EV||busy)return;
-  busy=true;
+  busy=true;tick();
   try{
-    var r=await sb.from('reg_registrations').select('id,name,title,status,category,arrived_at,arrived_by,payment_status').eq('event_id',EV.id).eq('code',code).maybeSingle();
+    var r=await sb.from('reg_registrations').select('id,name,title,status,category,door_set,arrived_at,arrived_by,payment_status').eq('event_id',EV.id).eq('code',code).maybeSingle();
     if(r.error){show('bad','<b>Error</b>'+h(r.error.message),false);return;}
     var x=r.data;
     if(!x){show('bad','<b>Code not found — الكود مش موجود</b><span dir="ltr">'+h(code)+'</span>',false);return;}
     if(x.status==='cancelled'||x.status==='waitlist'){show('bad','<b>'+h(x.name)+'</b>الحالة: '+h(x.status),false);return;}
     if(x.status==='attended'){show('warn','<b>'+h(x.name)+'</b>متسجل بالفعل — Already checked in',false);return;}
-    if(x.arrived_at){var t=new Date(x.arrived_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});show('warn','<b>'+h(x.name)+'</b>متسجل بالفعل — Already scanned at '+t+(x.arrived_by?' ('+h(x.arrived_by)+')':''),false);return;}
+    if(x.arrived_at){var t=new Date(x.arrived_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});track(x);openOpt(x);show('warn','<b>'+h(x.name)+'</b>متسجل بالفعل — Already scanned at '+t+(x.arrived_by?' ('+h(x.arrived_by)+')':''),false);return;}
     var u=await sb.from('reg_registrations').update({arrived_at:new Date().toISOString(),arrived_by:ME.name}).eq('id',x.id).is('arrived_at',null).select('id');
     if(u.error){show('bad','<b>Error</b>'+h(u.error.message),false);return;}
     if(!u.data||!u.data.length){show('warn','<b>'+h(x.name)+'</b>متسجل بالفعل — Already scanned',false);return;}
     openOpt(x);
     show('ok','<b>'+h(x.name)+'</b>'+(x.payment_status==='unpaid'?'<span>⚠ UNPAID — لم يدفع</span>':'')+'<span>وصل ✓ — الاستقبال هيطبع</span>',true);
-    addLog(new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),x.name);count();
+    track(x);count();
   }finally{busy=false;}
 }
-function openOpt(x){CUR={id:x.id,name:x.name,cat:x.category||'Delegate',title:x.title||'',set:{cat:null,title:null}};$('optName').textContent=x.name;$('opt').style.display='block';drawOpt();}
+function openOpt(x){var c=x.category||'Delegate',t=x.title||'';CUR={id:x.id,name:x.name,origCat:c,origTitle:t,cat:c,title:t,catOn:!!x.door_set||c!=='Delegate',door:!!x.door_set};$('optName').textContent=x.name;$('opt').style.display='block';drawOpt();}
 function drawOpt(){
   var cl=cats();if(!cl.length)cl=[{label:'Delegate',color:'#2563EB'},{label:'Faculty',color:'#7C3AED'},{label:'Speaker',color:'#E8631E'},{label:'Organizer',color:'#16A34A'},{label:'Sponsor',color:'#CA8A04'},{label:'Press',color:'#DB2777'}];
-  $('optCats').innerHTML=cl.map(function(c){var on=CUR.set.cat===c.label;return '<button class="cb'+(on?' on':'')+'" style="'+(on?'background:'+c.color:'')+'" onclick="pickOpt(\'cat\',this.dataset.v)" data-v="'+h(c.label)+'">'+h(c.label)+'</button>';}).join('');
-  $('optTitles').innerHTML=TT.map(function(t){var on=CUR.set.title===t;return '<button class="cb'+(on?' on':'')+'" style="'+(on?'background:#16803c':'')+'" onclick="pickOpt(\'title\',this.dataset.v)" data-v="'+h(t)+'">'+h(t)+'</button>';}).join('');
+  $('optCats').innerHTML=cl.map(function(c){var on=CUR.catOn&&CUR.cat===c.label;return '<button class="cb'+(on?' on':'')+'" style="'+(on?'background:'+c.color:'')+'" onclick="pickOpt(\'cat\',this.dataset.v)" data-v="'+h(c.label)+'">'+h(c.label)+'</button>';}).join('');
+  $('optTitles').innerHTML=TT.map(function(t){var on=CUR.title===t;return '<button class="cb'+(on?' on':'')+'" style="'+(on?'background:#16803c':'')+'" onclick="pickOpt(\'title\',this.dataset.v)" data-v="'+h(t)+'">'+h(t)+'</button>';}).join('');
 }
 async function pickOpt(k,v){
-  if(!CUR)return;var was=CUR.set[k];CUR.set[k]=(was===v)?null:v;drawOpt();
-  var patch={door_set:!!(CUR.set.cat||CUR.set.title)};
-  patch.category=CUR.set.cat||CUR.cat;patch.title=CUR.set.title!==null?CUR.set.title:CUR.title;
-  var r=await sb.from('reg_registrations').update(patch).eq('id',CUR.id);
-  if(r.error){CUR.set[k]=was;drawOpt();show('bad','<b>Error</b>'+h(r.error.message),false);return;}
-  var bits=[CUR.set.title,CUR.set.cat].filter(Boolean).join(' · ');
-  show('ok','<b>'+h(CUR.name)+'</b><span>'+(bits?'✓ '+h(bits):'وصل ✓')+'</span><span>الاستقبال هيطبع</span>',true);
+  if(!CUR)return;var old={cat:CUR.cat,title:CUR.title,catOn:CUR.catOn,door:CUR.door};
+  if(k==='cat'){if(CUR.catOn&&CUR.cat===v){CUR.cat=CUR.origCat;CUR.catOn=false;}else{CUR.cat=v;CUR.catOn=true;}}
+  else{CUR.title=(CUR.title===v)?'':v;}
+  CUR.door=true;drawOpt();
+  var r=await sb.from('reg_registrations').update({category:CUR.cat,title:CUR.title,door_set:true}).eq('id',CUR.id);
+  if(r.error){Object.assign(CUR,old);drawOpt();show('bad','<b>Error</b>'+h(r.error.message),false);return;}
+  track({id:CUR.id,name:CUR.name,category:CUR.cat,title:CUR.title,door_set:true});
+  var bits=[CUR.title,CUR.catOn?CUR.cat:''].filter(Boolean).join(' · ');
+  show('ok','<b>'+h(CUR.name)+'</b><span>'+(bits?'✓ '+h(bits):'وصل ✓')+'</span><span>الاستقبال هيطبع</span>',true);tick();
 }
 function toggleCam(){
   if(!window.Html5Qrcode)return alert('Scanner library not loaded');

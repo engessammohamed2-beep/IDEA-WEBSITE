@@ -260,7 +260,7 @@ async function boot(){
   ['view','edit','walkin','checkin','print','export','manage_events'].forEach(function(k){document.body.classList.toggle('no-'+k,!(isA||perms[k]));});
   document.body.classList.toggle('not-admin',!isA);
   document.getElementById('login-card').style.display='none';document.getElementById('dashboard').style.display='block';
-  document.getElementById('auth-status').textContent=me.name+(me.role==='admin'?' (admin)':'');
+  window.STAFF_NAME=me.name;document.getElementById('auth-status').textContent=me.name+(me.role==='admin'?' (admin)':'');
   loadRegAdmin();
 }
 boot();sb.auth.onAuthStateChange(function(e){if(e==='SIGNED_IN'||e==='INITIAL_SESSION')boot();});

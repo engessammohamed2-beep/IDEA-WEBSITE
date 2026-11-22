@@ -215,7 +215,7 @@ function renderRegs(){
    '<td style="font-size:.8rem">'+h(pname(x.package_id))+'<div style="color:var(--ink-soft);font-size:.72rem;margin-top:3px">'+(x.source==='walkin'?'walk-in':'online')+'<br>'+new Date(x.created_at).toLocaleString()+'</div></td>'+
    '<td><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:.78rem;font-weight:600;color:'+(x.status==='attended'?'#1a8f55':(x.arrived_at&&x.status==='confirmed'?'#B77900':'#C0392B'))+'"><span style="width:11px;height:11px;border-radius:50%;flex:none;background:'+(x.status==='attended'?'#22C55E;box-shadow:0 0 6px 2px rgba(34,197,94,.7)':(x.arrived_at&&x.status==='confirmed'?'#F59E0B;box-shadow:0 0 6px 2px rgba(245,158,11,.7)':'#E5382B;box-shadow:0 0 5px 1px rgba(229,56,43,.5)'))+'"></span>'+(x.status==='attended'?'Attended - حضر':(x.arrived_at&&x.status==='confirmed'?'Arrived - وصل (مستني النيم تاج)':'Not attended - لم يحضر'))+'</div>'+sel(ST,x.status,'rgSet('+id+',\'status\',this.value)')+'</td>'+
    '<td>'+sel(PY,x.payment_status,'rgSet('+id+',\'payment_status\',this.value)')+'<div style="margin-top:4px">'+sel(PM,x.payment_method||'','rgSet('+id+',\'payment_method\',this.value)')+'</div></td>'+
-   '<td class="act"><button class="mini-btn" title="Copy ticket link" onclick="rgCopyLink(\''+x.code+'\')">Copy link</button>'+tagBtn(x)+'<button class="mini-btn pm-print" title="Certificate" onclick="rgCertOne('+id+')">Cert</button><button class="mini-btn pm-edit" onclick="rgDelReg('+id+')">Delete</button></td></tr>';}).join('')||'<tr><td colspan="7" style="color:var(--ink-soft)">No registrations</td></tr>';
+   '<td class="act"><button class="mini-btn" title="Copy ticket link" onclick="rgCopyLink(\''+x.code+'\')">Copy link</button>'+tagBtn(x)+''+prBtn(x,'cert')+'<button class="mini-btn pm-edit" onclick="rgDelReg('+id+')">Delete</button></td></tr>';}).join('')||'<tr><td colspan="7" style="color:var(--ink-soft)">No registrations</td></tr>';
 }
 window.rgRender=renderRegs;
 window.rgSet=async function(id,k,v){var o={};o[k]=v;if(k==='status')o.attended_at=v==='attended'?new Date().toISOString():null;var r=await sb.from('reg_registrations').update(o).eq('id',id);if(r.error)msg(r.error.message,true);else msg('تم الحفظ');loadRegs();};
@@ -259,22 +259,26 @@ function badgeBlock(x,W,H){
 }
 function printBadges(list){
   var W=Number(EV.badge_w_mm)||105,H=Number(EV.badge_h_mm)||148;
-  var w=window.open('','_blank');if(!w){alert('Allow pop-ups');return;}
+  var w=window.open('','_blank');if(!w){alert('Allow pop-ups');return false;}
   w.document.write('<!doctype html><meta charset="utf-8"><title>Name tags</title><style>@page{size:'+W+'mm '+H+'mm;margin:0}body{margin:0;font-family:Arial,sans-serif;background:#ddd}.bg{background:#fff;box-sizing:border-box;text-align:center;margin:0 auto 6px;position:relative;page-break-after:always;overflow:hidden}.np{padding:10px;background:#fff}@media print{.np{display:none}body{background:#fff}.bg{margin:0}}</style><div class="np"><button onclick="print()">Print / Save as PDF ('+W+'×'+H+' mm)</button> — '+list.length+' tag(s)</div>'+list.map(function(x){return badgeBlock(x,W,H);}).join('')+'<script>window.addEventListener("load",function(){setTimeout(function(){print()},700)})<\/script>');
   w.document.close();
+  return true;
 }
 window.rgBadgeOne=function(id){var x=REGS.filter(function(r){return r.id===id;})[0];if(x)printBadges([x]);};
-function tagBtn(x){var on=!!x.tag_printed_at;
-  return '<button class="mini-btn pm-print" title="'+(on?'Printed '+h(new Date(x.tag_printed_at).toLocaleString())+' — click to print again':'Not printed yet — click to print')+'" onclick="rgTag(\''+x.id+'\')" style="background:'+(on?'#16A34A':'#DC2626')+';color:#fff;border-color:'+(on?'#16A34A':'#DC2626')+';font-weight:700">'+(on?'✓ Tag':'Tag')+'</button>';}
+function whoWhen(t,by){return new Date(t).toLocaleString()+(by?' — '+by:'');}
+function prBtn(x,kind){var at=x[kind+'_printed_at'],by=x[kind+'_printed_by'],on=!!at,lab=kind==='tag'?'Tag':'Cert',fn=kind==='tag'?'rgTag':'rgCert';
+  var tip=on?'طُبع '+(kind==='tag'?'النيم تاج':'الشهادة')+' / Printed: '+whoWhen(at,by)+' — اضغط للطباعة تاني':'لم تُطبع بعد / Not printed yet — click to print';
+  return '<button class="mini-btn pm-print" title="'+h(tip)+'" onclick="'+fn+'(\''+x.id+'\')" style="background:'+(on?'#16A34A':'#DC2626')+';color:#fff;border-color:'+(on?'#16A34A':'#DC2626')+';font-weight:700">'+(on?'✓ ':'')+lab+'</button>';}
+function tagBtn(x){return prBtn(x,'tag');}
 async function markPrinted(x,toAttended){
-  var now=new Date().toISOString(),p={tag_printed_at:now};
+  var now=new Date().toISOString(),p={tag_printed_at:now,tag_printed_by:window.STAFF_NAME||''};
   if(toAttended&&x.arrived_at&&x.status==='confirmed'){p.status='attended';p.attended_at=now;}
   var u=await sb.from('reg_registrations').update(p).eq('id',x.id);
   if(u.error){msg(u.error.message,true);return false;}
   Object.assign(x,p);return true;}
 window.rgTag=async function(id){
   var x=REGS.filter(function(r){return r.id===id;})[0];if(!x)return;
-  printBadges([x]);await markPrinted(x,true);renderRegs();renderArrivals();};
+  if(!printBadges([x]))return;await markPrinted(x,true);renderRegs();renderArrivals();};
 /* drag helper: moves el inside box with the mouse/finger, writes % into inputs */
 function makeDrag(el,box,xi,yi,cb){
   el.style.cursor='move';el.style.touchAction='none';el.style.userSelect='none';
@@ -363,13 +367,14 @@ window.rgCertUpload=async function(inp){
   inp.value='';
 };
 function printCerts(list){
-  if(!EV.cert_template_url){alert('Upload the certificate template first');return;}
-  if(!list.length){alert('No registrants match (certificates default to attended only)');return;}
+  if(!EV.cert_template_url){alert('Upload the certificate template first');return false;}
+  if(!list.length){alert('No registrants match (certificates default to attended only)');return false;}
   var land=EV.cert_orientation!=='portrait',W=land?297:210,H=land?210:297;
-  var w=window.open('','_blank');if(!w){alert('Allow pop-ups');return;}
+  var w=window.open('','_blank');if(!w){alert('Allow pop-ups');return false;}
   w.document.write('<!doctype html><meta charset="utf-8"><title>Certificates</title><style>@page{size:A4 '+(land?'landscape':'portrait')+';margin:0}body{margin:0;background:#ddd}.c{position:relative;width:'+W+'mm;height:'+H+'mm;margin:0 auto 6px;page-break-after:always;overflow:hidden;background:#fff}.c img{position:absolute;inset:0;width:100%;height:100%}.c div{position:absolute;left:'+EV.cert_name_x+'%;top:'+EV.cert_name_y+'%;transform:translate(-50%,-50%);white-space:nowrap;font-family:'+EV.cert_font+';color:'+EV.cert_color+';font-size:'+EV.cert_font_mm+'mm}.np{padding:10px;background:#fff}@media print{.np{display:none}body{background:#fff}.c{margin:0}}</style><div class="np"><button onclick="print()">Print / Save as PDF</button> — '+list.length+' certificate(s)</div>'+
    list.map(function(x){return '<div class="c"><img src="'+h(EV.cert_template_url)+'" alt=""><div>'+h((x.title?x.title+' ':'')+x.name)+'</div></div>';}).join('')+'<script>window.addEventListener("load",function(){setTimeout(function(){print()},900)})<\/script>');
   w.document.close();
+  return true;
 }
 window.rgCertAll=function(){var sc=$('rg-cert_scope_all').checked?'all':'attended';printCerts(REGS.filter(function(x){return sc==='all'?(x.status==='confirmed'||x.status==='attended'):x.status==='attended';}));};
 window.rgCopyLink=function(code){var u=location.origin+'/event.html?e='+EV.slug+'&ticket='+code;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){toast('Link copied');},function(){prompt('Copy the link',u);});};
@@ -404,6 +409,8 @@ window.rgSaveCountry=async function(btn){
   if(r.error)return msg(r.error.message,true);
   CCX=null;msg('Country saved to the list');newCountries();};
 window.rgCertOne=function(id){var x=REGS.filter(function(r){return r.id===id;})[0];if(x)printCerts([x]);};
+window.rgCert=async function(id){var x=REGS.filter(function(r){return r.id===id;})[0];if(!x)return;if(!printCerts([x]))return;
+  var p={cert_printed_at:new Date().toISOString(),cert_printed_by:window.STAFF_NAME||''};var u=await sb.from('reg_registrations').update(p).eq('id',id);if(u.error)return msg(u.error.message,true);Object.assign(x,p);renderRegs();};
 /* poster */
 window.rgPoster=function(){
   var url=location.origin+'/event.html?e='+EV.slug;
@@ -431,7 +438,7 @@ window.rgWalkin=async function(){
   msg('تم تسجيل '+o.name+'');
   ['rg-w-first','rg-w-last','rg-w-email','rg-w-phone'].forEach(function(i){$(i).value='';});
   await loadRegs();
-  if($('rg-w-print').checked){printBadges([r.data]);await sb.from('reg_registrations').update({tag_printed_at:new Date().toISOString()}).eq('id',r.data.id);loadRegs();}
+  if($('rg-w-print').checked){printBadges([r.data]);await sb.from('reg_registrations').update({tag_printed_at:new Date().toISOString(),tag_printed_by:window.STAFF_NAME||''}).eq('id',r.data.id);loadRegs();}
   $('rg-w-first').focus();
 };
 setInterval(function(){if(EV&&!document.hidden&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#rg-card')))loadRegs();},20000);
@@ -483,7 +490,7 @@ async function arrFinish(id,print){
   var u=await sb.from('reg_registrations').update({category:cat,title:ttl,status:'attended',attended_at:new Date().toISOString()}).eq('id',id);
   if(u.error)return msg(u.error.message,true);
   x.category=cat;x.title=ttl;x.status='attended';delete ARRC[id];delete ARRT[id];
-  if(print){printBadges([x]);await sb.from('reg_registrations').update({tag_printed_at:new Date().toISOString()}).eq('id',id);}
+  if(print&&printBadges([x])){await sb.from('reg_registrations').update({tag_printed_at:new Date().toISOString(),tag_printed_by:window.STAFF_NAME||''}).eq('id',id);}
   msg('تم: '+x.name+' — '+cat);await loadRegs();
 }
 window.arrPrint=function(id){return arrFinish(id,true);};
