@@ -197,7 +197,8 @@ window.catEdit=async function(i,k,v){
 window.catAdd=function(l,c){l=String(l||'').trim();if(!l)return;if(CATS.some(function(x){return x.label.toLowerCase()===l.toLowerCase();}))return msg('Already exists',true);CATS.push({label:l,color:c||'#475569'});catUI();catSave();fillReception();renderRegs();};
 window.catAddNew=function(){var el=$('rg-cat-new');catAdd(el.value,$('rg-cat-newc').value);el.value='';};
 window.catDel=function(i){if(CATS.length<=1)return msg('Keep at least one category',true);if(!confirm('Remove "'+CATS[i].label+'"? People already in it keep the word, shown gray.'))return;CATS.splice(i,1);catUI();catSave();fillReception();renderRegs();};
-window.catPrintToggle=function(){catUI();rgBadgePreview();};
+window.catPrintToggle=function(){catUI();if($('rg-badge_cat_print').checked)BPK='cat';else if(BPK==='cat')BPK='name';rgBadgePreview();};
+window.qrToggle=function(){if($('rg-badge_show_qr').checked)BPK='qr';else if(BPK==='qr')BPK='name';rgBadgePreview();};
 function pname(id){var p=PKS.filter(function(x){return x.id===id;})[0];return p?(p.name_en||p.name_ar):'';}
 function renderRegs(){
   var list=filtered();
@@ -208,14 +209,13 @@ function renderRegs(){
   $('rg-counter').innerHTML='<div style="display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline"><b style="font-size:1.15rem">Attended '+c.attended+' of '+tot+' ('+pc+'%) - حضر '+c.attended+' من '+tot+'</b><span style="color:#C0392B">Not yet - لسه ما حضروش: '+c.confirmed+'</span><span>Walk-in - تسجيل في المكان: '+c.walkin+'</span></div><div style="height:8px;background:#eee;border-radius:4px;margin-top:6px;overflow:hidden"><div style="height:100%;width:'+pc+'%;background:#22C55E;transition:width .4s"></div></div>';
   var ST=['confirmed','waitlist','cancelled','attended'],PY=['unpaid','paid','free'],PM=['','cash','card','instapay','other'],TT=['','Dr.','Prof.','Mr.','Ms.','Mrs.'];
   function sel(arr,val,fn){return '<select onchange="'+fn+'">'+arr.map(function(s){return '<option value="'+s+'"'+(s===val?' selected':'')+'>'+(s||'—')+'</option>';}).join('')+'</select>';}
-  $('rg-tbody').innerHTML=list.map(function(x){var id="'"+x.id+"'";return '<tr><td dir="ltr"><b>'+h(x.code)+'</b></td>'+
-   '<td style="min-width:200px"><div style="display:flex;gap:4px">'+sel(TT,x.title||'','rgSet('+id+',\'title\',this.value)')+'<input value="'+h(x.name)+'" dir="ltr" onchange="rgSet('+id+',\'name\',this.value)" style="padding:5px;border:1px solid var(--line);border-radius:5px;min-width:130px"></div><div style="margin-top:5px">'+catSel(x.category||'Delegate','rgSet('+id+',\'category\',this.value)')+'</div></td>'+
-   '<td dir="ltr" style="font-size:.8rem">'+h(x.email)+'<br>'+h(x.phone)+'</td><td>'+h(pname(x.package_id))+'</td>'+
+  $('rg-tbody').innerHTML=list.map(function(x){var id="'"+x.id+"'";return '<tr><td dir="ltr" style="font-size:.82rem;word-break:keep-all"><b>'+h(x.code)+'</b></td>'+
+   '<td><div style="display:flex;gap:4px"><span style="flex:0 0 auto">'+sel(TT,x.title||'','rgSet('+id+',\'title\',this.value)')+'</span><input value="'+h(x.name)+'" dir="ltr" onchange="rgSet('+id+',\'name\',this.value)" style="padding:5px;border:1px solid var(--line);border-radius:5px;flex:1;min-width:0"></div><div style="margin-top:5px">'+catSel(x.category||'Delegate','rgSet('+id+',\'category\',this.value)')+'</div></td>'+
+   '<td dir="ltr" style="font-size:.8rem">'+h(x.email)+'<br>'+h(x.phone)+'</td>'+
+   '<td style="font-size:.8rem">'+h(pname(x.package_id))+'<div style="color:var(--ink-soft);font-size:.72rem;margin-top:3px">'+(x.source==='walkin'?'walk-in':'online')+'<br>'+new Date(x.created_at).toLocaleString()+'</div></td>'+
    '<td><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:.78rem;font-weight:600;color:'+(x.status==='attended'?'#1a8f55':'#C0392B')+'"><span style="width:11px;height:11px;border-radius:50%;flex:none;background:'+(x.status==='attended'?'#22C55E;box-shadow:0 0 6px 2px rgba(34,197,94,.7)':'#E5382B;box-shadow:0 0 5px 1px rgba(229,56,43,.5)')+'"></span>'+(x.status==='attended'?'Attended - حضر':'Not attended - لم يحضر')+'</div>'+sel(ST,x.status,'rgSet('+id+',\'status\',this.value)')+'</td>'+
-   '<td>'+sel(PY,x.payment_status,'rgSet('+id+',\'payment_status\',this.value)')+'<br>'+sel(PM,x.payment_method||'','rgSet('+id+',\'payment_method\',this.value)')+'</td>'+
-   '<td style="font-size:.78rem">'+(x.source==='walkin'?'walk-in':'online')+'<br>'+new Date(x.created_at).toLocaleString()+'</td>'+
-   '<td style="min-width:150px"><input readonly dir="ltr" value="'+h(location.origin+'/event.html?e='+EV.slug+'&ticket='+x.code)+'" onclick="this.select()" style="width:130px;padding:4px;font-size:.72rem;border:1px solid var(--line);border-radius:4px"> <button class="mini-btn" onclick="rgCopyLink(\''+x.code+'\')">Copy</button></td>'+
-   '<td style="white-space:nowrap"><button class="mini-btn pm-print" title="Name tag" onclick="rgBadgeOne('+id+')">Tag</button><button class="mini-btn pm-print" title="Certificate" onclick="rgCertOne('+id+')">Cert</button><button class="mini-btn pm-edit" onclick="rgDelReg('+id+')">Delete</button></td></tr>';}).join('')||'<tr><td colspan="9" style="color:var(--ink-soft)">No registrations</td></tr>';
+   '<td>'+sel(PY,x.payment_status,'rgSet('+id+',\'payment_status\',this.value)')+'<div style="margin-top:4px">'+sel(PM,x.payment_method||'','rgSet('+id+',\'payment_method\',this.value)')+'</div></td>'+
+   '<td class="act"><button class="mini-btn" title="Copy ticket link" onclick="rgCopyLink(\''+x.code+'\')">Copy link</button><button class="mini-btn pm-print" title="Name tag" onclick="rgBadgeOne('+id+')">Tag</button><button class="mini-btn pm-print" title="Certificate" onclick="rgCertOne('+id+')">Cert</button><button class="mini-btn pm-edit" onclick="rgDelReg('+id+')">Delete</button></td></tr>';}).join('')||'<tr><td colspan="7" style="color:var(--ink-soft)">No registrations</td></tr>';
 }
 window.rgRender=renderRegs;
 window.rgSet=async function(id,k,v){var o={};o[k]=v;if(k==='status')o.attended_at=v==='attended'?new Date().toISOString():null;var r=await sb.from('reg_registrations').update(o).eq('id',id);if(r.error)msg(r.error.message,true);else msg('تم الحفظ');loadRegs();};
@@ -265,16 +265,35 @@ function printBadges(list){
 }
 window.rgBadgeOne=function(id){var x=REGS.filter(function(r){return r.id===id;})[0];if(x)printBadges([x]);};
 /* drag helper: moves el inside box with the mouse/finger, writes % into inputs */
-function makeDrag(el,box,xi,yi){
+function makeDrag(el,box,xi,yi,cb){
   el.style.cursor='move';el.style.touchAction='none';el.style.userSelect='none';
   el.onpointerdown=function(e){
-    e.preventDefault();el.setPointerCapture(e.pointerId);
+    if(cb)cb();e.preventDefault();el.setPointerCapture(e.pointerId);
     var move=function(ev){var r=box.getBoundingClientRect();var px=Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100)),py=Math.max(0,Math.min(100,(ev.clientY-r.top)/r.height*100));
       el.style.left=px+'%';el.style.top=py+'%';$(xi).value=px.toFixed(1);$(yi).value=py.toFixed(1);};
-    var up=function(){el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);$(xi).dispatchEvent(new Event('change',{bubbles:true}));};
+    var up=function(){el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);$(xi).dispatchEvent(new Event('change',{bubbles:true}));if(cb)cb(true);};
     el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
   };
 }
+/* ---- name tag layout: click an element, then size / move it ---- */
+var BPK='name';
+var BPE={name:{x:'rg-badge_name_x',y:'rg-badge_name_y',m:'rg-badge_name_mm',lab:'Name — الاسم',def:9,dx:50,dy:38,st:.5,id:'bp-name',on:function(){return true;}},
+ cat:{x:'rg-badge_cat_x',y:'rg-badge_cat_y',m:'rg-badge_cat_mm',lab:'Category — التصنيف',def:7,dx:50,dy:58,st:.5,id:'bp-cat',on:function(){return $('rg-badge_cat_print').checked;},hint:'فعّل الشيك بوكس جنب "التصنيف" الأول — Tick the checkbox next to Category first'},
+ qr:{x:'rg-badge_qr_x',y:'rg-badge_qr_y',m:'rg-badge_qr_mm',lab:'QR',def:40,dx:50,dy:74,st:2,id:'bp-qr',on:function(){return $('rg-badge_show_qr').checked;},hint:'فعّل الشيك بوكس جنب QR الأول — Tick the checkbox next to QR first'}};
+function bpNum(k,f){var e=BPE[k],v=parseFloat($(e[f]).value);return isNaN(v)?(f==='m'?e.def:f==='x'?e.dx:e.dy):v;}
+window.bpSel=function(k,refreshOnly){BPK=k;bpMark();};
+function bpMark(){
+  Object.keys(BPE).forEach(function(k){var el=$(BPE[k].id);if(!el)return;var s=k===BPK;el.style.border=s?'2px solid #E8631E':'1px dashed #aaa';el.style.boxShadow=s?'0 0 0 3px rgba(232,99,30,.25)':'';el.style.zIndex=s?'3':'1';});
+  document.querySelectorAll('#bp-els [data-k]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-k')===BPK);});
+  var e=BPE[BPK],on=e.on();if(!$('bp-title'))return;
+  $('bp-title').textContent=e.lab;$('bp-hint').style.display=on?'none':'block';$('bp-hint').textContent=e.hint||'';
+  $('bp-ctl').style.opacity=on?'1':'.4';$('bp-ctl').style.pointerEvents=on?'auto':'none';
+  [['bp-m','m'],['bp-x','x'],['bp-y','y']].forEach(function(a){if(document.activeElement!==$(a[0]))$(a[0]).value=+bpNum(BPK,a[1]).toFixed(1);});
+}
+function bpCommit(){var e=BPE[BPK];rgBadgePreview();$(e.m).dispatchEvent(new Event('change',{bubbles:true}));}
+window.bpSize=function(d){var e=BPE[BPK];$(e.m).value=Math.max(1,+(bpNum(BPK,'m')+d*e.st).toFixed(1));bpCommit();};
+window.bpMove=function(dx,dy){var e=BPE[BPK];$(e.x).value=Math.max(0,Math.min(100,+(bpNum(BPK,'x')+dx*.5).toFixed(1)));$(e.y).value=Math.max(0,Math.min(100,+(bpNum(BPK,'y')+dy*.5).toFixed(1)));bpCommit();};
+window.bpType=function(){var e=BPE[BPK];$(e.m).value=$('bp-m').value;$(e.x).value=$('bp-x').value;$(e.y).value=$('bp-y').value;bpCommit();};
 window.rgBadgePreview=function(){
   var W=Number($('rg-badge_w_mm').value)||105,H=Number($('rg-badge_h_mm').value)||148,pv=$('rg-badge-pv');
   var bw=Math.min(300,pv.parentNode.clientWidth||300),sc=bw/W;
@@ -282,10 +301,11 @@ window.rgBadgePreview=function(){
   var nx=$('rg-badge_name_x').value,ny=$('rg-badge_name_y').value,nm=Number($('rg-badge_name_mm').value)||9,qx=$('rg-badge_qr_x').value,qy=$('rg-badge_qr_y').value,qm=Number($('rg-badge_qr_mm').value)||40;
   var sample='Dr. Sample Name';
   pv.innerHTML=($('rg-badge_bg_url').value?'<img src="'+h($('rg-badge_bg_url').value)+'" alt="" style="position:absolute;inset:0;width:100%;height:100%">':'')+'<div style="position:absolute;top:3px;left:0;right:0;text-align:center;font-size:'+(W*0.04*sc)+'px;color:#555">'+h(EV.title_en||'Event')+'</div>'+
-   '<div id="bp-name" style="position:absolute;left:'+nx+'%;top:'+ny+'%;transform:translate(-50%,-50%);width:94%;text-align:center;font-weight:700;line-height:1.15;font-size:'+(fitMm(sample,W,nm)*sc)+'px;border:1px dashed #E8631E">'+sample+'</div>'+
-   ($('rg-badge_cat_print').checked?'<div id="bp-cat" style="position:absolute;left:'+($('rg-badge_cat_x').value||50)+'%;top:'+($('rg-badge_cat_y').value||58)+'%;transform:translate(-50%,-50%);width:94%;text-align:center;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#000;font-size:'+(fitMm(catList()[0].label,W,Number($('rg-badge_cat_mm').value)||7)*sc)+'px;border:1px dashed #E8631E">'+h(catList()[0].label)+'</div>':'')+
-   ($('rg-badge_show_qr').checked?'<div id="bp-qr" style="position:absolute;left:'+qx+'%;top:'+qy+'%;transform:translate(-50%,-50%);text-align:center;border:1px dashed #E8631E"><img alt="" style="display:block;width:'+(qm*sc)+'px;height:'+(qm*sc)+'px" src="'+qrDataUrl('SAMPLE123',200)+'"><div style="font:700 '+(W*0.035*sc)+'px monospace">SAMPLE123</div></div>':'');
-  makeDrag($('bp-name'),pv,'rg-badge_name_x','rg-badge_name_y');if($('bp-qr'))makeDrag($('bp-qr'),pv,'rg-badge_qr_x','rg-badge_qr_y');if($('bp-cat'))makeDrag($('bp-cat'),pv,'rg-badge_cat_x','rg-badge_cat_y');
+   '<div id="bp-name" style="position:absolute;left:'+nx+'%;top:'+ny+'%;transform:translate(-50%,-50%);width:94%;text-align:center;font-weight:700;line-height:1.15;font-size:'+(fitMm(sample,W,nm)*sc)+'px;border:1px dashed #aaa">'+sample+'</div>'+
+   ($('rg-badge_cat_print').checked?'<div id="bp-cat" style="position:absolute;left:'+($('rg-badge_cat_x').value||50)+'%;top:'+($('rg-badge_cat_y').value||58)+'%;transform:translate(-50%,-50%);width:94%;text-align:center;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#000;font-size:'+(fitMm(catList()[0].label,W,Number($('rg-badge_cat_mm').value)||7)*sc)+'px;border:1px dashed #aaa">'+h(catList()[0].label)+'</div>':'')+
+   ($('rg-badge_show_qr').checked?'<div id="bp-qr" style="position:absolute;left:'+qx+'%;top:'+qy+'%;transform:translate(-50%,-50%);text-align:center;border:1px dashed #aaa"><img alt="" style="display:block;width:'+(qm*sc)+'px;height:'+(qm*sc)+'px" src="'+qrDataUrl('SAMPLE123',200)+'"><div style="font:700 '+(W*0.035*sc)+'px monospace">SAMPLE123</div></div>':'');
+  makeDrag($('bp-name'),pv,'rg-badge_name_x','rg-badge_name_y',function(f){bpSel('name',f);});if($('bp-qr'))makeDrag($('bp-qr'),pv,'rg-badge_qr_x','rg-badge_qr_y',function(f){bpSel('qr',f);});if($('bp-cat'))makeDrag($('bp-cat'),pv,'rg-badge_cat_x','rg-badge_cat_y',function(f){bpSel('cat',f);});
+  bpMark();
 };
 /* certificates */
 window.rgCertPreview=function(){
@@ -430,7 +450,7 @@ function waiting(){return REGS.filter(function(x){return x.arrived_at&&x.status!
 function arrAgo(t){var m=Math.max(0,Math.round((Date.now()-new Date(t))/60000));return m<1?'الآن':m+' min';}
 function renderArrivals(){
   var box=$('rg-arr-list');if(!box)return;
-  var L=waiting();$('rg-arr-n').textContent=L.length||'';
+  var L=waiting();$('rg-arr-n').textContent=L.length||'';$('rg-arr-n').style.display=L.length?'inline-block':'none';
   if(!L.length){box.innerHTML='<div style="color:var(--ink-soft);font-size:.85rem">مفيش حد مستني — No one waiting</div>';return;}
   box.innerHTML=L.map(function(x){
     var ch=ARRC[x.id]!==undefined?ARRC[x.id]:(x.category&&x.category!=='Delegate'?x.category:'');

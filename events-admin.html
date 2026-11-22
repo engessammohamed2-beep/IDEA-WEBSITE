@@ -19,6 +19,11 @@
 <style>
 .no-manage_events .adm-only,.no-checkin .pm-checkin,.no-walkin .pm-walkin,.no-view .pm-view,.no-export .pm-export,.no-print .pm-print,.no-edit .pm-edit,.not-admin .sa-only{display:none !important}
 [data-tab]{display:none}[data-tab].on{display:block}#rg-tabs .mini-btn.on{background:#E8631E;color:#fff;border-color:#E8631E}
+#bp-els .bp-row{display:flex;align-items:center;gap:8px}#bp-els input[type=checkbox]{width:18px;height:18px}.bp-on{width:18px;text-align:center;color:#16A34A;font-weight:700}
+.bp-el{flex:1;text-align:start;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;cursor:pointer}.bp-el.on{border-color:#E8631E;background:#FFF1E8;font-weight:700}
+.bp-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}.bp-line>span:first-child{min-width:100px;font-size:.85rem}#bp-panel input[type=number]{width:74px;padding:7px;border:1px solid var(--line);border-radius:6px}#bp-panel .mini-btn{min-width:34px;padding:6px}
+.ct-table{table-layout:fixed;width:100%}.ct-table th,.ct-table td{padding:6px 4px;vertical-align:middle}.ct-table input[type=text],.ct-table input:not([type]){width:100%;min-width:0;box-sizing:border-box}.ct-table select{max-width:100%}.ct-table td{word-break:break-word}.ct-table td.act{display:flex;flex-wrap:wrap;gap:4px}
+@media(max-width:900px){.ct-table,.ct-table tbody,.ct-table tr,.ct-table td{display:block;width:100%}.ct-table thead,.ct-table colgroup{display:none}.ct-table tr{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px}.ct-table td{border:0;padding:3px 0}}
 .no-edit #rg-tbody select,.no-edit #rg-tbody input{pointer-events:none;opacity:.65}
 </style>
 <div class="admin-shell">
@@ -69,7 +74,7 @@
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><input id="ct-f-q" placeholder="Search" oninput="ctRender()" style="padding:7px;border:1px solid var(--line);border-radius:5px"><select id="ct-f-country" onchange="ctRender()" style="padding:7px;border:1px solid var(--line);border-radius:5px"></select><select id="ct-f-mode" onchange="ctRender()" style="padding:7px;border:1px solid var(--line);border-radius:5px"><option value="">Everyone</option><option value="notreg">Not registered in this event</option><option value="reg">Registered in this event</option></select><button class="mini-btn" type="button" onclick="ctCopyEmails()">Copy emails (BCC)</button><button class="mini-btn" type="button" onclick="ctExport()">Export Excel with messages</button></div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;padding:8px;background:var(--paper-2);border-radius:6px"><b>Add to registration list - إضافة لقائمة التسجيل:</b><select id="ct-pkg" style="padding:6px;border:1px solid var(--line);border-radius:5px"></select><select id="ct-st" style="padding:6px;border:1px solid var(--line);border-radius:5px"><option value="confirmed">As confirmed</option><option value="attended">As attended</option></select><button class="mini-btn" type="button" onclick="ctSelAll(true)">Select all shown</button><button class="mini-btn" type="button" onclick="ctSelAll(false)">Clear</button><button class="mini-btn primary" type="button" onclick="ctAddToReg()">Add selected (<span id="ct-sel-n">0</span>)</button></div>
           <div id="ct-dups"></div>
-          <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th><input type="checkbox" id="ct-sel-head" onchange="ctSelAll(this.checked)"></th><th>Title / Name</th><th>Email</th><th>Phone</th><th>Country</th><th>Organization</th><th>Send</th></tr></thead><tbody id="ct-tbody"></tbody></table></div></div>
+          <div><table class="admin-table ct-table"><colgroup><col style="width:3%"><col style="width:23%"><col style="width:21%"><col style="width:13%"><col style="width:10%"><col style="width:14%"><col style="width:16%"></colgroup><thead><tr><th><input type="checkbox" id="ct-sel-head" onchange="ctSelAll(this.checked)"></th><th>Title / Name</th><th>Email</th><th>Phone</th><th>Country</th><th>Organization</th><th>Send</th></tr></thead><tbody id="ct-tbody"></tbody></table></div></div>
       </div>
       <div class="adm-only" data-tab="setup">
         <h4>1. Event details</h4>
@@ -127,16 +132,13 @@
             </select></label>
           <div id="rg-badge-custom" style="display:none;gap:6px"><label>W mm<input id="rg-badge_w_mm" type="number" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label><label>H mm<input id="rg-badge_h_mm" type="number" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label></div>
           <label>Certificate orientation<select id="rg-cert_orientation" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="landscape">A4 landscape</option><option value="portrait">A4 portrait</option></select></label>
-          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="rg-badge_show_qr" onchange="rgBadgePreview()"> Show QR on name tag — إظهار الـ QR على النيم تاج</label>
+          
           <div style="grid-column:1/-1;border:1px solid var(--line);border-radius:8px;padding:10px"><b>Attendee categories - تصنيفات الحضور</b>
             <p style="font-size:.82rem;color:var(--ink-soft);margin:4px 0 6px">Each person gets one category (default Delegate). It shows as a colored label next to the name at check-in and in the list, so the person printing the tag knows what to hand over. Rename, recolor, remove, or add your own.</p>
             <div id="rg-cats"></div>
             <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><input type="color" id="rg-cat-newc" value="#475569" style="width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:5px"><input id="rg-cat-new" placeholder="New category" style="padding:6px;border:1px solid var(--line);border-radius:5px;width:180px" onkeydown="if(event.key==='Enter'){event.preventDefault();catAddNew()}"><button class="mini-btn" type="button" onclick="catAddNew()">Add</button></div>
             <div style="margin-top:8px;font-size:.82rem;color:var(--ink-soft)">Suggested - اقتراحات: <span id="rg-cat-sugg"></span></div>
-            <label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="rg-badge_cat_print" onchange="catPrintToggle()"> Print the category word on the name tag - اطبع الكلمة على النيم تاج</label>
-            <div id="rg-cat-print-box" style="display:none;margin-top:6px;font-size:.85rem">The word appears as a dashed box in the Name tag layout preview below: drag it to where it should print. Word size:
-              <input id="rg-badge_cat_mm" type="number" step="0.5" oninput="rgBadgePreview()" style="width:70px;padding:5px;border:1px solid var(--line);border-radius:5px"> mm
-              <input id="rg-badge_cat_x" type="hidden"><input id="rg-badge_cat_y" type="hidden"></div></div>
+            <div style="margin-top:10px;font-size:.82rem;color:var(--ink-soft)">لطباعة التصنيف على النيم تاج: فعّله من <b>Name tag layout</b> تحت - Enable printing it from the Name tag layout section below.</div></div>
           <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="rg-cert_scope_all"> Certificates for all registrants (unchecked = attended only)</label>
           <div style="grid-column:1/-1;border:1px solid var(--line);border-radius:8px;padding:8px"><b>Certificate search</b> (one public link for everyone) — search by:
             <label style="display:inline-flex;gap:5px;margin:0 8px"><input type="checkbox" id="rg-cert_search_phone"> Phone</label><label style="display:inline-flex;gap:5px;margin-right:8px"><input type="checkbox" id="rg-cert_search_code"> Code</label><label style="display:inline-flex;gap:5px"><input type="checkbox" id="rg-cert_search_email"> Email</label>
@@ -145,16 +147,26 @@
         </div>
         <div style="margin:12px 0 0"><b>Name tag background / design</b> — صورة أو PDF <input type="file" accept="image/*,application/pdf" onchange="rgBadgeBgUpload(this)"><input id="rg-badge_bg_url" type="hidden"> <button class="mini-btn" onclick="rgBadgeBgClear()">Remove</button>
           <span style="font-size:.8rem;color:var(--ink-soft)">PDF بيتحوّل لصورة، ومقاس النيم تاج بياخد مقاس الـ PDF تلقائي.</span></div>
-        <div style="margin:12px 0"><b>Name tag layout — اسحب الاسم والـ QR بالماوس</b>
-          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">
+        <div style="margin:12px 0"><b>Name tag layout — دوس على أي عنصر (الاسم / التصنيف / QR) وعدّل حجمه ومكانه</b>
+          <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">
             <div style="min-width:200px;max-width:320px;flex:0 0 auto"><div id="rg-badge-pv" style="position:relative;background:#fff;border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden;margin:0 auto"></div></div>
-            <div style="display:grid;grid-template-columns:repeat(2,110px);gap:8px;align-content:start">
-              <label>Name X % <input id="rg-badge_name_x" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
-              <label>Name Y % <input id="rg-badge_name_y" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
-              <label>Name size mm <input id="rg-badge_name_mm" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
-              <label>QR size mm <input id="rg-badge_qr_mm" type="number" step="1" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
-              <label>QR X % <input id="rg-badge_qr_x" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
-              <label>QR Y % <input id="rg-badge_qr_y" type="number" step="0.5" oninput="rgBadgePreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label>
+            <div style="flex:1;min-width:260px;max-width:430px">
+              <div id="bp-els" style="display:flex;flex-direction:column;gap:6px">
+                <div class="bp-row"><span class="bp-on">✓</span><button type="button" class="bp-el" data-k="name" onclick="bpSel('name')">الاسم · Name</button></div>
+                <div class="bp-row"><input type="checkbox" id="rg-badge_cat_print" onchange="catPrintToggle()" title="Print"><button type="button" class="bp-el" data-k="cat" onclick="bpSel('cat')">التصنيف · Category (اطبع / print)</button></div>
+                <div class="bp-row"><input type="checkbox" id="rg-badge_show_qr" onchange="qrToggle()" title="Show"><button type="button" class="bp-el" data-k="qr" onclick="bpSel('qr')">QR (إظهار / show)</button></div>
+              </div>
+              <div id="bp-panel" style="margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff">
+                <div style="font-weight:700;margin-bottom:6px" id="bp-title"></div>
+                <div id="bp-hint" style="font-size:.8rem;color:#B77900;margin-bottom:6px;display:none"></div>
+                <div id="bp-ctl">
+                  <div class="bp-line"><span>Size — الحجم</span><button type="button" class="mini-btn" onclick="bpSize(-1)">−</button><input id="bp-m" type="number" step="0.5" oninput="bpType()"><span>mm</span><button type="button" class="mini-btn" onclick="bpSize(1)">+</button></div>
+                  <div class="bp-line"><span>Position — المكان</span>
+                    <div style="display:grid;grid-template-columns:repeat(3,34px);gap:3px"><span></span><button type="button" class="mini-btn" onclick="bpMove(0,-1)">▲</button><span></span><button type="button" class="mini-btn" onclick="bpMove(-1,0)">◀</button><button type="button" class="mini-btn" onclick="bpMove(0,1)">▼</button><button type="button" class="mini-btn" onclick="bpMove(1,0)">▶</button></div>
+                    <div style="display:flex;flex-direction:column;gap:4px;font-size:.8rem">X % <input id="bp-x" type="number" step="0.5" oninput="bpType()"> Y % <input id="bp-y" type="number" step="0.5" oninput="bpType()"></div></div>
+                </div>
+              </div>
+              <div style="display:none"><input id="rg-badge_name_x" type="number" step="0.5" oninput="rgBadgePreview()"><input id="rg-badge_name_y" type="number" step="0.5" oninput="rgBadgePreview()"><input id="rg-badge_name_mm" type="number" step="0.5" oninput="rgBadgePreview()"><input id="rg-badge_qr_x" type="number" step="0.5" oninput="rgBadgePreview()"><input id="rg-badge_qr_y" type="number" step="0.5" oninput="rgBadgePreview()"><input id="rg-badge_qr_mm" type="number" step="1" oninput="rgBadgePreview()"><input id="rg-badge_cat_x" type="number" step="0.5" oninput="rgBadgePreview()"><input id="rg-badge_cat_y" type="number" step="0.5" oninput="rgBadgePreview()"><input id="rg-badge_cat_mm" type="number" step="0.5" oninput="rgBadgePreview()"></div>
             </div>
           </div></div>
         <p style="font-size:.85rem;color:var(--ink-soft)">النيم تاج: اللقب + الاسم (إنجليزي) + QR. الشهادة: ارفع تصميم الشهادة (صورة) وحدد مكان الاسم.</p>
@@ -214,7 +226,7 @@
         </div>
         <div id="rg-newcc"></div>
         <div id="rg-counter" style="margin:8px 0 10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff"></div>
-        <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Code</th><th>Title / Name</th><th>Contact</th><th>Package</th><th>Status</th><th>Payment</th><th>Source / Date</th><th>Link to send</th><th></th></tr></thead><tbody id="rg-tbody"></tbody></table></div>
+        <div><table class="admin-table ct-table"><colgroup><col style="width:11%"><col style="width:22%"><col style="width:16%"><col style="width:12%"><col style="width:13%"><col style="width:10%"><col style="width:16%"></colgroup><thead><tr><th>Code</th><th>Title / Name / Category</th><th>Contact</th><th>Package · Source</th><th>Status</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="rg-tbody"></tbody></table></div>
         </div>
       </div>
     </div>
