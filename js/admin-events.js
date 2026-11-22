@@ -163,7 +163,7 @@ window.rgDelPkg=async function(id){if(!confirm('Delete package?'))return;await s
 /* ---- registrations ---- */
 async function loadRegs(){
   var r=await sb.from('reg_registrations').select('*').eq('event_id',EV.id).order('created_at',{ascending:false});
-  REGS=r.data||[];renderRegs();
+  REGS=r.data||[];renderRegs();renderArrivals();
 }
 function filtered(){
   var s=$('rg-f-status').value,p=$('rg-f-pkg').value,q=$('rg-f-q').value.toLowerCase();
@@ -424,6 +424,47 @@ window.rgScan=function(){
   $('rg-reader').style.display='block';scanner=new Html5Qrcode('rg-reader');var last='',t=0;
   scanner.start({facingMode:'environment'},{fps:10,qrbox:220},function(txt){if(txt===last&&Date.now()-t<4000)return;last=txt;t=Date.now();checkin(txt);}).catch(function(e){alert(e);});
 };
+/* ---- arrivals (scanned at the door) ---- */
+var ARRC={};
+function waiting(){return REGS.filter(function(x){return x.arrived_at&&x.status!=='attended'&&x.status!=='cancelled';}).sort(function(a,b){return new Date(a.arrived_at)-new Date(b.arrived_at);});}
+function arrAgo(t){var m=Math.max(0,Math.round((Date.now()-new Date(t))/60000));return m<1?'الآن':m+' min';}
+function renderArrivals(){
+  var box=$('rg-arr-list');if(!box)return;
+  var L=waiting();$('rg-arr-n').textContent=L.length||'';
+  if(!L.length){box.innerHTML='<div style="color:var(--ink-soft);font-size:.85rem">مفيش حد مستني — No one waiting</div>';return;}
+  box.innerHTML=L.map(function(x){
+    var ch=ARRC[x.id]!==undefined?ARRC[x.id]:(x.category&&x.category!=='Delegate'?x.category:'');
+    var opts='<option value="">— اختر التصنيف / Choose —</option>'+catList().map(function(c){return '<option value="'+h(c.label)+'"'+(c.label===ch?' selected':'')+'>'+h(c.label)+'</option>';}).join('');
+    return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff">'+
+      '<div style="flex:1;min-width:160px"><b>'+h((x.title?x.title+' ':'')+x.name)+'</b>'+(x.payment_status==='unpaid'?' <span style="color:#C0392B;font-weight:700">UNPAID</span>':'')+'<div style="font-size:.75rem;color:var(--ink-soft)">'+h(pname(x.package_id))+' · '+arrAgo(x.arrived_at)+(x.arrived_by?' · '+h(x.arrived_by):'')+'</div></div>'+
+      '<select id="arr-c-'+x.id+'" onchange="arrChoose(\''+x.id+'\',this)" style="padding:6px;border-radius:6px;border:1px solid var(--line);'+(ch?'background:'+catColor(ch)+';color:#fff;font-weight:700':'')+'">'+opts+'</select>'+
+      '<button class="mini-btn primary" onclick="arrPrint(\''+x.id+'\')">اطبع Print</button>'+
+      '<button class="mini-btn" onclick="arrDone(\''+x.id+'\')">بدون طباعة</button></div>';}).join('');
+}
+window.arrChoose=function(id,el){ARRC[id]=el.value;el.style.background=el.value?catColor(el.value):'';el.style.color=el.value?'#fff':'';el.style.fontWeight=el.value?'700':'';};
+async function arrFinish(id,print){
+  var x=REGS.filter(function(r){return r.id===id;})[0];if(!x)return;
+  var sel=($('arr-c-'+id)||{}).value||'';
+  if(!sel&&print&&!confirm('⚠ لم تختر التصنيف!\nهيتطبع النيم تاج بتصنيف "Delegate".\n\nNo category chosen — the tag will print as "Delegate". Continue?'))return;
+  var cat=sel||x.category||'Delegate';
+  var u=await sb.from('reg_registrations').update({category:cat,status:'attended',attended_at:new Date().toISOString()}).eq('id',id);
+  if(u.error)return msg(u.error.message,true);
+  x.category=cat;x.status='attended';delete ARRC[id];
+  if(print)printBadges([x]);
+  msg('تم: '+x.name+' — '+cat);await loadRegs();
+}
+window.arrPrint=function(id){return arrFinish(id,true);};
+window.arrDone=function(id){return arrFinish(id,false);};
+var arrSig='';
+setInterval(async function(){
+  if(!EV||document.hidden||!$('rg-arr-list'))return;
+  var r=await sb.from('reg_registrations').select('id').eq('event_id',EV.id).not('arrived_at','is',null).neq('status','attended').neq('status','cancelled');
+  if(r.error)return;var sig=(r.data||[]).map(function(x){return x.id;}).sort().join(',');
+  var cur=waiting().map(function(x){return x.id;}).sort().join(',');
+  if(sig!==cur&&!(document.activeElement&&document.activeElement.id&&/^arr-c-/.test(document.activeElement.id)))loadRegs();
+  else renderAgoOnly();
+},3000);
+function renderAgoOnly(){}
 var tm=null;
 function autosave(e){
   var t=e.target;if(!t.closest)return;

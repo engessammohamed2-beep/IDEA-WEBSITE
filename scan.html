@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#14305f">
+<title>Scanner Station</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#0f1b33;color:#fff;min-height:100vh}
+.wrap{max-width:520px;margin:0 auto;padding:12px 14px 40px}
+h1{font-size:1.1rem;margin:6px 0 10px}
+input,select,button{font:inherit}
+.in{width:100%;padding:12px;border-radius:10px;border:0;margin:6px 0;color:#111}
+.btn{background:#E8631E;color:#fff;border:0;border-radius:10px;padding:12px 18px;font-weight:700;width:100%}
+.btn.ghost{background:#1d3f7a}
+.row{display:flex;gap:8px}
+#reader{display:none;width:100%;border-radius:14px;overflow:hidden;background:#000;min-height:40px}
+#res{margin:12px 0;border-radius:14px;padding:16px;text-align:center;font-size:1.05rem;background:#1d3f7a;min-height:92px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+#res b{font-size:1.35rem}
+#res.ok{background:#16803c}#res.warn{background:#b77900}#res.bad{background:#b3261e}
+.chip{display:inline-block;color:#fff;border-radius:99px;padding:2px 12px;font-size:.8rem;font-weight:700}
+.log{font-size:.9rem;border-top:1px solid #ffffff22;padding:7px 0;display:flex;justify-content:space-between;gap:8px}
+.muted{opacity:.7;font-size:.85rem}
+.top{display:flex;justify-content:space-between;align-items:center}
+.top a,.top button{color:#9fc4ff;background:none;border:0;font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="login" style="display:none">
+    <h1>Scanner Station — تسجيل الدخول</h1>
+    <input class="in" id="email" placeholder="Phone or email — رقم التليفون أو الإيميل" dir="ltr" autocomplete="username">
+    <input class="in" id="password" type="password" placeholder="Password — الباسورد" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()">
+    <button class="btn" onclick="signIn()">Sign in</button>
+    <div id="amsg" class="muted" style="margin-top:8px;color:#ffb4ab"></div>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="top"><h1>Scanner Station</h1><div><span id="who" class="muted"></span> <button onclick="signOut()">Sign out</button></div></div>
+    <select class="in" id="ev"></select>
+    <div id="reader"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="camBtn" onclick="toggleCam()">Camera ON / OFF — الكاميرا</button>
+    </div>
+    <input class="in" id="code" dir="ltr" placeholder="Reader / type code — قارئ QR أو اكتب الكود" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter'){scan(this.value);this.value='';}">
+    <div id="res">Ready — جاهز للمسح</div>
+    <div id="count" class="muted"></div>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-init.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+var sb=window.getSupabaseClient(),ME=null,EV=null,EVS=[],cam=null,last='',lastT=0,booted=null,busy=false;
+var $=function(i){return document.getElementById(i);};
+function h(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function toEmail(v){v=(v||'').trim();if(v.indexOf('@')>-1)return v;var d=v.replace(/\D/g,'');return 'staff-'+d+'@staff.ideaeg.online';}
+async function signIn(){$('amsg').textContent='';var r=await sb.auth.signInWithPassword({email:toEmail($('email').value),password:$('password').value});if(r.error)$('amsg').textContent='بيانات الدخول غلط — Wrong login';}
+async function signOut(){await sb.auth.signOut();location.reload();}
+function cats(){var c=EV&&EV.categories;return Array.isArray(c)&&c.length?c:[];}
+function catColor(l){var c=cats().filter(function(x){return x.label===l;})[0];return c?c.color:'#64748B';}
+function chip(l){return '<span class="chip" style="background:'+catColor(l)+'">'+h(l||'-')+'</span>';}
+function beep(ok){try{if(navigator.vibrate)navigator.vibrate(ok?60:[120,60,120]);var a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=ok?880:220;g.gain.value=.08;o.start();setTimeout(function(){o.stop();a.close();},ok?120:260);}catch(e){}}
+function show(cls,html,ok){var r=$('res');r.className=cls;r.innerHTML=html;beep(ok);}
+function addLog(t,name){var d=document.createElement('div');d.className='log';d.innerHTML='<span>'+h(name)+'</span><span class="muted">'+h(t)+'</span>';$('log').insertBefore(d,$('log').firstChild);while($('log').children.length>12)$('log').removeChild($('log').lastChild);}
+async function boot(){
+  var s=(await sb.auth.getSession()).data.session;
+  if(!s){$('login').style.display='block';return;}
+  if(booted===s.user.id)return;booted=s.user.id;
+  var me=(await sb.from('staff_members').select('name,role,active,perms').eq('user_id',s.user.id).maybeSingle()).data;
+  if(!me||!me.active){await sb.auth.signOut();booted=null;$('login').style.display='block';$('amsg').textContent='الحساب ده مش مصرّح له — No access';return;}
+  var p=me.perms||{};
+  if(!(me.role==='admin'||p.checkin)){$('login').style.display='none';$('app').style.display='block';$('app').innerHTML='<h1>مفيش صلاحية check-in للحساب ده</h1><p class="muted">You need the check-in permission.</p>';return;}
+  ME=me;$('who').textContent=me.name;$('login').style.display='none';$('app').style.display='block';
+  var r=await sb.from('reg_events').select('id,slug,title_en,title_ar,categories').order('created_at',{ascending:false});
+  EVS=r.data||[];
+  var keep=null;try{keep=localStorage.getItem('scan_event');}catch(e){}
+  $('ev').innerHTML=EVS.map(function(e){return '<option value="'+e.id+'">'+h(e.title_en||e.title_ar||e.slug)+'</option>';}).join('');
+  if(EVS.some(function(e){return e.id===keep;}))$('ev').value=keep;
+  $('ev').onchange=function(){pickEv();};pickEv();
+  $('code').focus();
+}
+function pickEv(){EV=EVS.filter(function(e){return e.id===$('ev').value;})[0]||null;try{localStorage.setItem('scan_event',$('ev').value);}catch(e){}count();}
+async function count(){
+  if(!EV)return;
+  var a=await sb.from('reg_registrations').select('id',{count:'exact',head:true}).eq('event_id',EV.id).not('arrived_at','is',null);
+  $('count').textContent='Scanned so far: '+(a.count||0)+' — اتمسح لحد دلوقتي';
+}
+async function scan(txt){
+  var code=String(txt||'').trim().toUpperCase();if(!code||!EV||busy)return;
+  busy=true;
+  try{
+    var r=await sb.from('reg_registrations').select('id,name,status,category,arrived_at,arrived_by,payment_status').eq('event_id',EV.id).eq('code',code).maybeSingle();
+    if(r.error){show('bad','<b>Error</b>'+h(r.error.message),false);return;}
+    var x=r.data;
+    if(!x){show('bad','<b>Code not found — الكود مش موجود</b><span dir="ltr">'+h(code)+'</span>',false);return;}
+    if(x.status==='cancelled'||x.status==='waitlist'){show('bad','<b>'+h(x.name)+'</b>الحالة: '+h(x.status),false);return;}
+    if(x.status==='attended'){show('warn','<b>'+h(x.name)+'</b>متسجل بالفعل — Already checked in',false);return;}
+    if(x.arrived_at){var t=new Date(x.arrived_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});show('warn','<b>'+h(x.name)+'</b>متسجل بالفعل — Already scanned at '+t+(x.arrived_by?' ('+h(x.arrived_by)+')':''),false);return;}
+    var u=await sb.from('reg_registrations').update({arrived_at:new Date().toISOString(),arrived_by:ME.name}).eq('id',x.id).is('arrived_at',null).select('id');
+    if(u.error){show('bad','<b>Error</b>'+h(u.error.message),false);return;}
+    if(!u.data||!u.data.length){show('warn','<b>'+h(x.name)+'</b>متسجل بالفعل — Already scanned',false);return;}
+    show('ok','<b>'+h(x.name)+'</b>'+(x.payment_status==='unpaid'?'<span>⚠ UNPAID — لم يدفع</span>':'')+'<span>وصل ✓ — الاستقبال هيطبع</span>',true);
+    addLog(new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),x.name);count();
+  }finally{busy=false;}
+}
+function toggleCam(){
+  if(!window.Html5Qrcode)return alert('Scanner library not loaded');
+  if(cam){cam.stop().catch(function(){});cam=null;$('reader').style.display='none';return;}
+  $('reader').style.display='block';cam=new Html5Qrcode('reader');
+  cam.start({facingMode:'environment'},{fps:10,qrbox:240},function(t){if(t===last&&Date.now()-lastT<4000)return;last=t;lastT=Date.now();scan(t);}).catch(function(e){alert(e);cam=null;});
+}
+boot();sb.auth.onAuthStateChange(function(e){if(e==='SIGNED_IN'||e==='INITIAL_SESSION')boot();});
+document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#app')&&!/SELECT|BUTTON|INPUT/.test(e.target.tagName)&&$('code'))$('code').focus();});
+</script>
+</body>
+</html>
