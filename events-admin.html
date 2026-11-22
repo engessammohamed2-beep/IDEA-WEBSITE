@@ -128,6 +128,15 @@
           <div id="rg-badge-custom" style="display:none;gap:6px"><label>W mm<input id="rg-badge_w_mm" type="number" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label><label>H mm<input id="rg-badge_h_mm" type="number" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></label></div>
           <label>Certificate orientation<select id="rg-cert_orientation" oninput="rgCertPreview()" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="landscape">A4 landscape</option><option value="portrait">A4 portrait</option></select></label>
           <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="rg-badge_show_qr" onchange="rgBadgePreview()"> Show QR on name tag — إظهار الـ QR على النيم تاج</label>
+          <div style="grid-column:1/-1;border:1px solid var(--line);border-radius:8px;padding:10px"><b>Attendee categories - تصنيفات الحضور</b>
+            <p style="font-size:.82rem;color:var(--ink-soft);margin:4px 0 6px">Each person gets one category (default Delegate). It shows as a colored label next to the name at check-in and in the list, so the person printing the tag knows what to hand over. Rename, recolor, remove, or add your own.</p>
+            <div id="rg-cats"></div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><input type="color" id="rg-cat-newc" value="#475569" style="width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:5px"><input id="rg-cat-new" placeholder="New category" style="padding:6px;border:1px solid var(--line);border-radius:5px;width:180px" onkeydown="if(event.key==='Enter'){event.preventDefault();catAddNew()}"><button class="mini-btn" type="button" onclick="catAddNew()">Add</button></div>
+            <div style="margin-top:8px;font-size:.82rem;color:var(--ink-soft)">Suggested - اقتراحات: <span id="rg-cat-sugg"></span></div>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="rg-badge_cat_print" onchange="catPrintToggle()"> Print the category word on the name tag - اطبع الكلمة على النيم تاج</label>
+            <div id="rg-cat-print-box" style="display:none;margin-top:6px;font-size:.85rem">The word appears as a dashed box in the Name tag layout preview below: drag it to where it should print. Word size:
+              <input id="rg-badge_cat_mm" type="number" step="0.5" oninput="rgBadgePreview()" style="width:70px;padding:5px;border:1px solid var(--line);border-radius:5px"> mm
+              <input id="rg-badge_cat_x" type="hidden"><input id="rg-badge_cat_y" type="hidden"></div></div>
           <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="rg-cert_scope_all"> Certificates for all registrants (unchecked = attended only)</label>
           <div style="grid-column:1/-1;border:1px solid var(--line);border-radius:8px;padding:8px"><b>Certificate search</b> (one public link for everyone) — search by:
             <label style="display:inline-flex;gap:5px;margin:0 8px"><input type="checkbox" id="rg-cert_search_phone"> Phone</label><label style="display:inline-flex;gap:5px;margin-right:8px"><input type="checkbox" id="rg-cert_search_code"> Code</label><label style="display:inline-flex;gap:5px"><input type="checkbox" id="rg-cert_search_email"> Email</label>
@@ -176,6 +185,7 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:12px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px">
           <select id="rg-w-pkg" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"></select>
           <select id="rg-w-title" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px"><option value="Dr.">Dr.</option><option value="Prof.">Prof.</option><option value="Mr.">Mr.</option><option value="Ms.">Ms.</option><option value="Mrs.">Mrs.</option><option value="">—</option></select>
+          <select id="rg-w-cat" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px" title="Category"></select>
           <input id="rg-w-first" placeholder="First name (English)" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px">
           <input id="rg-w-last" placeholder="Last name (English)" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px">
           <input id="rg-w-phone" placeholder="Phone" dir="ltr" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px">
