@@ -445,7 +445,7 @@ window.rgScan=function(){
   scanner.start({facingMode:'environment'},{fps:10,qrbox:220},function(txt){if(txt===last&&Date.now()-t<4000)return;last=txt;t=Date.now();checkin(txt);}).catch(function(e){alert(e);});
 };
 /* ---- arrivals (scanned at the door) ---- */
-var ARRC={};
+var ARRC={},ARRT={};
 function waiting(){return REGS.filter(function(x){return x.arrived_at&&x.status!=='attended'&&x.status!=='cancelled';}).sort(function(a,b){return new Date(a.arrived_at)-new Date(b.arrived_at);});}
 function arrAgo(t){var m=Math.max(0,Math.round((Date.now()-new Date(t))/60000));return m<1?'الآن':m+' min';}
 function renderArrivals(){
@@ -453,10 +453,11 @@ function renderArrivals(){
   var L=waiting();$('rg-arr-n').textContent=L.length||'';$('rg-arr-n').style.display=L.length?'inline-block':'none';
   if(!L.length){box.innerHTML='<div style="color:var(--ink-soft);font-size:.85rem">مفيش حد مستني — No one waiting</div>';return;}
   box.innerHTML=L.map(function(x){
-    var ch=ARRC[x.id]!==undefined?ARRC[x.id]:(x.category&&x.category!=='Delegate'?x.category:'');
+    var ch=ARRC[x.id]!==undefined?ARRC[x.id]:((x.door_set||(x.category&&x.category!=='Delegate'))?x.category:'');var tt=ARRT[x.id]!==undefined?ARRT[x.id]:(x.title||'');
     var opts='<option value="">— اختر التصنيف / Choose —</option>'+catList().map(function(c){return '<option value="'+h(c.label)+'"'+(c.label===ch?' selected':'')+'>'+h(c.label)+'</option>';}).join('');
     return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff">'+
-      '<div style="flex:1;min-width:160px"><b>'+h((x.title?x.title+' ':'')+x.name)+'</b>'+(x.payment_status==='unpaid'?' <span style="color:#C0392B;font-weight:700">UNPAID</span>':'')+'<div style="font-size:.75rem;color:var(--ink-soft)">'+h(pname(x.package_id))+' · '+arrAgo(x.arrived_at)+(x.arrived_by?' · '+h(x.arrived_by):'')+'</div></div>'+
+      '<div style="flex:1;min-width:160px"><b>'+h((x.title?x.title+' ':'')+x.name)+'</b>'+(x.payment_status==='unpaid'?' <span style="color:#C0392B;font-weight:700">UNPAID</span>':'')+'<div style="font-size:.75rem;color:var(--ink-soft)">'+h(pname(x.package_id))+' · '+arrAgo(x.arrived_at)+(x.arrived_by?' · '+h(x.arrived_by):'')+'</div>'+(x.door_set?'<div style="font-size:.78rem;color:#16803c;font-weight:700">✔ اختاره موظف الباب: '+h([x.title,x.category].filter(Boolean).join(' · '))+'</div>':'')+'</div>'+
+      '<select id="arr-t-'+x.id+'" onchange="ARRT[\''+x.id+'\']=this.value" style="padding:6px;border-radius:6px;border:1px solid var(--line)">'+['','Dr.','Prof.','Mr.','Ms.','Mrs.'].map(function(t){return '<option value="'+t+'"'+(t===tt?' selected':'')+'>'+(t||'— لقب —')+'</option>';}).join('')+'</select>'+
       '<select id="arr-c-'+x.id+'" onchange="arrChoose(\''+x.id+'\',this)" style="padding:6px;border-radius:6px;border:1px solid var(--line);'+(ch?'background:'+catColor(ch)+';color:#fff;font-weight:700':'')+'">'+opts+'</select>'+
       '<button class="mini-btn primary" onclick="arrPrint(\''+x.id+'\')">اطبع Print</button>'+
       '<button class="mini-btn" onclick="arrDone(\''+x.id+'\')">بدون طباعة</button></div>';}).join('');
@@ -467,9 +468,10 @@ async function arrFinish(id,print){
   var sel=($('arr-c-'+id)||{}).value||'';
   if(!sel&&print&&!confirm('⚠ لم تختر التصنيف!\nهيتطبع النيم تاج بتصنيف "Delegate".\n\nNo category chosen — the tag will print as "Delegate". Continue?'))return;
   var cat=sel||x.category||'Delegate';
-  var u=await sb.from('reg_registrations').update({category:cat,status:'attended',attended_at:new Date().toISOString()}).eq('id',id);
+  var tsel=$('arr-t-'+id),ttl=tsel?tsel.value:(x.title||'');
+  var u=await sb.from('reg_registrations').update({category:cat,title:ttl,status:'attended',attended_at:new Date().toISOString()}).eq('id',id);
   if(u.error)return msg(u.error.message,true);
-  x.category=cat;x.status='attended';delete ARRC[id];
+  x.category=cat;x.title=ttl;x.status='attended';delete ARRC[id];delete ARRT[id];
   if(print)printBadges([x]);
   msg('تم: '+x.name+' — '+cat);await loadRegs();
 }
@@ -481,7 +483,7 @@ setInterval(async function(){
   var r=await sb.from('reg_registrations').select('id').eq('event_id',EV.id).not('arrived_at','is',null).neq('status','attended').neq('status','cancelled');
   if(r.error)return;var sig=(r.data||[]).map(function(x){return x.id;}).sort().join(',');
   var cur=waiting().map(function(x){return x.id;}).sort().join(',');
-  if(sig!==cur&&!(document.activeElement&&document.activeElement.id&&/^arr-c-/.test(document.activeElement.id)))loadRegs();
+  if(sig!==cur&&!(document.activeElement&&document.activeElement.id&&/^arr-[ct]-/.test(document.activeElement.id)))loadRegs();
   else renderAgoOnly();
 },3000);
 function renderAgoOnly(){}

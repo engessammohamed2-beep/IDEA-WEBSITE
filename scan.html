@@ -27,6 +27,7 @@ input,select,button{font:inherit}
 #res.ok{background:#16803c}#res.warn{background:#b77900}#res.bad{background:#b3261e}
 .chip{display:inline-block;color:#fff;border-radius:99px;padding:2px 12px;font-size:.8rem;font-weight:700}
 .log{font-size:.9rem;border-top:1px solid #ffffff22;padding:7px 0;display:flex;justify-content:space-between;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.cb{border:2px solid #ffffff55;background:transparent;color:#fff;border-radius:99px;padding:10px 16px;font-weight:700;font-size:.95rem}.cb.on{border-color:#fff;color:#fff}
 .muted{opacity:.7;font-size:.85rem}
 .top{display:flex;justify-content:space-between;align-items:center}
 .top a,.top button{color:#9fc4ff;background:none;border:0;font-size:.85rem}
@@ -51,6 +52,11 @@ input,select,button{font:inherit}
     </div>
     <input class="in" id="code" dir="ltr" placeholder="Reader / type code — قارئ QR أو اكتب الكود" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter'){scan(this.value);this.value='';}">
     <div id="res">Ready — جاهز للمسح</div>
+    <div id="opt" style="display:none;background:#1d3f7a;border-radius:14px;padding:12px;margin-bottom:10px">
+      <div class="muted" style="margin-bottom:6px">اختياري — Optional: <b id="optName"></b><br>لو ما اخترتش، كمّل مسح عادي</div>
+      <div class="muted">التصنيف — Category</div><div id="optCats" class="chips"></div>
+      <div class="muted" style="margin-top:8px">اللقب — Title</div><div id="optTitles" class="chips"></div>
+    </div>
     <div id="count" class="muted"></div>
     <div id="log"></div>
   </div>
@@ -60,6 +66,7 @@ input,select,button{font:inherit}
 <script src="js/supabase-init.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
+var CUR=null,TT=['Dr.','Prof.','Mr.','Ms.','Mrs.'];
 var sb=window.getSupabaseClient(),ME=null,EV=null,EVS=[],cam=null,last='',lastT=0,booted=null,busy=false;
 var $=function(i){return document.getElementById(i);};
 function h(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -99,7 +106,7 @@ async function scan(txt){
   var code=String(txt||'').trim().toUpperCase();if(!code||!EV||busy)return;
   busy=true;
   try{
-    var r=await sb.from('reg_registrations').select('id,name,status,category,arrived_at,arrived_by,payment_status').eq('event_id',EV.id).eq('code',code).maybeSingle();
+    var r=await sb.from('reg_registrations').select('id,name,title,status,category,arrived_at,arrived_by,payment_status').eq('event_id',EV.id).eq('code',code).maybeSingle();
     if(r.error){show('bad','<b>Error</b>'+h(r.error.message),false);return;}
     var x=r.data;
     if(!x){show('bad','<b>Code not found — الكود مش موجود</b><span dir="ltr">'+h(code)+'</span>',false);return;}
@@ -109,9 +116,25 @@ async function scan(txt){
     var u=await sb.from('reg_registrations').update({arrived_at:new Date().toISOString(),arrived_by:ME.name}).eq('id',x.id).is('arrived_at',null).select('id');
     if(u.error){show('bad','<b>Error</b>'+h(u.error.message),false);return;}
     if(!u.data||!u.data.length){show('warn','<b>'+h(x.name)+'</b>متسجل بالفعل — Already scanned',false);return;}
+    openOpt(x);
     show('ok','<b>'+h(x.name)+'</b>'+(x.payment_status==='unpaid'?'<span>⚠ UNPAID — لم يدفع</span>':'')+'<span>وصل ✓ — الاستقبال هيطبع</span>',true);
     addLog(new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),x.name);count();
   }finally{busy=false;}
+}
+function openOpt(x){CUR={id:x.id,name:x.name,cat:x.category||'Delegate',title:x.title||'',set:{cat:null,title:null}};$('optName').textContent=x.name;$('opt').style.display='block';drawOpt();}
+function drawOpt(){
+  var cl=cats();if(!cl.length)cl=[{label:'Delegate',color:'#2563EB'},{label:'Faculty',color:'#7C3AED'},{label:'Speaker',color:'#E8631E'},{label:'Organizer',color:'#16A34A'},{label:'Sponsor',color:'#CA8A04'},{label:'Press',color:'#DB2777'}];
+  $('optCats').innerHTML=cl.map(function(c){var on=CUR.set.cat===c.label;return '<button class="cb'+(on?' on':'')+'" style="'+(on?'background:'+c.color:'')+'" onclick="pickOpt(\'cat\',this.dataset.v)" data-v="'+h(c.label)+'">'+h(c.label)+'</button>';}).join('');
+  $('optTitles').innerHTML=TT.map(function(t){var on=CUR.set.title===t;return '<button class="cb'+(on?' on':'')+'" style="'+(on?'background:#16803c':'')+'" onclick="pickOpt(\'title\',this.dataset.v)" data-v="'+h(t)+'">'+h(t)+'</button>';}).join('');
+}
+async function pickOpt(k,v){
+  if(!CUR)return;var was=CUR.set[k];CUR.set[k]=(was===v)?null:v;drawOpt();
+  var patch={door_set:!!(CUR.set.cat||CUR.set.title)};
+  patch.category=CUR.set.cat||CUR.cat;patch.title=CUR.set.title!==null?CUR.set.title:CUR.title;
+  var r=await sb.from('reg_registrations').update(patch).eq('id',CUR.id);
+  if(r.error){CUR.set[k]=was;drawOpt();show('bad','<b>Error</b>'+h(r.error.message),false);return;}
+  var bits=[CUR.set.title,CUR.set.cat].filter(Boolean).join(' · ');
+  show('ok','<b>'+h(CUR.name)+'</b><span>'+(bits?'✓ '+h(bits):'وصل ✓')+'</span><span>الاستقبال هيطبع</span>',true);
 }
 function toggleCam(){
   if(!window.Html5Qrcode)return alert('Scanner library not loaded');
