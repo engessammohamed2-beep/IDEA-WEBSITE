@@ -251,7 +251,7 @@ function render(){
     h+='<h2 style="margin-top:30px">'+esc(T('اختر الباقة','Choose your package'))+'</h2><div class="pk-grid">';
     PKS.forEach(function(p){
       var feats=(f(p,'features')||'').split('\n').filter(Boolean);
-      var price=EV.show_payment?(Number(p.price)>0?Number(p.price).toLocaleString()+' '+esc(EV.currency||''):esc(T('مجاني','Free'))):(Number(p.price)>0?'':esc(T('مجاني','Free')));
+      var price=EV.show_payment?(Number(p.price)>0?Number(p.price).toLocaleString()+' '+esc(p.currency||EV.currency||''):esc(T('مجاني','Free'))):(Number(p.price)>0?'':esc(T('مجاني','Free')));
       h+='<div class="pk'+(sel===p.id?' sel':'')+'" data-id="'+p.id+'"><h3>'+esc(f(p,'name'))+'</h3>'+(price?'<div class="pr">'+price+'</div>':'')+
         (f(p,'desc')?'<p style="margin:4px 0;color:var(--ink-soft);font-size:.92rem">'+esc(f(p,'desc'))+'</p>':'')+
         (feats.length?'<ul>'+feats.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'')+'<button type="button" class="btn '+(sel===p.id?'btn-primary':'btn-ghost')+'" style="width:100%;justify-content:center;margin-top:8px">'+esc(T('سجّل الآن','Register now'))+'</button></div>';

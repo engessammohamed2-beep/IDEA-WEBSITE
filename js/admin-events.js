@@ -32,7 +32,7 @@ async function pick(){
   try{localStorage.setItem('rg_last_event',EV.id);}catch(e){}
   $('rg-main').style.display='block';
   var f=['slug','title_en','title_ar','description_en','description_ar','cover_image_url','location_en','location_ar','map_url','contact_email','admin_email','currency','payment_note_en','payment_note_ar','payment_whatsapp'];
-  f.forEach(function(k){$('rg-'+k).value=EV[k]||'';});
+  f.forEach(function(k){if(k==='currency'){$('rg-currency').innerHTML=curOpts(EV.currency||'EGP');}$('rg-'+k).value=EV[k]||(k==='currency'?'EGP':'');});
   $('rg-start_at').value=toLocal(EV.start_at);$('rg-end_at').value=toLocal(EV.end_at);$('rg-registration_deadline').value=toLocal(EV.registration_deadline);
   $('rg-form_lang').value=EV.form_lang||'auto';$('rg-badge_show_qr').checked=EV.badge_show_qr!==false;$('rg-cert_scope_all').checked=EV.cert_scope==='all';$('rg-cert_online').checked=!!EV.cert_online;$('rg-cert_search_phone').checked=EV.cert_search_phone!==false;$('rg-cert_search_code').checked=EV.cert_search_code!==false;$('rg-cert_search_email').checked=!!EV.cert_search_email;$('rg-cert-link').value=location.origin+'/event.html?e='+EV.slug+'&cert=1';
   ['badge_size','badge_bg_url','badge_w_mm','badge_h_mm','cert_template_url','cert_orientation','cert_name_x','cert_name_y','cert_font','cert_font_mm','cert_color','badge_name_x','badge_name_y','badge_name_mm','badge_qr_x','badge_qr_y','badge_qr_mm','badge_cat_x','badge_cat_y','badge_cat_mm'].forEach(function(k){var el=$('rg-'+k);if(el&&EV[k]!=null)el.value=EV[k];});
@@ -130,13 +130,15 @@ window.rgDelField=function(i){EV.form_fields=readFields();EV.form_fields.splice(
 window.rgMove=function(i,d){var a=readFields(),j=i+d;if(j<0||j>=a.length)return;var t=a[i];a[i]=a[j];a[j]=t;EV.form_fields=a;renderFields();};
 
 /* ---- packages ---- */
+var CURS=[['EGP','جنيه — EGP'],['USD','دولار — USD'],['EUR','يورو — EUR']];
+function curOpts(v){var L=CURS.slice();if(v&&!L.some(function(c){return c[0]===v;}))L.push([v,v]);return L.map(function(c){return '<option value="'+h(c[0])+'"'+(c[0]===v?' selected':'')+'>'+h(c[1])+'</option>';}).join('');}
 async function loadPkgs(){
   var r=await sb.from('reg_packages').select('*').eq('event_id',EV.id).order('sort_order');
   PKS=r.data||[];
   $('rg-pkgs').innerHTML=PKS.map(function(p){return '<div class="rg-pk" data-id="'+p.id+'" style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px">'+
    '<input data-k="name_en" placeholder="Name EN" value="'+h(p.name_en)+'" style="flex:1;min-width:130px;'+IN+'">'+
    '<input data-k="name_ar" placeholder="الاسم" dir="rtl" value="'+h(p.name_ar)+'" style="flex:1;min-width:130px;'+IN+'">'+
-   '<input data-k="price" type="number" min="0" placeholder="Price" value="'+p.price+'" style="width:90px;'+IN+'">'+
+   '<span style="display:inline-flex;gap:0"><input data-k="price" type="number" min="0" placeholder="Price" value="'+p.price+'" style="width:90px;border-radius:6px 0 0 6px;'+IN+'"><select data-k="currency" title="Currency - العملة" style="border-radius:0 6px 6px 0;margin-inline-start:-1px;'+IN+'">'+curOpts(p.currency||(EV&&EV.currency)||'EGP')+'</select></span>'+
    '<input data-k="capacity" type="number" min="0" placeholder="Seats (empty=∞)" value="'+(p.capacity==null?'':p.capacity)+'" style="width:120px;'+IN+'">'+
    '<input data-k="sort_order" type="number" value="'+(p.sort_order||0)+'" title="Order" style="width:64px;'+IN+'">'+
    '<label style="font-size:.82rem"><input type="checkbox" data-k="active"'+(p.active?' checked':'')+'> Active</label>'+
@@ -423,7 +425,7 @@ window.rgPoster=function(){
 function fillReception(){
   itemsUI();
   if($('rg-w-cat'))$('rg-w-cat').innerHTML=catOpts('Delegate');
-  $('rg-w-pkg').innerHTML=PKS.map(function(p){return '<option value="'+p.id+'">'+h(p.name_en||p.name_ar)+(Number(p.price)>0?' — '+p.price+' '+h(EV.currency||''):'')+'</option>';}).join('');
+  $('rg-w-pkg').innerHTML=PKS.map(function(p){return '<option value="'+p.id+'">'+h(p.name_en||p.name_ar)+(Number(p.price)>0?' — '+p.price+' '+h(p.currency||EV.currency||''):'')+'</option>';}).join('');
 }
 window.rgWalkin=async function(){
   var f=function(i){return $(i).value.trim();};
